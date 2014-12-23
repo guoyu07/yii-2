@@ -9,7 +9,7 @@
  */
 
 /**
- * CBehavior is a convenient base class for behavior classes.
+ * CBehavior 是所有行为类的基类。
  *
  * @property CComponent $owner The owner component that this behavior is attached to.
  * @property boolean $enabled Whether this behavior is enabled.
@@ -68,7 +68,7 @@ class CBehavior extends CComponent implements IBehavior
 	}
 
 	/**
-	 * @return CComponent the owner component that this behavior is attached to.
+	 * @return CComponent 此行为被连接到该所有者的组件。
 	 */
 	public function getOwner()
 	{
@@ -76,7 +76,7 @@ class CBehavior extends CComponent implements IBehavior
 	}
 
 	/**
-	 * @return boolean whether this behavior is enabled
+	 * @return boolean 行为是否被启用。
 	 */
 	public function getEnabled()
 	{
@@ -84,7 +84,7 @@ class CBehavior extends CComponent implements IBehavior
 	}
 
 	/**
-	 * @param boolean $value whether this behavior is enabled
+	 * @param boolean $value 行为是否被启用。
 	 */
 	public function setEnabled($value)
 	{

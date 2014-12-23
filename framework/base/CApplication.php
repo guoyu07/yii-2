@@ -9,19 +9,19 @@
  */
 
 /**
- * CApplication is the base class for all application classes.
+ * CApplication 是所有应用程序类的基类。
  *
  * An application serves as the global context that the user request
  * is being processed. It manages a set of application components that
  * provide specific functionalities to the whole application.
  *
- * The core application components provided by CApplication are the following:
+ * 所提供的核心应用组件如下：
  * <ul>
- * <li>{@link getErrorHandler errorHandler}: handles PHP errors and
- *   uncaught exceptions. This application component is dynamically loaded when needed.</li>
- * <li>{@link getSecurityManager securityManager}: provides security-related
- *   services, such as hashing, encryption. This application component is dynamically
- *   loaded when needed.</li>
+ * <li>{@link getErrorHandler errorHandler}: 处理PHP错误和错误异常。
+ *   这个应用组件在需要时动态加载。</li>
+ * <li>{@link getSecurityManager securityManager}: 提供安全相关的服务，
+ *   例如，哈希，加密功能。
+ *   这个应用组件在需要时动态加载。</li>
  * <li>{@link getStatePersister statePersister}: provides global state
  *   persistence method. This application component is dynamically loaded when needed.</li>
  * <li>{@link getCache cache}: provides caching feature. This application component is
