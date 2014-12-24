@@ -113,15 +113,15 @@ abstract class CApplication extends CModule
 	private $_homeUrl;
 
 	/**
-	 * Processes the request.
+	 * 处理请求。
 	 * This is the place where the actual request processing work is done.
 	 * Derived classes should override this method.
 	 */
 	abstract public function processRequest();
 
 	/**
-	 * Constructor.
-	 * @param mixed $config application configuration.
+	 * 构造器。
+	 * @param mixed $config 应用程序配置。
 	 * If a string, it is treated as the path of the file that contains the configuration;
 	 * If an array, it is the actual configuration information.
 	 * Please make sure you specify the {@link getBasePath basePath} property in the configuration,
@@ -171,7 +171,7 @@ abstract class CApplication extends CModule
 
 
 	/**
-	 * Runs the application.
+	 * 运行应用程序。
 	 * This method loads static application components. Derived classes usually overrides this
 	 * method to do more application-specific tasks.
 	 * Remember to call the parent implementation so that static application components are loaded.
@@ -187,7 +187,7 @@ abstract class CApplication extends CModule
 	}
 
 	/**
-	 * Terminates the application.
+	 * 终止应用程序。
 	 * This method replaces PHP's exit() function by calling
 	 * {@link onEndRequest} before exiting.
 	 * @param integer $status exit status (value 0 means normal exit while other values mean abnormal exit).
