@@ -85,7 +85,7 @@
 abstract class CApplication extends CModule
 {
 	/**
-	 * @var string the application name. Defaults to 'My Application'.
+	 * @var string 应用程序名称。默认为 'My Application'。
 	 */
 	public $name='My Application';
 	/**
