@@ -2,11 +2,11 @@ Authentication and Authorization
 ================================
 
 Authentication and authorization are required for a Web page that should
-be limited to certain users. *Authentication* is about verifying whether
-someone is who they claim to be. It usually involves a username and a
+be limited to certain users. Authentication is about verifying whether
+someone is who he claims he is. It usually involves a username and a
 password, but may include any other methods of demonstrating identity, such
-as a smart card, fingerprints, etc. *Authorization* is finding out if the
-person, once identified (i.e. authenticated), is permitted to manipulate
+as a smart card, fingerprints, etc. Authorization is finding out if the
+person, once identified (authenticated), is permitted to manipulate
 specific resources. This is usually determined by finding out if that
 person is of a particular role that has access to the resources.
 
@@ -29,23 +29,25 @@ information about the user.
 Defining Identity Class
 -----------------------
 
-As mentioned above, authentication is about validating the identity of the user. A typical Web application authentication implementation usually involves using a username and password combination to verify a user's identity. However, it may include other methods and different implementations may be required. To accommodate varying authentication methods, the Yii auth framework introduces the identity class.
-
-We define an identity class which contains the actual authentication logic. The identity class should implement the [IUserIdentity] interface. Different identity classes can be
-implemented for different authentication approaches (e.g. OpenID, LDAP, Twitter OAuth, Facebook Connect). A good start when writing your own implementation is to extend [CUserIdentity] which is a base class for the authentication approach using a username and password.
+In order to authenticate a user, we define an identity class which
+contains the actual authentication logic. The identity class should
+implement the [IUserIdentity] interface. Different classes may be
+implemented for different authentication approaches (e.g. OpenID, LDAP). A
+good start is by extending [CUserIdentity] which is a base class for the
+authentication approach based on username and password.
 
 The main work in defining an identity class is the implementation of the
-[IUserIdentity::authenticate] method. This is the method used to encapsulate the main details of the authentication approach. An identity class may also declare
+[IUserIdentity::authenticate] method. An identity class may also declare
 additional identity information that needs to be persistent during the user
 session.
 
-#### An Example
-
-In the following example, we use an identity class to demonstrate using a database approach to authentication. This is typical in Web applications. A user will enter their username and password into a login form, and then we validate these credentials, using [ActiveRecord](/doc/guide/database.ar), against a user table in the database . There are actually a few things being demonstrated in this single example:
-
-1. The implementation of the `authenticate()` method to use the database to validate credentials.
-2. Overriding the `CUserIdentity::getId()` method to return the `_id` property because the default implementation returns the username as the ID.
-3. Using the `setState()` ([CBaseUserIdentity::setState]) method to demonstrate storing other information that can easily be retrieved upon subsequent requests.
+In the following example, we validate the given username and password
+against the user table in a database using [Active
+Record](/doc/guide/database.ar). We also override the `getId` method to
+return the `_id` variable which is set during authentication (the default
+implementation would return the username as the ID). During authentication,
+we store the retrieved `title` information in a state with the same name by
+calling [CBaseUserIdentity::setState].
 
 ~~~
 [php]
@@ -57,7 +59,7 @@ class UserIdentity extends CUserIdentity
 		$record=User::model()->findByAttributes(array('username'=>$this->username));
 		if($record===null)
 			$this->errorCode=self::ERROR_USERNAME_INVALID;
-		else if(!CPasswordHelper::verifyPassword($this->password,$record->password))
+		else if($record->password!==md5($this->password))
 			$this->errorCode=self::ERROR_PASSWORD_INVALID;
 		else
 		{
@@ -75,8 +77,12 @@ class UserIdentity extends CUserIdentity
 }
 ~~~
 
-When we cover login and logout in the next section, we'll see that we pass this identity class into the login method for a user. Any information that we store in a state (by calling [CBaseUserIdentity::setState]) will be passed to [CWebUser], which in turn will store them in a persistent storage, such as session.
-This information can then be accessed like properties of [CWebUser]. In our example, we stored the user title information via `$this->setState('title', $record->title);`. Once we complete our login process, we can obtain the `title` information of the current user by simply using `Yii::app()->user->title`.
+Information stored in a state (by calling [CBaseUserIdentity::setState]) will be passed
+to [CWebUser] which stores them in a persistent storage, such as session.
+These information can be accessed like properties of [CWebUser]. For example, we
+can obtain the `title` information of the current user by `Yii::app()->user->title`
+(This has been available since version 1.0.3. In prior versions, we should use
+`Yii::app()->user->getState('title')`, instead.)
 
 > Info: By default, [CWebUser] uses session as persistent storage for user
 identity information. If cookie-based login is enabled (by setting
@@ -84,14 +90,11 @@ identity information. If cookie-based login is enabled (by setting
 also be saved in cookie. Make sure you do not declare sensitive information
 (e.g. password) to be persistent.
 
-### Storing passwords in the database
-
-Secure storage of user passwords in a database requires some care. An attacker that has stolen your user table (or a backup of it) can recover passwords using standard techniques if you don't protect against them. The above code example uses Yii built-in [CPasswordHelper] to hash the password and to validate it (since version 1.1.14). [CPasswordHelper::hashPassword] returns hashes that are very hard to crack.
-
 Login and Logout
 ----------------
 
-Now that we have seen an example of creating a user identity, we use this to help ease the implementation of our needed login and logout actions. The following code demonstrates how this is accomplished:
+Using the identity class and the user component, we can
+implement login and logout actions easily.
 
 ~~~
 [php]
@@ -105,13 +108,6 @@ else
 // Logout the current user
 Yii::app()->user->logout();
 ~~~
-
-Here we are creating a new UserIdentity object and passing in the authentication credentials (i.e. the `$username` and `$password` values submitted by the user) to its constructor. We then simply call the `authenticate()` method. If successful, we pass the identity information into the [CWebUser::login] method, which will store the identity information into persistent storage (PHP session by default) for retrieval upon subsequent requests. If the authentication fails, we can interrogate the `errorMessage` property for more information as to why it failed.
-
-Whether or not a user has been authenticated can easily be checked throughout the application by using `Yii::app()->user->isGuest`. If using persistent storage like session (the default) and/or a cookie (discussed below) to store the identity information, the user can remain logged in upon subsequent requests. In this case, we don't need to use the UserIdentity class and the entire login process upon each request. Rather CWebUser will automatically take care of loading the identity information from this persistent storage and will use it to determine whether `Yii::app()->user->isGuest` returns true or false.
-
-Cookie-based Login
-------------------
 
 By default, a user will be logged out after a certain period of inactivity,
 depending on the [session configuration](http://www.php.net/manual/en/session.configuration.php).
@@ -128,44 +124,6 @@ this feature requires the user's browser to accept cookies.
 Yii::app()->user->login($identity,3600*24*7);
 ~~~
 
-As we mentioned above, when cookie-based login is enabled, the states
-stored via [CBaseUserIdentity::setState] will be saved in the cookie as well.
-The next time when the user is logged in, these states will be read from
-the cookie and made accessible via `Yii::app()->user`.
-
-Although Yii has measures to prevent the state cookie from being tampered
-on the client side, we strongly suggest that security sensitive information be not
-stored as states. Instead, these information should be restored on the server
-side by reading from some persistent storage on the server side (e.g. database).
-
-In addition, for any serious Web applications, we recommend using the following
-strategy to enhance the security of cookie-based login.
-
-* When a user successfully logs in by filling out a login form, we generate and
-store a random key in both the cookie state and in persistent storage on server side
-(e.g. database).
-
-* Upon a subsequent request, when the user authentication is being done via the cookie information, we compare the two copies
-of this random key and ensure a match before logging in the user.
-
-* If the user logs in via the login form again, the key needs to be re-generated.
-
-By using the above strategy, we eliminate the possibility that a user may re-use
-an old state cookie which may contain outdated state information.
-
-To implement the above strategy, we need to override the following two methods:
-
-* [CUserIdentity::authenticate()]: this is where the real authentication is performed.
-If the user is authenticated, we should re-generate a new random key, and store it
-in the database as well as in the identity states via [CBaseUserIdentity::setState].
-
-* [CWebUser::beforeLogin()]: this is called when a user is being logged in.
-We should check if the key obtained from the state cookie is the same as the one
-from the database.
-
-
-
-
 Access Control Filter
 ---------------------
 
@@ -175,8 +133,9 @@ authorization is based on user's name, client IP address and request types.
 It is provided as a filter named as
 ["accessControl"|CController::filterAccessControl].
 
-> Tip: Access control filter is sufficient for simple scenarios. For more
-complex access control you may use role-based access (RBAC), which we will cover in the next subsection.
+> Tip: Access control filter is sufficient for simple scenarios. For
+complex access control, you may use role-based access (RBAC) which is to be
+covered shortly.
 
 To control the access to actions in a controller, we install the access
 control filter by overriding [CController::filters] (see
@@ -229,8 +188,9 @@ class PostController extends CController
 ~~~
 
 The above code specifies three rules, each represented as an array. The
-first element of the array is either `'allow'` or `'deny'` and the other
-name-value pairs specify the pattern parameters of the rule. The rules defined above are interpreted as follows: the `create` and `edit` actions cannot be executed by anonymous
+first element of the array is either `'allow'` or `'deny'` and the rest
+name-value pairs specify the pattern parameters of the rule. These rules
+read: the `create` and `edit` actions cannot be executed by anonymous
 users; the `delete` action can be executed by users with `admin` role;
 and the `delete` action cannot be executed by anyone.
 
@@ -250,12 +210,12 @@ be executed.
 >     // ... other rules...
 >     // the following rule denies 'delete' action for all contexts
 >     array('deny',
->         'actions'=>array('delete'),
+>         'action'=>array('delete'),
 >     ),
 > );
 > ~~~
-> The reason for this rule is because if none of the rules matches a context, then the action will continue to be executed.
-
+> The reason for this rule is because if none of the rules matches a context,
+> an action will be executed.
 
 An access rule can match the following context parameters:
 
@@ -264,6 +224,7 @@ matches. This should be an array of action IDs. The comparison is case-insensiti
 
    - [controllers|CAccessRule::controllers]: specifies which controllers this rule
 matches. This should be an array of controller IDs. The comparison is case-insensitive.
+This option has been available since version 1.0.4.
 
    - [users|CAccessRule::users]: specifies which users this rule matches.
 The current user's [name|CWebUser::name] is used for matching. The comparison
@@ -274,7 +235,7 @@ is case-insensitive. Three special characters can be used here:
 	   - `@`: authenticated users.
 
    - [roles|CAccessRule::roles]: specifies which roles that this rule matches.
-This makes use of the [role-based access control](/doc/guide/topics.auth#role-based-access-control)
+This makes use of the [role-based access control](#role-based-access-control)
 feature to be described in the next subsection. In particular, the rule
 is applied if [CWebUser::checkAccess] returns true for one of the roles.
 Note, you should mainly use roles in an `allow` rule because by definition,
@@ -290,11 +251,10 @@ matches.
 
    - [expression|CAccessRule::expression]: specifies a PHP expression whose value
 indicates whether this rule matches. In the expression, you can use variable `$user`
-which refers to `Yii::app()->user`.
+which refers to `Yii::app()->user`. This option has been available since version 1.0.3.
 
 
-Handling Authorization Result
------------------------------
+### Handling Authorization Result
 
 When authorization fails, i.e., the user is not allowed to perform the
 specified action, one of the following two scenarios may happen:
@@ -383,7 +343,7 @@ Using authorization items, we can build up an *authorization
 hierarchy*. An item `A` is a parent of another item `B` in the
 hierarchy if `A` consists of `B` (or say `A` inherits the permission(s)
 represented by `B`). An item can have multiple child items, and it can also
-have multiple parent items. Therefore, an authorization hierarchy is a
+have multipe parent items. Therefore, an authorization hierarchy is a
 partial-order graph rather than a tree. In this hierarchy, role items sit
 on top levels, operation items on bottom levels, while task items in
 between.
@@ -407,8 +367,7 @@ if(Yii::app()->user->checkAccess('deletePost'))
 }
 ~~~
 
-Configuring Authorization Manager
----------------------------------
+### Configuring Authorization Manager
 
 Before we set off to define an authorization hierarchy and perform access
 checking, we need to configure the
@@ -439,8 +398,7 @@ return array(
 We can then access the [authManager|CWebApplication::authManager]
 application component using `Yii::app()->authManager`.
 
-Defining Authorization Hierarchy
---------------------------------
+### Defining Authorization Hierarchy
 
 Defining authorization hierarchy involves three steps: defining
 authorization items, establishing relationships between authorization
@@ -508,18 +466,13 @@ $auth->assign('editor','editorC');
 $auth->assign('admin','adminD');
 ~~~
 
-Once we have established this hierarchy, the [authManager|CWebApplication::authManager] component (e.g.
-[CPhpAuthManager], [CDbAuthManager]) will load the authorization
-items automatically. Therefore, we only need to run the above code one time, and NOT for every request.
-
 > Info: While the above example looks long and tedious, it is mainly for
-> demonstrative purposes. Developers will usually need to develop some administrative user
-> interfaces so that end users can establish an authorization
-> hierarchy more intuitively.
+demonstrative purpose. Developers usually need to develop some user
+interfaces so that end users can use to establish an authorization
+hierarchy more intuitively.
 
 
-Using Business Rules
---------------------
+### Using Business Rules
 
 When we are defining the authorization hierarchy, we can associate a role, a task or an operation with a so-called *business rule*. We may also associate a business rule when we assign a role to a user. A business rule is a piece of PHP code that is executed when we perform access checking. The returning value of the code is used to determine if the role or assignment applies to the current user. In the example above, we associated a business rule with the `updateOwnPost` task. In the business rule we simply check if the current user ID is the same as the specified post's author ID. The post information in the `$params` array is supplied by developers when performing access checking.
 
@@ -542,7 +495,7 @@ if(Yii::app()->user->checkAccess('createPost'))
 
 If the authorization rule is associated with a business rule which
 requires additional parameters, we can pass them as well. For example, to
-check if a user can update a post, we would pass in the post data in the `$params`:
+check if a user can update a post, we would do
 
 ~~~
 [php]
@@ -556,19 +509,21 @@ if(Yii::app()->user->checkAccess('updateOwnPost',$params))
 
 ### Using Default Roles
 
+> Note: The default role feature has been available since version 1.0.3
+
 Many Web applications need some very special roles that would be assigned to
 every or most of the system users. For example, we may want to assign some
 privileges to all authenticated users. It poses a lot of maintenance trouble
 if we explicitly specify and store these role assignments. We can exploit
 *default roles* to solve this problem.
 
-A default role is a role that is implicitly assigned to every user. We do not 
-need to explicitly assign it to a user.
+A default role is a role that is implicitly assigned to every user, including
+both authenticated and guest. We do not need to explicitly assign it to a user.
 When [CWebUser::checkAccess] is invoked, default roles will be checked first as if they are
 assigned to the user.
 
 Default roles must be declared in the [CAuthManager::defaultRoles] property.
-For example, the following configuration declares two roles to be default roles: `authenticated` and `admin`.
+For example, the following configuration declares two roles to be default roles: `authenticated` and `guest`.
 
 ~~~
 [php]
@@ -576,7 +531,7 @@ return array(
 	'components'=>array(
 		'authManager'=>array(
 			'class'=>'CDbAuthManager',
-			'defaultRoles'=>array('authenticated', 'admin'),
+			'defaultRoles'=>array('authenticated', 'guest'),
 		),
 	),
 );
@@ -585,21 +540,16 @@ return array(
 Because a default role is assigned to every user, it usually needs to be
 associated with a business rule that determines whether the role
 really applies to the user. For example, the following code defines two
-roles, `authenticated` and `admin`, which effectively apply to authenticated
-users and users with the username `admin`, respectively.
+roles, `authenticated` and `guest`, which effectively apply to authenticated
+users and guest users, respectively.
 
 ~~~
 [php]
 $bizRule='return !Yii::app()->user->isGuest;';
 $auth->createRole('authenticated', 'authenticated user', $bizRule);
 
-$bizRule='return Yii::app()->user->name === "admin";';
-$auth->createRole('admin', 'admin user', $bizRule);
+$bizRule='return Yii::app()->user->isGuest;';
+$auth->createRole('guest', 'guest user', $bizRule);
 ~~~
-
-> Info: Since version 1.1.11 the `$params` array passed to a business rule has a key named
-> `userId` whose value is the id of the user the business rule is checked for.
-> You would need this if you call [CDbAuthManager::checkAccess()] or [CPhpAuthManager::checkAccess()] in places
-> where `Yii::app()->user` is not available or not the user you are checking access for.
 
 <div class="revision">$Id$</div>

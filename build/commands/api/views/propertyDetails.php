@@ -17,7 +17,9 @@ property
 <?php echo $this->renderPropertySignature($property); ?>
 </div>
 
-<p><?php echo $property->description; ?></p>
+<p>
+<?php echo $property->description; ?>
+</p>
 
 <?php $this->renderPartial('seeAlso',array('object'=>$property)); ?>
 

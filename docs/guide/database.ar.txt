@@ -12,7 +12,7 @@ Each AR class represents a database table (or view) whose attributes are
 represented as the AR class properties, and an AR instance represents a row
 in that table. Common CRUD operations are implemented as AR methods. As a
 result, we can access our data in a more object-oriented way. For example,
-we can use the following code to insert a new row to the `tbl_post` table:
+we can use the following code to insert a new row to the `Post` table:
 
 ~~~
 [php]
@@ -30,11 +30,11 @@ you should replace `AUTOINCREMENT` with `AUTO_INCREMENT` in the following SQL.
 
 ~~~
 [sql]
-CREATE TABLE tbl_post (
+CREATE TABLE Post (
 	id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 	title VARCHAR(128) NOT NULL,
 	content TEXT NOT NULL,
-	create_time INTEGER NOT NULL
+	createTime INTEGER NOT NULL
 );
 ~~~
 
@@ -77,11 +77,13 @@ Support for AR is limited by DBMS. Currently, only the following DBMS are
 supported:
 
    - [MySQL 4.1 or later](http://www.mysql.com)
-   - [MariaDB](https://mariadb.com)
    - [PostgreSQL 7.3 or later](http://www.postgres.com)
    - [SQLite 2 and 3](http://www.sqlite.org)
    - [Microsoft SQL Server 2000 or later](http://www.microsoft.com/sqlserver/)
    - [Oracle](http://www.oracle.com)
+
+> Note: The support for Microsoft SQL Server has been available since version 1.0.4;
+> And the support for Oracle has been available since version 1.0.5.
 
 If you want to use an application component other than `db`, or if you
 want to work with multiple databases using AR, you should override
@@ -101,7 +103,7 @@ To access a database table, we first need to define an AR class by
 extending [CActiveRecord]. Each AR class represents a single database
 table, and an AR instance represents a row in that table. The following
 example shows the minimal code needed for the AR class representing the
-`tbl_post` table.
+`Post` table.
 
 ~~~
 [php]
@@ -110,11 +112,6 @@ class Post extends CActiveRecord
 	public static function model($className=__CLASS__)
 	{
 		return parent::model($className);
-	}
-
-	public function tableName()
-	{
-		return 'tbl_post';
 	}
 }
 ~~~
@@ -137,21 +134,8 @@ name. Override the [tableName()|CActiveRecord::tableName] method if they
 are different. The [model()|CActiveRecord::model] method is declared as
 such for every AR class (to be explained shortly).
 
-> Info: To use the [table prefix feature](/doc/guide/database.dao#using-table-prefix),
-> the [tableName()|CActiveRecord::tableName] method
-> for an AR class may be overridden as follows,
-> ~~~
-> [php]
-> public function tableName()
-> {
->     return '{{post}}';
-> }
-> ~~~
-> That is, instead of returning the fully qualified table name, we return
-> the table name without the prefix and enclose it in double curly brackets.
-
 Column values of a table row can be accessed as properties of the
-corresponding AR instance. For example, the following code sets the
+corresponding AR class instance. For example, the following code sets the
 `title` column (attribute):
 
 ~~~
@@ -162,27 +146,19 @@ $post->title='a sample post';
 
 Although we never explicitly declare the `title` property in the `Post`
 class, we can still access it in the above code. This is because `title` is
-a column in the `tbl_post` table, and CActiveRecord makes it accessible as a
+a column in the `Post` table, and CActiveRecord makes it accessible as a
 property with the help of the PHP `__get()` magic method. An exception will
 be thrown if we attempt to access a non-existing column in the same way.
 
-> Info: In this guide, we use lower case for all table names and column names.
-This is because different DBMS handle case-sensitivity differently.
-For example, PostgreSQL treats column names as case-insensitive
+> Info: In this guide, we name columns using camel cases (e.g. `createTime`).
+This is because columns are accessed in the way as normal object properties
+which also uses camel-case naming. While using camel case does make our PHP
+code look more consistent in naming, it may introduce case-sensitivity problem
+for some DBMS. For example, PostgreSQL treats column names as case-insensitive
 by default, and we must quote a column in a query condition if the column
-contains mixed-case letters. Using lower case would help eliminate this problem.
-
-AR relies on well defined primary keys of tables. If a table does not have a primary key, it is required that the corresponding AR class specify which column(s) should be the primary key by overriding the `primaryKey()` method as follows,
-
-~~~
-[php]
-public function primaryKey()
-{
-	return 'id';
-	// For composite primary key, return an array like the following
-	// return array('pk1', 'pk2');
-}
-~~~
+contains mixed-case letters. For this reason, it may be wise to name columns
+(and also tables) only in lower-case letters (e.g. `create_time`) to avoid
+any potential case-sensitivity issues.
 
 
 Creating Record
@@ -198,7 +174,7 @@ insertion.
 $post=new Post;
 $post->title='sample post';
 $post->content='content for the sample post';
-$post->create_time=time();
+$post->createTime=time();
 $post->save();
 ~~~
 
@@ -225,7 +201,7 @@ $post=new Post;
 echo $post->title;  // this would display: please enter a title
 ~~~
 
-An attribute can be assigned a value of [CDbExpression]
+Starting from version 1.0.2, an attribute can be assigned a value of [CDbExpression]
 type before the record is saved (either insertion or updating) to the database.
 For example, in order to save a timestamp returned by the MySQL `NOW()` function,
 we can use the following code:
@@ -233,8 +209,8 @@ we can use the following code:
 ~~~
 [php]
 $post=new Post;
-$post->create_time=new CDbExpression('NOW()');
-// $post->create_time='NOW()'; will not work because
+$post->createTime=new CDbExpression('NOW()');
+// $post->createTime='NOW()'; will not work because
 // 'NOW()' will be treated as a string
 $post->save();
 ~~~
@@ -244,7 +220,7 @@ cumbersom SQL statements, we often want to know what SQL statements are executed
 by AR underneath. This can be achieved by turning on the [logging feature](/doc/guide/topics.logging)
 of Yii. For example, we can turn on [CWebLogRoute] in the application configuration,
 and we will see the executed SQL statements being displayed at the end of each Web page.
-We can set [CDbConnection::enableParamLogging] to be true in
+Since version 1.0.5, we can set [CDbConnection::enableParamLogging] to be true in
 the application configuration so that the parameter values bound to the SQL
 statements are also logged.
 
@@ -444,7 +420,7 @@ anything coming from the client side.
 
 AR performs data validation automatically when
 [save()|CActiveRecord::save] is being invoked. The validation is based on
-the rules specified in the [rules()|CModel::rules] method of the AR class.
+the rules specified by in the [rules()|CModel::rules] method of the AR class.
 For more details about how to specify validation rules, refer to
 the [Declaring Validation Rules](/doc/guide/form.model#declaring-validation-rules)
 section. Below is the typical workflow needed by saving a record:
@@ -522,7 +498,8 @@ after an AR instance is deleted.
 every AR instance created using the `new` operator.
 
    - [beforeFind|CActiveRecord::beforeFind]: this is invoked before an AR finder
-is used to perform a query (e.g. `find()`, `findAll()`).
+is used to perform a query (e.g. `find()`, `findAll()`). This has been available
+since version 1.0.9.
 
    - [afterFind|CActiveRecord::afterFind]: this is invoked after every AR
 instance created as a result of query.
@@ -547,15 +524,12 @@ try
 	// we therefore use a transaction to ensure consistency and integrity
 	$post=$model->findByPk(10);
 	$post->title='new post title';
-	if($post->save())
-		$transaction->commit();
-	else
-		$transaction->rollback();
+	$post->save();
+	$transaction->commit();
 }
 catch(Exception $e)
 {
-	$transaction->rollback();
-	throw $e;
+	$transaction->rollBack();
 }
 ~~~
 
@@ -563,7 +537,8 @@ catch(Exception $e)
 Named Scopes
 ------------
 
-> Info: The original idea of named scopes came from Ruby on Rails.
+> Note: The support for named scopes has been available since version 1.0.5.
+> The original idea of named scopes came from Ruby on Rails.
 
 A *named scope* represents a *named* query criteria that can be combined with other named scopes and applied to an active record query.
 
@@ -581,7 +556,7 @@ class Post extends CActiveRecord
 				'condition'=>'status=1',
 			),
 			'recently'=>array(
-				'order'=>'create_time DESC',
+				'order'=>'createTime DESC',
 				'limit'=>5,
 			),
 		);
@@ -589,7 +564,7 @@ class Post extends CActiveRecord
 }
 ~~~
 
-Each named scope is declared as an array which can be used to initialize a [CDbCriteria] instance. For example, the `recently` named scope specifies that the `order` property to be `create_time DESC` and the `limit` property to be 5, which translates to a query criteria that should bring back the most recent 5 posts.
+Each named scope is declared as an array which can be used to initialize a [CDbCriteria] instance. For example, the `recently` named scope specifies that the `order` property to be `createTime DESC` and the `limit` property to be 5, which translates to a query criteria that should bring back the most recent 5 posts.
 
 Named scopes are mostly used as modifiers to the `find` method calls. Several named scopes may be chained together and result in a more restrictive query result set. For example, to find the recently published posts, we can use the following code:
 
@@ -599,6 +574,13 @@ $posts=Post::model()->published()->recently()->findAll();
 ~~~
 
 In general, named scopes must appear to the left of a `find` method call. Each of them provides a query criteria, which is combined with other criterias, including the one passed to the `find` method call. The net effect is like adding a list of filters to a query.
+
+Starting from version 1.0.6, named scopes can also be used with `update` and `delete` methods. For example, the following code would delete all recently published posts:
+
+~~~
+[php]
+Post::model()->published()->recently()->delete();
+~~~
 
 > Note: Named scopes can only be used with class-level methods. That is, the method must be called using `ClassName::model()`.
 
@@ -612,7 +594,7 @@ Named scopes can be parameterized. For example, we may want to customize the num
 public function recently($limit=5)
 {
 	$this->getDbCriteria()->mergeWith(array(
-		'order'=>'create_time DESC',
+		'order'=>'createTime DESC',
 		'limit'=>$limit,
 	));
 	return $this;
@@ -629,9 +611,9 @@ $posts=Post::model()->published()->recently(3)->findAll();
 If we do not supply the parameter 3 in the above, we would retrieve the 5 recently published posts by default.
 
 
-### Default Scope
+### Default Named Scope
 
-A model class can have a default scope that would be applied for all queries (including relational ones) about the model. For example, a website supporting multiple languages may only want to display contents that are in the language the current user specifies. Because there may be many queries about the site contents, we can define a default scope to solve this problem. To do so, we override the [CActiveRecord::defaultScope] method as follows,
+A model class can have a default named scope that would be applied for all queries (including relational ones) about the model. For example, a website supporting multiple languages may only want to display contents that are in the language the current user specifies. Because there may be many queries about the site contents, we can define a default named scope to solve this problem. To do so, we override the [CActiveRecord::defaultScope] method as follows,
 
 ~~~
 [php]
@@ -653,7 +635,6 @@ Now, if the following method call will automatically use the query criteria as d
 $contents=Content::model()->findAll();
 ~~~
 
-> Note: Default scope and named scopes only apply to `SELECT` queries. They are ignored for `INSERT`, `UPDATE` and `DELETE` queries.
-> Also, when declaring a scope (default or named), the AR class cannot be used to make DB queries in the method that declares the scope.
+Note that default named scope only applies to `SELECT` queries. It is ignored for `INSERT`, `UPDATE` and `DELETE` queries.
 
 <div class="revision">$Id$</div>

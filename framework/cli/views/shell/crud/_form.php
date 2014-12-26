@@ -7,36 +7,27 @@
  * - $columns: a list of column schema objects
  */
 ?>
-<div class="form">
+<div class="yiiForm">
 
-<?php echo "<?php \$form=\$this->beginWidget('CActiveForm', array(
-	'id'=>'".$this->class2id($modelClass)."-form',
-	'enableAjaxValidation'=>false,
-)); ?>\n"; ?>
+<p>
+Fields with <span class="required">*</span> are required.
+</p>
 
-	<p class="note">Fields with <span class="required">*</span> are required.</p>
+<?php echo "<?php echo CHtml::beginForm(); ?>\n"; ?>
 
-	<?php echo "<?php echo \$form->errorSummary(\$model); ?>\n"; ?>
+<?php echo "<?php echo CHtml::errorSummary(\$model); ?>\n"; ?>
 
-<?php
-foreach($columns as $column)
-{
-	if($column->isPrimaryKey)
-		continue;
-?>
-	<div class="row">
-		<?php echo "<?php echo ".$this->generateActiveLabel($modelClass,$column)."; ?>\n"; ?>
-		<?php echo "<?php echo ".$this->generateActiveField($modelClass,$column)."; ?>\n"; ?>
-		<?php echo "<?php echo \$form->error(\$model,'{$column->name}'); ?>\n"; ?>
-	</div>
+<?php foreach($columns as $name=>$column): ?>
+<div class="simple">
+<?php echo "<?php echo ".$this->generateInputLabel($modelClass,$column)."; ?>\n"; ?>
+<?php echo "<?php echo ".$this->generateInputField($modelClass,$column)."; ?>\n"; ?>
+</div>
+<?php endforeach; ?>
 
-<?php
-}
-?>
-	<div class="row buttons">
-		<?php echo "<?php echo CHtml::submitButton(\$model->isNewRecord ? 'Create' : 'Save'); ?>\n"; ?>
-	</div>
+<div class="action">
+<?php echo "<?php echo CHtml::submitButton(\$update ? 'Save' : 'Create'); ?>\n"; ?>
+</div>
 
-<?php echo "<?php \$this->endWidget(); ?>\n"; ?>
+<?php echo "<?php echo CHtml::endForm(); ?>\n"; ?>
 
-</div><!-- form -->
+</div><!-- yiiForm -->

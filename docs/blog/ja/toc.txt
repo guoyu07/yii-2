@@ -1,6 +1,6 @@
 * さあはじめよう
-    - [はじめに](start.overview)
-    - [Yii の試運転](start.testdrive)
+	- [はじめに](start.overview)
+    - [Yiiの試運転](start.testdrive)
     - [要求分析](start.requirements)
     - [全体の設計](start.design)
 
@@ -11,25 +11,26 @@
     - [まとめ](prototype.summary)
 
 * 記事の管理
-    - [Post モデルのカスタマイズ](post.model)
-    - [記事の作成と修正](post.create)
-    - [記事の表示](post.display)
-    - [記事の管理](post.admin)
+    - [Customizing Post Model](post.model)
+    - [Creating and Updating Posts](post.create)
+    - [Displaying Posts](post.display)
+    - [Managing Posts](post.admin)
 
 * コメントの管理
-    - [Comment モデルのカスタマイズ](comment.model)
-    - [コメントの作成と表示](comment.create)
-    - [コメントの管理](comment.admin)
+	- [Customizing Comment Model](comment.model)
+    - [Creating and Displaying Comments](comment.create)
+    - [Managing Comments](comment.admin)
 
 * ポートレット
-    - [ユーザメニューポートレットの作成](portlet.menu)
-    - [タグクラウドポートレットの作成](portlet.tags)
-    - [最近のコメントポートレットの作成](portlet.comments)
+	- [Establishing Portlet Architecture](portlet.base)
+	- [Creating User Menu Portlet](portlet.menu)
+	- [Creating Login Portlet](portlet.login)
+	- [Creating Tag Cloud Portlet](portlet.tags)
+	- [Creating Recent Comments Portlet](portlet.comments)
 
 * 最後の仕上げ
-    - [URL をきれいにする](final.url)
-    - [エラーのロギング](final.logging)
-    - [最後のチューンナップと配備](final.deployment)
-    - [将来の拡張](final.future)
-
-<div class="revision">$Id$</div>
+	- [Beautifying URLs](final.url)
+	- [Logging Errors](final.logging)
+    - [Customizing Error Display](final.error)
+    - [Final Tune-up and Deployment](final.deployment)
+    - [Future Enhancements](final.future)

@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -17,11 +17,10 @@
  *
  * See {@link CCache} manual for common cache operations that are supported by CFileCache.
  *
- * @property integer $gCProbability The probability (parts per million) that garbage collection (GC) should be performed
- * when storing a piece of data in the cache. Defaults to 100, meaning 0.01% chance.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.caching
+ * @since 1.0.6
  */
 class CFileCache extends CCache
 {
@@ -31,23 +30,9 @@ class CFileCache extends CCache
 	 */
 	public $cachePath;
 	/**
-	 * @var integer the permission to be set for directory to store cache files
-	 * This value will be used by PHP chmod function.
-	 * Defaults to 0777, meaning the directory can be read, written and executed by all users.
-	 * @since 1.1.16
-	 */
-	public $cachePathMode=0777;
-	/**
 	 * @var string cache file suffix. Defaults to '.bin'.
 	 */
 	public $cacheFileSuffix='.bin';
-	/**
-	 * @var integer the permission to be set for new cache files.
-	 * This value will be used by PHP chmod function.
-	 * Defaults to 0666, meaning the file is read-writable by all users.
-	 * @since 1.1.16
-	 */
-	public $cacheFileMode=0666;
 	/**
 	 * @var integer the level of sub-directories to store cache files. Defaults to 0,
 	 * meaning no sub-directories. If the system has huge number of cache files (e.g. 10K+),
@@ -55,15 +40,6 @@ class CFileCache extends CCache
 	 * The value of this property should not exceed 16 (less than 3 is recommended).
 	 */
 	public $directoryLevel=0;
-	/**
-	 * @var boolean whether cache entry expiration time should be embedded into a physical file.
-	 * Defaults to false meaning that the file modification time will be used to store expire value.
-	 * True value means that first ten bytes of the file would be reserved and used to store expiration time.
-	 * On some systems PHP is not allowed to change file modification time to be in future even with 777
-	 * permissions, so this property could be useful in this case.
-	 * @since 1.1.14
-	 */
-	public $embedExpiry=false;
 
 	private $_gcProbability=100;
 	private $_gced=false;
@@ -71,6 +47,8 @@ class CFileCache extends CCache
 	/**
 	 * Initializes this application component.
 	 * This method is required by the {@link IApplicationComponent} interface.
+	 * It checks the availability of memcache.
+	 * @throws CException if APC cache extension is not loaded or is disabled.
 	 */
 	public function init()
 	{
@@ -78,10 +56,7 @@ class CFileCache extends CCache
 		if($this->cachePath===null)
 			$this->cachePath=Yii::app()->getRuntimePath().DIRECTORY_SEPARATOR.'cache';
 		if(!is_dir($this->cachePath))
-		{
-			mkdir($this->cachePath,$this->cachePathMode,true);
-			chmod($this->cachePath,$this->cachePathMode);
-		}
+			mkdir($this->cachePath,0777,true);
 	}
 
 	/**
@@ -94,7 +69,7 @@ class CFileCache extends CCache
 	}
 
 	/**
-	 * @param integer $value the probability (parts per million) that garbage collection (GC) should be performed
+	 * @param integer the probability (parts per million) that garbage collection (GC) should be performed
 	 * when storing a piece of data in the cache. Defaults to 100, meaning 0.01% chance.
 	 * This number should be between 0 and 1000000. A value 0 meaning no GC will be performed at all.
 	 */
@@ -110,28 +85,25 @@ class CFileCache extends CCache
 
 	/**
 	 * Deletes all values from cache.
-	 * This is the implementation of the method declared in the parent class.
-	 * @return boolean whether the flush operation was successful.
-	 * @since 1.1.5
+	 * Be careful of performing this operation if the cache is shared by multiple applications.
 	 */
-	protected function flushValues()
+	public function flush()
 	{
-		$this->gc(false);
-		return true;
+		return $this->gc(false);
 	}
 
 	/**
 	 * Retrieves a value from cache with a specified key.
 	 * This is the implementation of the method declared in the parent class.
-	 * @param string $key a unique key identifying the cached value
-	 * @return string|boolean the value stored in cache, false if the value is not in the cache or expired.
+	 * @param string a unique key identifying the cached value
+	 * @return string the value stored in cache, false if the value is not in the cache or expired.
 	 */
 	protected function getValue($key)
 	{
 		$cacheFile=$this->getCacheFile($key);
-		if(($time=$this->filemtime($cacheFile))>time())
-			return @file_get_contents($cacheFile,false,null,$this->embedExpiry ? 10 : -1);
-		elseif($time>0)
+		if(($time=@filemtime($cacheFile))>time())
+			return file_get_contents($cacheFile);
+		else if($time>0)
 			@unlink($cacheFile);
 		return false;
 	}
@@ -140,9 +112,9 @@ class CFileCache extends CCache
 	 * Stores a value identified by a key in cache.
 	 * This is the implementation of the method declared in the parent class.
 	 *
-	 * @param string $key the key identifying the value to be cached
-	 * @param string $value the value to be cached
-	 * @param integer $expire the number of seconds in which the cached value will expire. 0 means never expire.
+	 * @param string the key identifying the value to be cached
+	 * @param string the value to be cached
+	 * @param integer the number of seconds in which the cached value will expire. 0 means never expire.
 	 * @return boolean true if the value is successfully stored into cache, false otherwise
 	 */
 	protected function setValue($key,$value,$expire)
@@ -159,15 +131,11 @@ class CFileCache extends CCache
 
 		$cacheFile=$this->getCacheFile($key);
 		if($this->directoryLevel>0)
+			@mkdir(dirname($cacheFile),0777,true);
+		if(@file_put_contents($cacheFile,$value,LOCK_EX)==strlen($value))
 		{
-			$cacheDir=dirname($cacheFile);
-			@mkdir($cacheDir,$this->cachePathMode,true);
-			@chmod($cacheDir,$this->cachePathMode);
-		}
-		if(@file_put_contents($cacheFile,$this->embedExpiry ? $expire.$value : $value,LOCK_EX)!==false)
-		{
-			@chmod($cacheFile,$this->cacheFileMode);
-			return $this->embedExpiry ? true : @touch($cacheFile,$expire);
+			@chmod($cacheFile,0777);
+			return @touch($cacheFile,$expire);
 		}
 		else
 			return false;
@@ -177,15 +145,15 @@ class CFileCache extends CCache
 	 * Stores a value identified by a key into cache if the cache does not contain this key.
 	 * This is the implementation of the method declared in the parent class.
 	 *
-	 * @param string $key the key identifying the value to be cached
-	 * @param string $value the value to be cached
-	 * @param integer $expire the number of seconds in which the cached value will expire. 0 means never expire.
+	 * @param string the key identifying the value to be cached
+	 * @param string the value to be cached
+	 * @param integer the number of seconds in which the cached value will expire. 0 means never expire.
 	 * @return boolean true if the value is successfully stored into cache, false otherwise
 	 */
 	protected function addValue($key,$value,$expire)
 	{
 		$cacheFile=$this->getCacheFile($key);
-		if($this->filemtime($cacheFile)>time())
+		if(@filemtime($cacheFile)>time())
 			return false;
 		return $this->setValue($key,$value,$expire);
 	}
@@ -193,7 +161,7 @@ class CFileCache extends CCache
 	/**
 	 * Deletes a value with the specified key from cache
 	 * This is the implementation of the method declared in the parent class.
-	 * @param string $key the key of the value to be deleted
+	 * @param string the key of the value to be deleted
 	 * @return boolean if no error happens during deletion
 	 */
 	protected function deleteValue($key)
@@ -204,7 +172,7 @@ class CFileCache extends CCache
 
 	/**
 	 * Returns the cache file path given the cache key.
-	 * @param string $key cache key
+	 * @param string cache key
 	 * @return string the cache file path
 	 */
 	protected function getCacheFile($key)
@@ -225,11 +193,10 @@ class CFileCache extends CCache
 
 	/**
 	 * Removes expired cache files.
-	 * @param boolean $expiredOnly whether only expired cache files should be removed.
-	 * If false, all cache files under {@link cachePath} will be removed.
-	 * @param string $path the path to clean with. If null, it will be {@link cachePath}.
+	 * @param boolean whether to removed expired cache files only. If true, all cache files under {@link cachePath} will be removed.
+	 * @param string the path to clean with. If null, it will be {@link cachePath}.
 	 */
-	public function gc($expiredOnly=true,$path=null)
+	protected function gc($expiredOnly=true,$path=null)
 	{
 		if($path===null)
 			$path=$this->cachePath;
@@ -242,22 +209,9 @@ class CFileCache extends CCache
 			$fullPath=$path.DIRECTORY_SEPARATOR.$file;
 			if(is_dir($fullPath))
 				$this->gc($expiredOnly,$fullPath);
-			elseif($expiredOnly && $this->filemtime($fullPath)<time() || !$expiredOnly)
+			else if($expiredOnly && @filemtime($fullPath)<time() || !$expiredOnly)
 				@unlink($fullPath);
 		}
 		closedir($handle);
-	}
-
-	/**
-	 * Returns cache file modification time. {@link $embedExpiry} aware.
-	 * @param string $path to the file, modification time to be retrieved from.
-	 * @return integer file modification time.
-	 */
-	private function filemtime($path)
-	{
-		if($this->embedExpiry)
-			return (int)@file_get_contents($path,false,null,0,10);
-		else
-			return @filemtime($path);
 	}
 }

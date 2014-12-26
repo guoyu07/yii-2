@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -23,12 +23,8 @@
  * $n=count($map);  // returns the number of items in the map
  * </pre>
  *
- * @property boolean $readOnly Whether this map is read-only or not. Defaults to false.
- * @property CMapIterator $iterator An iterator for traversing the items in the list.
- * @property integer $count The number of items in the map.
- * @property array $keys The key list.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.collections
  * @since 1.0
  */
@@ -46,8 +42,8 @@ class CMap extends CComponent implements IteratorAggregate,ArrayAccess,Countable
 	/**
 	 * Constructor.
 	 * Initializes the list with an array or an iterable object.
-	 * @param array $data the initial data. Default is null, meaning no initialization.
-	 * @param boolean $readOnly whether the list is read-only
+	 * @param array the intial data. Default is null, meaning no initialization.
+	 * @param boolean whether the list is read-only
 	 * @throws CException If data is not null and neither an array nor an iterator.
 	 */
 	public function __construct($data=null,$readOnly=false)
@@ -66,7 +62,7 @@ class CMap extends CComponent implements IteratorAggregate,ArrayAccess,Countable
 	}
 
 	/**
-	 * @param boolean $value whether this list is read-only or not
+	 * @param boolean whether this list is read-only or not
 	 */
 	protected function setReadOnly($value)
 	{
@@ -94,7 +90,6 @@ class CMap extends CComponent implements IteratorAggregate,ArrayAccess,Countable
 	}
 
 	/**
-	 * Returns the number of items in the map.
 	 * @return integer the number of items in the map
 	 */
 	public function getCount()
@@ -113,7 +108,7 @@ class CMap extends CComponent implements IteratorAggregate,ArrayAccess,Countable
 	/**
 	 * Returns the item with the specified key.
 	 * This method is exactly the same as {@link offsetGet}.
-	 * @param mixed $key the key
+	 * @param mixed the key
 	 * @return mixed the element at the offset, null if no element is found at the offset
 	 */
 	public function itemAt($key)
@@ -127,26 +122,21 @@ class CMap extends CComponent implements IteratorAggregate,ArrayAccess,Countable
 	/**
 	 * Adds an item into the map.
 	 * Note, if the specified key already exists, the old value will be overwritten.
-	 * @param mixed $key key
-	 * @param mixed $value value
+	 * @param mixed key
+	 * @param mixed value
 	 * @throws CException if the map is read-only
 	 */
 	public function add($key,$value)
 	{
 		if(!$this->_r)
-		{
-			if($key===null)
-				$this->_d[]=$value;
-			else
-				$this->_d[$key]=$value;
-		}
+			$this->_d[$key]=$value;
 		else
 			throw new CException(Yii::t('yii','The map is read only.'));
 	}
 
 	/**
 	 * Removes an item from the map by its key.
-	 * @param mixed $key the key of the item to be removed
+	 * @param mixed the key of the item to be removed
 	 * @return mixed the removed value, null if no such key exists.
 	 * @throws CException if the map is read-only
 	 */
@@ -181,7 +171,7 @@ class CMap extends CComponent implements IteratorAggregate,ArrayAccess,Countable
 	}
 
 	/**
-	 * @param mixed $key the key
+	 * @param mixed the key
 	 * @return boolean whether the map contains an item with the specified key
 	 */
 	public function contains($key)
@@ -200,7 +190,7 @@ class CMap extends CComponent implements IteratorAggregate,ArrayAccess,Countable
 	/**
 	 * Copies iterable data into the map.
 	 * Note, existing data in the map will be cleared first.
-	 * @param mixed $data the data to be copied from, must be an array or object implementing Traversable
+	 * @param mixed the data to be copied from, must be an array or object implementing Traversable
 	 * @throws CException If data is neither an array nor an iterator.
 	 */
 	public function copyFrom($data)
@@ -214,7 +204,7 @@ class CMap extends CComponent implements IteratorAggregate,ArrayAccess,Countable
 			foreach($data as $key=>$value)
 				$this->add($key,$value);
 		}
-		elseif($data!==null)
+		else if($data!==null)
 			throw new CException(Yii::t('yii','Map data must be an array or an object implementing Traversable.'));
 	}
 
@@ -225,13 +215,13 @@ class CMap extends CComponent implements IteratorAggregate,ArrayAccess,Countable
 	 * If the merge is recursive, the following algorithm is performed:
 	 * <ul>
 	 * <li>the map data is saved as $a, and the source data is saved as $b;</li>
-	 * <li>if $a and $b both have an array indexed at the same string key, the arrays will be merged using this algorithm;</li>
-	 * <li>any integer-indexed elements in $b will be appended to $a and reindexed accordingly;</li>
+	 * <li>if $a and $b both have an array indxed at the same string key, the arrays will be merged using this algorithm;</li>
+	 * <li>any integer-indexed elements in $b will be appended to $a and reindxed accordingly;</li>
 	 * <li>any string-indexed elements in $b will overwrite elements in $a with the same index;</li>
 	 * </ul>
 	 *
-	 * @param mixed $data the data to be merged with, must be an array or object implementing Traversable
-	 * @param boolean $recursive whether the merging should be recursive.
+	 * @param mixed the data to be merged with, must be an array or object implementing Traversable
+	 * @param boolean whether the merging should be recursive.
 	 *
 	 * @throws CException If data is neither an array nor an iterator.
 	 */
@@ -259,48 +249,35 @@ class CMap extends CComponent implements IteratorAggregate,ArrayAccess,Countable
 					$this->add($key,$value);
 			}
 		}
-		elseif($data!==null)
+		else if($data!==null)
 			throw new CException(Yii::t('yii','Map data must be an array or an object implementing Traversable.'));
 	}
 
 	/**
-	 * Merges two or more arrays into one recursively.
-	 * If each array has an element with the same string key value, the latter
-	 * will overwrite the former (different from array_merge_recursive).
-	 * Recursive merging will be conducted if both arrays have an element of array
-	 * type and are having the same key.
-	 * For integer-keyed elements, the elements from the latter array will
-	 * be appended to the former array.
-	 * @param array $a array to be merged to
-	 * @param array $b array to be merged from. You can specify additional
-	 * arrays via third argument, fourth argument etc.
+	 * Merges two arrays into one recursively.
+	 * @param array array to be merged to
+	 * @param array array to be merged from
 	 * @return array the merged array (the original arrays are not changed.)
 	 * @see mergeWith
 	 */
 	public static function mergeArray($a,$b)
 	{
-		$args=func_get_args();
-		$res=array_shift($args);
-		while(!empty($args))
+		foreach($b as $k=>$v)
 		{
-			$next=array_shift($args);
-			foreach($next as $k => $v)
-			{
-				if(is_integer($k))
-					isset($res[$k]) ? $res[]=$v : $res[$k]=$v;
-				elseif(is_array($v) && isset($res[$k]) && is_array($res[$k]))
-					$res[$k]=self::mergeArray($res[$k],$v);
-				else
-					$res[$k]=$v;
-			}
+			if(is_integer($k))
+				$a[]=$v;
+			else if(is_array($v) && isset($a[$k]) && is_array($a[$k]))
+				$a[$k]=self::mergeArray($a[$k],$v);
+			else
+				$a[$k]=$v;
 		}
-		return $res;
+		return $a;
 	}
 
 	/**
 	 * Returns whether there is an element at the specified offset.
 	 * This method is required by the interface ArrayAccess.
-	 * @param mixed $offset the offset to check on
+	 * @param mixed the offset to check on
 	 * @return boolean
 	 */
 	public function offsetExists($offset)
@@ -311,7 +288,7 @@ class CMap extends CComponent implements IteratorAggregate,ArrayAccess,Countable
 	/**
 	 * Returns the element at the specified offset.
 	 * This method is required by the interface ArrayAccess.
-	 * @param integer $offset the offset to retrieve element.
+	 * @param integer the offset to retrieve element.
 	 * @return mixed the element at the offset, null if no element is found at the offset
 	 */
 	public function offsetGet($offset)
@@ -322,8 +299,8 @@ class CMap extends CComponent implements IteratorAggregate,ArrayAccess,Countable
 	/**
 	 * Sets the element at the specified offset.
 	 * This method is required by the interface ArrayAccess.
-	 * @param integer $offset the offset to set element
-	 * @param mixed $item the element value
+	 * @param integer the offset to set element
+	 * @param mixed the element value
 	 */
 	public function offsetSet($offset,$item)
 	{
@@ -333,7 +310,7 @@ class CMap extends CComponent implements IteratorAggregate,ArrayAccess,Countable
 	/**
 	 * Unsets the element at the specified offset.
 	 * This method is required by the interface ArrayAccess.
-	 * @param mixed $offset the offset to unset element
+	 * @param mixed the offset to unset element
 	 */
 	public function offsetUnset($offset)
 	{

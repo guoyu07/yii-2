@@ -14,30 +14,16 @@ Each extension has a name that uniquely identifies it among all extensions.
 Given an extension named as `xyz`, we can always use the path alias
 `ext.xyz` to locate its base directory which contains all files of `xyz`.
 
+> Note: The root path alias `ext` has been available since version 1.0.8.
+Previously, we would need to use `application.extensions` to refer to the
+directory containing all extensions. In the following description, we
+assume `ext` is defined. You will need to replace it with `application.extensions`
+if you are using version 1.0.7 or lower.
+
 Different extensions have different requirements about importing,
 configuration and usage. In the following, we summarize common usage scenarios
 about extensions, according to their categorization described in the
 [overview](/doc/guide/extension.overview).
-
-
-Zii Extensions
---------------
-
-Before we start describing the usage of third-party extensions, we would like to introduce
-the Zii extension library, which is a set of extensions developed by the Yii developer team
-and included in every release.
-
-When using a Zii extension, one must refer to the corresponding class using a path alias
-in the form of `zii.path.to.ClassName`. Here the root alias `zii` is predefined by Yii. It refers
-to the root directory of the Zii library. For example, to use [CGridView], we would use the
-following code in a view script when referring to the extension:
-
-~~~
-[php]
-$this->widget('zii.widgets.grid.CGridView', array(
-	'dataProvider'=>$dataProvider,
-));
-~~~
 
 
 Application Component
@@ -112,9 +98,8 @@ because [CApplicationComponent] defines a property named `behaviors`. By setting
 with a list of behavior configurations, the component will attach the corresponding behaviors
 when it is being initialized.
 
-For [CController], [CFormModel] and [CActiveRecord] classes which usually need to be extended,
-attaching behaviors can be done by overriding their `behaviors()` method. The classes will
-automatically attach any behaviors declared in this method during initialization. For example,
+For [CController], [CFormModel] and [CActiveModel] classes which usually need to be extended,
+attaching behaviors is done by overriding their `behaviors()` method. For example,
 
 ~~~
 [php]
@@ -187,7 +172,7 @@ Then, the action can be accessed via [route](/doc/guide/basics.controller#route)
 Filter
 ------
 [Filters](/doc/guide/basics.controller#filter) are also used by a [controller](/doc/guide/basics.controller).
-They mainly pre- and post-process the user request when it is handled by an
+Their mainly pre- and post-process the user request when it is handled by an
 [action](/doc/guide/basics.controller#action).
 Given a filter class `XyzClass` belonging to
 the `xyz` extension, we can use it by overriding the [CController::filters] method
@@ -308,7 +293,6 @@ To use a generic [component](/doc/guide/basics.component), we first
 need to include its class file by using
 
 ~~~
-[php]
 Yii::import('ext.xyz.XyzClass');
 ~~~
 

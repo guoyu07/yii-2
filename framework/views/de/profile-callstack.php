@@ -2,7 +2,7 @@
 <table class="yiiLog" width="100%" cellpadding="2" style="border-spacing:1px;font:11px Verdana, Arial, Helvetica, sans-serif;background:#EEEEEE;color:#666666;">
 	<tr>
 		<th style="background:black;color:white;" colspan="2">
-			Ergebnis der Performance-Analyse anhand des Aufrufstapels
+			Ergebnisse der Leistungsmessung anhand des Aufrufstapels
 		</th>
 	</tr>
 	<tr style="background-color: #ccc;">
@@ -12,7 +12,7 @@
 <?php
 foreach($data as $index=>$entry)
 {
-	$color=($index%2)?'#F5F5F5':'#FFFFFF';
+	$color=($index%2)?'#F5F5F5':'#EBF8FE';
 	list($proc,$time,$level)=$entry;
 	$proc=CHtml::encode($proc);
 	$time=sprintf('%0.5f',$time);

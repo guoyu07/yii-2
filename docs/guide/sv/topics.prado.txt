@@ -133,7 +133,7 @@ fragmentcachen. Till exempel,
 
 ~~~
 [php]
-<?php if($this->beginCache('profile', array('duration'=>3600))): ?>
+<?php if($this->cache('profile', array('duration'=>3600))): ?>
 	// user profile information here
 <?php $this->endCache(); endif; ?>
 ~~~
@@ -174,15 +174,4 @@ view comments that will be stripped off
 --->
 ~~~
 
-Blandning av mallformat
------------------------
-
-Med start från version 1.1.2 är det möjligt att blanda användning av någon alternativ 
-mallsyntax med vanlig PHP-syntax. För att göra så måste propertyn [CViewRenderer::fileExtension]
-i den installerade vyrenderaren konfigureras med ett värde skilt från `.php`. 
-Till exempel om propertyn är satt till `.tpl` kommer varje vyfil med filtillägget `.tpl` 
-att renderas med hjälp av den installerade vyrenderaren, medan alla andra vyfiler med filtillägget 
-`.php` kommer att behandlas som vanliga PHP-vyskript.
-
-
-<div class="revision">$Id: topics.prado.txt 3226 2011-05-18 10:37:47Z mdomba $</div>
+<div class="revision">$Id: topics.prado.txt 417 2008-12-28 05:29:16Z qiang.xue $</div>

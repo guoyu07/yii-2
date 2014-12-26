@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -20,25 +20,34 @@
  * the attributes.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.web
  * @since 1.0
  */
 class CFormModel extends CModel
 {
+	private $_validators;
 	private static $_names=array();
 
 	/**
 	 * Constructor.
-	 * @param string $scenario name of the scenario that this model is used in.
-	 * See {@link CModel::scenario} on how scenario is used by models.
-	 * @see getScenario
+	 * @param array initial attributes (name => value). The attributes
+	 * are subject to filtering via {@link setAttributes}.
+	 * @param string scenario name. See {@link setAttributes} for more details about this parameter.
+	 * This parameter has been available since version 1.0.2.
+	 * As of version 1.0.4, this parameter will be used to set the {@link CModel::scenario scenario}
+	 * property of the model.
+	 * @see setAttributes
 	 */
-	public function __construct($scenario='')
+	public function __construct($attributes=array(),$scenario='')
 	{
 		$this->setScenario($scenario);
+
 		$this->init();
+
+		if($attributes!==array())
+			$this->setAttributes($attributes);
 		$this->attachBehaviors($this->behaviors());
-		$this->afterConstruct();
 	}
 
 	/**
@@ -46,9 +55,25 @@ class CFormModel extends CModel
 	 * This method is invoked in the constructor right after {@link scenario} is set.
 	 * You may override this method to provide code that is needed to initialize the model (e.g. setting
 	 * initial property values.)
+	 * @since 1.0.8
 	 */
 	public function init()
 	{
+	}
+
+	/**
+	 * Returns the name of attributes that are safe to be massively assigned.
+	 * The default implementation simply returns {@link attributeNames}.
+	 * This method may be overridden by child classes.
+	 * See {@link CModel::safeAttributes} for more details about how to
+	 * override this method.
+	 * @return array list of safe attribute names.
+	 * @see CModel::safeAttributes
+	 * @since 1.0.2
+	 */
+	public function safeAttributes()
+	{
+		return $this->attributeNames();
 	}
 
 	/**
@@ -74,5 +99,15 @@ class CFormModel extends CModel
 		}
 		else
 			return self::$_names[$className];
+	}
+
+	/**
+	 * @return array list of validators created according to {@link CModel::rules rules}.
+	 */
+	public function getValidators()
+	{
+		if($this->_validators===null)
+			$this->_validators=$this->createValidators();
+		return $this->_validators;
 	}
 }

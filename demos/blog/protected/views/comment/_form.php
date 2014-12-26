@@ -1,40 +1,63 @@
+<?php if(Yii::app()->user->hasFlash('commentSubmitted')): ?>
 <div class="form">
+<?php echo Yii::app()->user->getFlash('commentSubmitted'); ?>
+</div>
+<?php return; endif; ?>
 
-<?php $form=$this->beginWidget('CActiveForm', array(
-	'id'=>'comment-form',
-	'enableAjaxValidation'=>true,
-)); ?>
+<div class="form">
+<?php echo CHtml::beginForm(); ?>
 
-	<p class="note">Fields with <span class="required">*</span> are required.</p>
+<?php echo CHtml::errorSummary($comment); ?>
 
-	<div class="row">
-		<?php echo $form->labelEx($model,'author'); ?>
-		<?php echo $form->textField($model,'author',array('size'=>60,'maxlength'=>128)); ?>
-		<?php echo $form->error($model,'author'); ?>
+<div class="row">
+<?php echo CHtml::activeLabel($comment,'author'); ?>
+<?php echo CHtml::activeTextField($comment,'author',array('size'=>65,'maxlength'=>128)); ?>
+</div>
+<div class="row">
+<?php echo CHtml::activeLabel($comment,'email'); ?>
+<?php echo CHtml::activeTextField($comment,'email',array('size'=>65,'maxlength'=>128)); ?>
+<p class="hint">
+Your email address will not be published.
+</p>
+</div>
+<div class="row">
+<?php echo CHtml::activeLabel($comment,'url'); ?>
+<?php echo CHtml::activeTextField($comment,'url',array('size'=>65,'maxlength'=>128)); ?>
+</div>
+<div class="row">
+<?php echo CHtml::activeLabel($comment,'content'); ?>
+<?php echo CHtml::activeTextArea($comment,'content',array('rows'=>6, 'cols'=>50)); ?>
+<p class="hint">
+You may use <a href="http://daringfireball.net/projects/markdown/syntax" target="_blank">Markdown syntax</a>.
+</p>
+</div>
+
+<?php if(Yii::app()->user->isGuest && extension_loaded('gd')): ?>
+<div class="row">
+	<?php echo CHtml::activeLabel($comment,'verifyCode'); ?>
+	<div>
+	<?php $this->widget('CCaptcha'); ?>
+	<?php echo CHtml::activeTextField($comment,'verifyCode'); ?>
 	</div>
+	<p class="hint">Please enter the letters as they are shown in the image above.
+	<br/>Letters are not case-sensitive.</p>
+</div>
+<?php endif; ?>
 
-	<div class="row">
-		<?php echo $form->labelEx($model,'email'); ?>
-		<?php echo $form->textField($model,'email',array('size'=>60,'maxlength'=>128)); ?>
-		<?php echo $form->error($model,'email'); ?>
-	</div>
+<div class="row action">
+<?php echo CHtml::submitButton($update ? 'Save' : 'Submit', array('name'=>'submitComment')); ?>
 
-	<div class="row">
-		<?php echo $form->labelEx($model,'url'); ?>
-		<?php echo $form->textField($model,'url',array('size'=>60,'maxlength'=>128)); ?>
-		<?php echo $form->error($model,'url'); ?>
-	</div>
+<?php echo CHtml::submitButton('Preview',array('name'=>'previewComment')); ?>
+</div>
 
-	<div class="row">
-		<?php echo $form->labelEx($model,'content'); ?>
-		<?php echo $form->textArea($model,'content',array('rows'=>6, 'cols'=>50)); ?>
-		<?php echo $form->error($model,'content'); ?>
-	</div>
-
-	<div class="row buttons">
-		<?php echo CHtml::submitButton($model->isNewRecord ? 'Submit' : 'Save'); ?>
-	</div>
-
-<?php $this->endWidget(); ?>
-
+<?php echo CHtml::endForm(); ?>
 </div><!-- form -->
+
+<?php if(isset($_POST['previewComment']) && !$comment->hasErrors()): ?>
+<h3>Preview</h3>
+<div class="comment">
+  <div class="author"><?php echo $comment->authorLink; ?> says:</div>
+  <div class="time"><?php echo date('F j, Y \a\t h:i a',$comment->createTime); ?></div>
+  <div class="content"><?php echo $comment->contentDisplay; ?></div>
+</div><!-- post preview -->
+<?php endif; ?>

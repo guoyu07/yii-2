@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -15,6 +15,7 @@
  * The method name is like 'actionXYZ' where 'XYZ' stands for the action name.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.web.actions
  * @since 1.0
  */
@@ -29,24 +30,5 @@ class CInlineAction extends CAction
 	{
 		$method='action'.$this->getId();
 		$this->getController()->$method();
-	}
-
-	/**
-	 * Runs the action with the supplied request parameters.
-	 * This method is internally called by {@link CController::runAction()}.
-	 * @param array $params the request parameters (name=>value)
-	 * @return boolean whether the request parameters are valid
-	 * @since 1.1.7
-	 */
-	public function runWithParams($params)
-	{
-		$methodName='action'.$this->getId();
-		$controller=$this->getController();
-		$method=new ReflectionMethod($controller, $methodName);
-		if($method->getNumberOfParameters()>0)
-			return $this->runWithParamsInternal($controller, $method, $params);
-
-		$controller->$methodName();
-		return true;
 	}
 }

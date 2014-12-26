@@ -7,17 +7,18 @@
  * Copyright © 1991-2007 Unicode, Inc. All rights reserved.
  * Distributed under the Terms of Use in http://www.unicode.org/copyright.html.
  *
- * @copyright 2008-2013 Yii Software LLC (http://www.yiiframework.com/license/)
+ * Copyright © 2008-2009 Yii Software LLC (http://www.yiiframework.com/license/)
  */
 return array (
-  'version' => '5798',
+  'version' => '1.19',
   'numberSymbols' => 
   array (
-    'alias' => '',
     'decimal' => '.',
     'group' => ',',
     'list' => ';',
     'percentSign' => '%',
+    'nativeZeroDigit' => '0',
+    'patternDigit' => '#',
     'plusSign' => '+',
     'minusSign' => '-',
     'exponential' => 'E',
@@ -31,27 +32,13 @@ return array (
   'currencyFormat' => '¤ #,##0.00',
   'currencySymbols' => 
   array (
-    'AUD' => 'AU$',
     'BRL' => 'R$',
-    'CAD' => 'CA$',
-    'CNY' => 'CN¥',
     'EUR' => '€',
-    'GBP' => '£',
-    'HKD' => 'HK$',
-    'ILS' => '₪',
-    'INR' => '₹',
+    'GBP' => 'UK£',
+    'INR' => '0≤Rs.|1≤Re.|1<Rs.',
+    'ITL' => 'IT₤',
     'JPY' => 'JP¥',
-    'KRW' => '₩',
-    'MXN' => 'MX$',
-    'NZD' => 'NZ$',
-    'THB' => '฿',
-    'TWD' => 'NT$',
     'USD' => 'US$',
-    'VND' => '₫',
-    'XAF' => 'FCFA',
-    'XCD' => 'EC$',
-    'XOF' => 'CFA',
-    'XPF' => 'CFPF',
     'NGN' => '₦',
   ),
   'monthNames' => 
@@ -86,9 +73,6 @@ return array (
       11 => 'Sby',
       12 => 'Sbh',
     ),
-  ),
-  'monthNamesSA' => 
-  array (
     'narrow' => 
     array (
       1 => '1',
@@ -127,9 +111,6 @@ return array (
       5 => 'Jum',
       6 => 'Asa',
     ),
-  ),
-  'weekDayNamesSA' => 
-  array (
     'narrow' => 
     array (
       0 => '1',
@@ -161,14 +142,14 @@ return array (
   ),
   'dateFormats' => 
   array (
-    'full' => 'EEEE, y MMMM dd',
-    'long' => 'y MMMM d',
-    'medium' => 'y MMM d',
+    'full' => 'EEEE, yyyy MMMM dd',
+    'long' => 'yyyy MMMM d',
+    'medium' => 'yyyy MMM d',
     'short' => 'yy/MM/dd',
   ),
   'timeFormats' => 
   array (
-    'full' => 'HH:mm:ss zzzz',
+    'full' => 'HH:mm:ss v',
     'long' => 'HH:mm:ss z',
     'medium' => 'HH:mm:ss',
     'short' => 'HH:mm',
@@ -176,10 +157,4 @@ return array (
   'dateTimeFormat' => '{1} {0}',
   'amName' => 'A.M.',
   'pmName' => 'P.M.',
-  'orientation' => 'ltr',
-  'pluralRules' => 
-  array (
-    0 => 'n==1',
-    1 => 'true',
-  ),
 );

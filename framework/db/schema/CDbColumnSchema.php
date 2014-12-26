@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -12,6 +12,7 @@
  * CDbColumnSchema class describes the column meta data of a database table.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.db.schema
  * @since 1.0
  */
@@ -61,24 +62,13 @@ class CDbColumnSchema extends CComponent
 	 * @var boolean whether this column is a foreign key
 	 */
 	public $isForeignKey;
-	/**
-	 * @var boolean whether this column is auto-incremental
-	 * @since 1.1.7
-	 */
-	public $autoIncrement=false;
-	/**
-	 * @var string comment of this column. Default value is empty string which means that no comment
-	 * has been set for the column. Null value means that RDBMS does not support column comments
-	 * at all (SQLite) or comment retrieval for the active RDBMS is not yet supported by the framework.
-	 * @since 1.1.13
-	 */
-	public $comment='';
+
 
 	/**
 	 * Initializes the column with its DB type and default value.
 	 * This sets up the column's PHP type, size, precision, scale as well as default value.
-	 * @param string $dbType the column's DB type
-	 * @param mixed $defaultValue the default value
+	 * @param string the column's DB type
+	 * @param mixed the default value
 	 */
 	public function init($dbType, $defaultValue)
 	{
@@ -91,15 +81,15 @@ class CDbColumnSchema extends CComponent
 
 	/**
 	 * Extracts the PHP type from DB type.
-	 * @param string $dbType DB type
+	 * @param string DB type
 	 */
 	protected function extractType($dbType)
 	{
-		if(stripos($dbType,'int')!==false && stripos($dbType,'unsigned int')===false)
+		if(stripos($dbType,'int')!==false)
 			$this->type='integer';
-		elseif(stripos($dbType,'bool')!==false)
+		else if(stripos($dbType,'bool')!==false)
 			$this->type='boolean';
-		elseif(preg_match('/(real|floa|doub)/i',$dbType))
+		else if(preg_match('/(real|floa|doub)/i',$dbType))
 			$this->type='double';
 		else
 			$this->type='string';
@@ -107,7 +97,7 @@ class CDbColumnSchema extends CComponent
 
 	/**
 	 * Extracts size, precision and scale information from column's DB type.
-	 * @param string $dbType the column's DB type
+	 * @param string the column's DB type
 	 */
 	protected function extractLimit($dbType)
 	{
@@ -123,7 +113,7 @@ class CDbColumnSchema extends CComponent
 	/**
 	 * Extracts the default value for the column.
 	 * The value is typecasted to correct PHP type.
-	 * @param mixed $defaultValue the default value obtained from metadata
+	 * @param mixed the default value obtained from metadata
 	 */
 	protected function extractDefault($defaultValue)
 	{
@@ -132,21 +122,21 @@ class CDbColumnSchema extends CComponent
 
 	/**
 	 * Converts the input value to the type that this column is of.
-	 * @param mixed $value input value
+	 * @param mixed input value
 	 * @return mixed converted value
 	 */
 	public function typecast($value)
 	{
 		if(gettype($value)===$this->type || $value===null || $value instanceof CDbExpression)
 			return $value;
-		if($value==='' && $this->allowNull)
+		if($value==='')
 			return $this->type==='string' ? '' : null;
 		switch($this->type)
 		{
-			case 'string': return (string)$value;
 			case 'integer': return (integer)$value;
 			case 'boolean': return (boolean)$value;
-			case 'double':
+			case 'double': return (double)$value;
+			case 'string': return (string)$value;
 			default: return $value;
 		}
 	}

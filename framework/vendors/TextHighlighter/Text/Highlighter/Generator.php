@@ -61,7 +61,7 @@ define ('TEXT_HIGHLIGHTER_FILE_READ',        12);
 * @author     Andrey Demenev <demenev@gmail.com>
 * @copyright  2004-2006 Andrey Demenev
 * @license    http://www.php.net/license/3_0.txt  PHP License
-* @version    Release: 0.7.1
+* @version    Release: 0.7.0
 * @link       http://pear.php.net/package/Text_Highlighter
 */
 
@@ -209,10 +209,10 @@ class Text_Highlighter_Generator extends  XML_Parser
     /**
     * Format error message
     *
-    * @param integer $code error code
+    * @param int $code error code
     * @param string $params parameters
     * @param string $fileName file name
-    * @param integer $lineNo line number
+    * @param int $lineNo line number
     * @return  array
     * @access  public
     */
@@ -1010,7 +1010,7 @@ CODE;
         }
 
         $this->_code .= <<<CODE
- 
+
  *
  * PHP version 4 and 5
  *
@@ -1060,12 +1060,12 @@ CODE;
  * @package    Text_Highlighter
  * @copyright  2004-2006 Andrey Demenev
  * @license    http://www.php.net/license/3_0.txt  PHP License
- * @version    Release: 0.7.1
+ * @version    Release: 0.7.0
  * @link       http://pear.php.net/package/Text_Highlighter
  */
 class  Text_Highlighter_{$this->language} extends Text_Highlighter
 {
-    
+
 CODE;
         $this->_code .= 'var $_language = \'' . strtolower($this->language) . "';\n\n";
         $array = var_export($syntax, true);
@@ -1234,7 +1234,7 @@ CODE;
 ;
         \$this->_checkDefines();
     }
-    
+
 }
 CODE;
 }

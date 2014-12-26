@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -22,11 +22,8 @@
  *
  * See {@link CCache} manual for common cache operations that are supported by CDbCache.
  *
- * @property integer $gCProbability The probability (parts per million) that garbage collection (GC) should be performed
- * when storing a piece of data in the cache. Defaults to 100, meaning 0.01% chance.
- * @property CDbConnection $dbConnection The DB connection instance.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.caching
  * @since 1.0
  */
@@ -64,6 +61,16 @@ class CDbCache extends CCache
 	private $_gced=false;
 
 	/**
+	 * Destructor.
+	 * Disconnect the db connection.
+	 */
+	public function __destruct()
+	{
+		if($this->_db!==null)
+			$this->_db->setActive(false);
+	}
+
+	/**
 	 * Initializes this application component.
 	 *
 	 * This method is required by the {@link IApplicationComponent} interface.
@@ -76,6 +83,7 @@ class CDbCache extends CCache
 
 		$db=$this->getDbConnection();
 		$db->setActive(true);
+
 		if($this->autoCreateCacheTable)
 		{
 			$sql="DELETE FROM {$this->cacheTableName} WHERE expire>0 AND expire<".time();
@@ -93,6 +101,7 @@ class CDbCache extends CCache
 	/**
 	 * @return integer the probability (parts per million) that garbage collection (GC) should be performed
 	 * when storing a piece of data in the cache. Defaults to 100, meaning 0.01% chance.
+	 * @since 1.0.9
 	 */
 	public function getGCProbability()
 	{
@@ -100,9 +109,10 @@ class CDbCache extends CCache
 	}
 
 	/**
-	 * @param integer $value the probability (parts per million) that garbage collection (GC) should be performed
+	 * @param integer the probability (parts per million) that garbage collection (GC) should be performed
 	 * when storing a piece of data in the cache. Defaults to 100, meaning 0.01% chance.
 	 * This number should be between 0 and 1000000. A value 0 meaning no GC will be performed at all.
+	 * @since 1.0.9
 	 */
 	public function setGCProbability($value)
 	{
@@ -116,15 +126,15 @@ class CDbCache extends CCache
 
 	/**
 	 * Creates the cache DB table.
-	 * @param CDbConnection $db the database connection
-	 * @param string $tableName the name of the table to be created
+	 * @param CDbConnection the database connection
+	 * @param string the name of the table to be created
 	 */
 	protected function createCacheTable($db,$tableName)
 	{
 		$driver=$db->getDriverName();
 		if($driver==='mysql')
 			$blob='LONGBLOB';
-		elseif($driver==='pgsql')
+		else if($driver==='pgsql')
 			$blob='BYTEA';
 		else
 			$blob='BLOB';
@@ -143,11 +153,11 @@ EOD;
 	 * @return CDbConnection the DB connection instance
 	 * @throws CException if {@link connectionID} does not point to a valid application component.
 	 */
-	public function getDbConnection()
+	protected function getDbConnection()
 	{
 		if($this->_db!==null)
 			return $this->_db;
-		elseif(($id=$this->connectionID)!==null)
+		else if(($id=$this->connectionID)!==null)
 		{
 			if(($this->_db=Yii::app()->getComponent($id)) instanceof CDbConnection)
 				return $this->_db;
@@ -163,42 +173,23 @@ EOD;
 	}
 
 	/**
-	 * Sets the DB connection used by the cache component.
-	 * @param CDbConnection $value the DB connection instance
-	 * @since 1.1.5
-	 */
-	public function setDbConnection($value)
-	{
-		$this->_db=$value;
-	}
-
-	/**
 	 * Retrieves a value from cache with a specified key.
 	 * This is the implementation of the method declared in the parent class.
-	 * @param string $key a unique key identifying the cached value
-	 * @return string|boolean the value stored in cache, false if the value is not in the cache or expired.
+	 * @param string a unique key identifying the cached value
+	 * @return string the value stored in cache, false if the value is not in the cache or expired.
 	 */
 	protected function getValue($key)
 	{
 		$time=time();
 		$sql="SELECT value FROM {$this->cacheTableName} WHERE id='$key' AND (expire=0 OR expire>$time)";
-		$db=$this->getDbConnection();
-		if($db->queryCachingDuration>0)
-		{
-			$duration=$db->queryCachingDuration;
-			$db->queryCachingDuration=0;
-			$result=$db->createCommand($sql)->queryScalar();
-			$db->queryCachingDuration=$duration;
-			return $result;
-		}
-		else
-			return $db->createCommand($sql)->queryScalar();
+		return $this->getDbConnection()->createCommand($sql)->queryScalar();
 	}
 
 	/**
 	 * Retrieves multiple values from cache with the specified keys.
-	 * @param array $keys a list of keys identifying the cached values
+	 * @param array a list of keys identifying the cached values
 	 * @return array a list of cached values indexed by the keys
+	 * @since 1.0.8
 	 */
 	protected function getValues($keys)
 	{
@@ -208,23 +199,12 @@ EOD;
 		$ids=implode("','",$keys);
 		$time=time();
 		$sql="SELECT id, value FROM {$this->cacheTableName} WHERE id IN ('$ids') AND (expire=0 OR expire>$time)";
-
-		$db=$this->getDbConnection();
-		if($db->queryCachingDuration>0)
-		{
-			$duration=$db->queryCachingDuration;
-			$db->queryCachingDuration=0;
-			$rows=$db->createCommand($sql)->queryAll();
-			$db->queryCachingDuration=$duration;
-		}
-		else
-			$rows=$db->createCommand($sql)->queryAll();
-
+		$rows=$this->getDbConnection()->createCommand($sql)->queryRows();
 		$results=array();
 		foreach($keys as $key)
 			$results[$key]=false;
 		foreach($rows as $row)
-			$results[$row['id']]=$row['value'];
+			$results[$row['id']]=$results[$row['value']];
 		return $results;
 	}
 
@@ -232,9 +212,9 @@ EOD;
 	 * Stores a value identified by a key in cache.
 	 * This is the implementation of the method declared in the parent class.
 	 *
-	 * @param string $key the key identifying the value to be cached
-	 * @param string $value the value to be cached
-	 * @param integer $expire the number of seconds in which the cached value will expire. 0 means never expire.
+	 * @param string the key identifying the value to be cached
+	 * @param string the value to be cached
+	 * @param integer the number of seconds in which the cached value will expire. 0 means never expire.
 	 * @return boolean true if the value is successfully stored into cache, false otherwise
 	 */
 	protected function setValue($key,$value,$expire)
@@ -247,9 +227,9 @@ EOD;
 	 * Stores a value identified by a key into cache if the cache does not contain this key.
 	 * This is the implementation of the method declared in the parent class.
 	 *
-	 * @param string $key the key identifying the value to be cached
-	 * @param string $value the value to be cached
-	 * @param integer $expire the number of seconds in which the cached value will expire. 0 means never expire.
+	 * @param string the key identifying the value to be cached
+	 * @param string the value to be cached
+	 * @param integer the number of seconds in which the cached value will expire. 0 means never expire.
 	 * @return boolean true if the value is successfully stored into cache, false otherwise
 	 */
 	protected function addValue($key,$value,$expire)
@@ -281,7 +261,7 @@ EOD;
 	/**
 	 * Deletes a value with the specified key from cache
 	 * This is the implementation of the method declared in the parent class.
-	 * @param string $key the key of the value to be deleted
+	 * @param string the key of the value to be deleted
 	 * @return boolean if no error happens during deletion
 	 */
 	protected function deleteValue($key)
@@ -293,6 +273,7 @@ EOD;
 
 	/**
 	 * Removes the expired data values.
+	 * @since 1.0.11
 	 */
 	protected function gc()
 	{
@@ -301,11 +282,9 @@ EOD;
 
 	/**
 	 * Deletes all values from cache.
-	 * This is the implementation of the method declared in the parent class.
-	 * @return boolean whether the flush operation was successful.
-	 * @since 1.1.5
+	 * Be careful of performing this operation if the cache is shared by multiple applications.
 	 */
-	protected function flushValues()
+	public function flush()
 	{
 		$this->getDbConnection()->createCommand("DELETE FROM {$this->cacheTableName}")->execute();
 		return true;

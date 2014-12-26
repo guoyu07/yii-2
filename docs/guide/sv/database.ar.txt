@@ -12,7 +12,7 @@ Varje AR-klass representerar en databastabell (eller -vy) vars attribut är
 representerade som AR-klassens propertyn, en AR-instans representerar en rad i 
 nämnda tabell. Vanliga CRUD-operationer är implementerade som AR-metoder. 
 Resultatet är tillgång till data på ett mer objektorienterat sätt. Till exempel, 
-kan följande kod användas för att sätta in en ny rad i tabellen `tbl_post`:
+kan följande kod användas för att sätta in en ny rad i tabellen `Post`:
 
 ~~~
 [php]
@@ -30,11 +30,11 @@ används skall `AUTOINCREMENT` bytas mot `AUTO_INCREMENT` i följande SQL.
 
 ~~~
 [sql]
-CREATE TABLE tbl_post (
+CREATE TABLE Post (
 	id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 	title VARCHAR(128) NOT NULL,
 	content TEXT NOT NULL,
-	create_time INTEGER NOT NULL
+	createTime INTEGER NOT NULL
 );
 ~~~
 
@@ -81,6 +81,9 @@ stöds endast följande databashanterare:
    - [Microsoft SQL Server 2000 eller senare](http://www.microsoft.com/sqlserver/)
    - [Oracle](http://www.oracle.com)
 
+> Note|Märk: Stöd för Microsoft SQL Server har varit tillgängligt sedan version 1.0.4;
+> Stöd för Oracle har varit tillgängligt sedan version 1.0.5.
+
 Vid önskemål om att använda en annan applikationskomponent än `db`, eller om att 
 använda AR till att arbeta mot flera databaser, åsidosätt 
 [CActiveRecord::getDbConnection()]. Klassen [CActiveRecord] utgör basklass för alla 
@@ -99,7 +102,7 @@ För tillgång till en databastabell måste först en AR-klass definieras genom 
 och utvidgning av [CActiveRecord]. Varje AR-klass representerar en enda 
 databastabell och en AR-instans representerar en rad i den tabellen. Följande 
 exempel visar den minimala kod som erfordras för AR-klassen korresponderande 
-mot tabellen `tbl_post`.
+mot tabellen `Post`.
 
 ~~~
 [php]
@@ -108,11 +111,6 @@ class Post extends CActiveRecord
 	public static function model($className=__CLASS__)
 	{
 		return parent::model($className);
-	}
-
-	public function tableName()
-	{
-		return 'tbl_post';
 	}
 }
 ~~~
@@ -135,20 +133,8 @@ Som standard är namnet på AR-klassen samma som namnet på databastabellen.
 Metoden [model()|CActiveRecord::model] finns deklarerad per se i varje AR-klass 
 (förklaring följer längre ned).
 
-> Info: För att använda [tabellprefix-finessen](/doc/guide/database.dao#using-table-prefix),
-> kan [tableName()|CActiveRecord::tableName]-metoden i en AR-klass behöva åsidosättas på följande sätt,
-> ~~~
-> [php]
-> public function tableName()
-> {
->     return '{{post}}';
-> }
-> ~~~
-> Det innebär att, istället för att returnera det fullständiga tabellnamnet, returnerar vi
-> tabellnamnet utan prefix, omgivet av dubbla krumparenteser.
-
-Kolumnvärden för en rad i en tabell kan åtkommas som propertyn i den motsvarande 
-AR-instansen. Till exempel, följande kod sätter kolumnen (attributet) `title`:
+Kolumnvärden för en rad i en tabell kan åtkommas som propertyn i den 
+motsvarande AR-klassinstansen. Till exempel, följande kod sätter kolumnen (attributet) `title`:
 
 ~~~
 [php]
@@ -158,30 +144,19 @@ $post->title='a sample post';
 
 Ävensom vi aldrig uttryckligen deklarerar `title`-propertyn i klassen `Post`, 
 kan vi fortfarande få tillgång till den i ovanstående kod. Detta beror på att 
-`title` är en kolumn i tabellen `tbl_post` och CActiveRecord gör den tillgänglig som 
+`title` är en kolumn i tabellen `Post` och CActiveRecord gör den tillgänglig som 
 en property med hjälp av PHP:s "magiska" metod `__get()`. En exception 
 signaleras vid försök att tillgå en icke-existerande kolumn på detta sätt.
 
-> Info: I denna guide användes gemener för tabell- och kolumnnamn. Detta beror på 
-att olika databashanterare hanterar skiftläge olika. Till exempel PostgreSQL 
-betraktar underförstått kolumnnamn som oberoende av skiftläge, och om ett kolumnnamn 
-i en fråga innehåller både gemena och versaler måste det omges av citationstecken. 
-Användning av enbart gemener eliminerar ev. skiftlägesrelaterade problem.
-
-AR förlitar sig på väldefinierade primärnycklar för tabeller. Om en tabell saknar 
-primärnyckel, krävs det att motsvarande AR-klass specificerar vilken/vilka kolumn(er) 
-som skall utgöra primärnyckel, genom att åsidosätta metoden `primaryKey()` enligt 
-nedanstående exempel,
-
-~~~
-[php]
-public function primaryKey()
-{
-	return 'id';
-	// For composite primary key, return an array like the following
-	// return array('pk1', 'pk2');
-}
-~~~
+> Info: I denna guide namnges kolumner med kamelnotation (t.ex. `createTime`).
+Detta beror på att kolumner adresseras som vanliga objektpropertyn, 
+vilka också de namnges med kamelnotation. Men även om kamelnotation får PHP-koden 
+att se mer konsekvent ut i fråga om namngivning, kan detta introducera problem 
+med skiftlägeskänslighet (case-sensitivity) för vissa DBMS. Till exempel PostgreSQL 
+betraktar som standard kolumnnamn som oberoende av skiftläge, och om ett kolumnnamn 
+i en fråga innehåller både gemena och versaler måste det omges av citationstecken.
+Av denna anledning kan det vara klokt att namnge kolumner (och även tabeller) enbart 
+med gemena (t.ex. `create_time`), för att undvika ev. skiftlägesrelaterade problem.
 
 
 Skapa DB-post
@@ -196,7 +171,7 @@ och anropa metoden [save()|CActiveRecord::save] för att genomföra insättninge
 $post=new Post;
 $post->title='sample post';
 $post->content='content for the sample post';
-$post->create_time=time();
+$post->createTime=time();
 $post->save();
 ~~~
 
@@ -222,15 +197,16 @@ $post=new Post;
 echo $post->title;  // this would display: please enter a title
 ~~~
 
-Ett attribut kan tilldelas ett värde av typen [CDbExpression] innan posten sparas 
-till databasen (antingen insättning eller uppdatering). Exempelvis, för att spara 
-en tidstämpel, returnerad av MySQL:s funktion `NOW()`, kan följande kod användas:
+Med start i version 1.0.2, kan ett attribut tilldelas ett värde av typen 
+[CDbExpression] innan posten sparas till databasen (antingen insättning eller 
+uppdatering). Exempelvis, för att spara en tidstämpel, returnerad av MySQL:s 
+funktion `NOW()`, kan följande kod användas:
 
 ~~~
 [php]
 $post=new Post;
-$post->create_time=new CDbExpression('NOW()');
-// $post->create_time='NOW()'; will not work because
+$post->createTime=new CDbExpression('NOW()');
+// $post->createTime='NOW()'; will not work because
 // 'NOW()' will be treated as a string
 $post->save();
 ~~~
@@ -240,8 +216,9 @@ arbetskrävande SQL-satser, vill vi ofta veta vilka SQL-satser som exekveras av 
 Detta kan uppnås genom att slå på Yii:s [loggningsfiness](/doc/guide/topics.logging).
 Till exempel kan vi aktivera [CWebLogRoute] i applikationskonfigurationen, vilket 
 leder till att exekverade SQL-satser kan avläsas i slutet av varje webbsida.
-Vi kan sätta [CDbConnection::enableParamLogging] till true i applikationskonfigurationen 
-så att även parametervärden knutna till SQL-satserna loggas.
+Sedan version 1.0.5, kan vi sätta [CDbConnection::enableParamLogging] till true i
+applikationskonfigurationen så att även parametervärden knutna till SQL-satserna 
+loggas.
 
 
 Läsa DB-post
@@ -516,6 +493,7 @@ klasser för att anpassa arbetsflödet i dessa.
 
    - [beforeFind|CActiveRecord::beforeFind]: körs innan någon av AR:s 
    'find'-metoder används för att exekvera en fråga (t.ex. `find()`, `findAll()`). 
+   Detta har varit tillgängligt sedan version 1.0.9.
 
    - [afterFind|CActiveRecord::afterFind]: körs varje gång en AR-instans 
    har skapats som resultat av en fråga.
@@ -553,7 +531,8 @@ catch(Exception $e)
 Namngivna omfång
 ----------------
 
-> Note|Märk: Ursprungsidén till namngivna omfång (named scopes) är hämtad från Ruby on Rails.
+> Note|Märk: Stöd för namngivna omfång (named scopes) har varit tillgängligt sedan 
+> version 1.0.5. Ursprungsidén är hämtad från Ruby on Rails.
 
 Ett *namngivet omfång* representerar ett *namngivet* frågekriterium som kan kombineras 
 med andra namngivna omfång och appliceras på en Active Record-fråga.
@@ -574,7 +553,7 @@ class Post extends CActiveRecord
 				'condition'=>'status=1',
 			),
 			'recently'=>array(
-				'order'=>'create_time DESC',
+				'order'=>'createTime DESC',
 				'limit'=>5,
 			),
 		);
@@ -584,7 +563,7 @@ class Post extends CActiveRecord
 
 Varje namngivet omfång deklareras som en array vilken kan användas för att 
 initialisera en instans av [CDbCriteria]. Till exempel, det namngivna omfånget 
-`recently` specificerar att propertyn `order` till att vara `create_time DESC` 
+`recently` specificerar att propertyn `order` till att vara `createTime DESC` 
 och propertyn `limit` till 5, vilket leder till ett frågekriterium som skulle 
 returnera de fem senast publicerade postningarna.
 
@@ -603,8 +582,16 @@ Vart och ett av dem tillhandahåller ett frågekriterium som kombineras med andr
 inklusive det som lämnas med i anropet `find`-metoden. Nettoeffekten blir som att lägga till 
 en lista av filter till en fråga.
 
+Med start fr o m version 1.0.6 kan namngivna omfång även användas med metoderna `update` och 
+`delete`. Till exempel följande kod skulle ta bort alla nyligen publicerade postningar:
+
+~~~
+[php]
+Post::model()->published()->recently()->delete();
+~~~
+
 > Note|Märk: Namngivna omfång kan endast användas för metoder på klassnivå. 
-Det innebär att metoden måste anropas på formatet `Klassnamn::model()`.
+Det innebär att metoden måste anropas på formatet `Klassnamn::modell()`.
 
 
 ### Parametriserade namngivna omfång
@@ -619,7 +606,7 @@ det behöver vi - istället för att deklarera det namngivna omfånget i metoden
 public function recently($limit=5)
 {
 	$this->getDbCriteria()->mergeWith(array(
-		'order'=>'create_time DESC',
+		'order'=>'createTime DESC',
 		'limit'=>$limit,
 	));
 	return $this;
@@ -638,13 +625,13 @@ Om parametern 3 ovan utelämnas kommer de fem senaste postningarna att
 hämtas, enligt förbestämt standardvärde.
 
 
-### Förbestämt omfång (default scope)
+### Förbestämt namngivet omfång
 
-En modellklass kan ha ett förbestämt omfång som kommer att åsättas 
+En modellklass kan ha ett förbestämt namngivet omfång som kommer att åsättas 
 alla frågor (inklusive relationella sådana) avseende modellen. Till exempel kan  
 en webbplats som stöder flera språk vilja begränsa innehåll som visas till 
 det språk den aktuella användaren valt. Eftersom det kan bli många frågor 
-gällande webbplatsens innehåll, kan ett förbestämt omfång lindra 
+gällande webbplatsens innehåll, kan ett förbestämt namngivet omfång lindra 
 detta problem. För att göra detta, åsidosätt metoden [CActiveRecord::defaultScope] enligt följande,
 
 ~~~
@@ -667,7 +654,7 @@ Nu kommer följande metodanrop att automatiskt använda frågekriteriet som defi
 $contents=Content::model()->findAll();
 ~~~
 
-> Note|Märk: Förbestämt omfång och namngivna omfång har effekt endast vid `SELECT`-frågor. De ignoreras vid `INSERT`-, `UPDATE`- och `DELETE`-frågor.
-> Dessutom, när ett omfång deklareras (förbestämt eller namngivet), kan AR-klassen inte användas för DB-frågor i metoden som deklarerar omfånget.
+Märk att ett förbestämt namngivet omfång endast gäller för `SELECT`-frågor. 
+Det ignoreras för `INSERT`-, `UPDATE`- och `DELETE`-frågor.
 
-<div class="revision">$Id: database.ar.txt 3318 2011-06-24 21:40:34Z qiang.xue $</div>
+<div class="revision">$Id: database.ar.txt 1391 2009-09-04 19:46:04Z qiang.xue $</div>

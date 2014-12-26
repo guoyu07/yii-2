@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -13,13 +13,8 @@
  *
  * It provides the calculation of page count and maintains the current page.
  *
- * @property CPagination $pages The pagination information.
- * @property integer $pageSize Number of items in each page.
- * @property integer $itemCount Total number of items.
- * @property integer $pageCount Number of pages.
- * @property integer $currentPage The zero-based index of the current page. Defaults to 0.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.web.widgets.pagers
  * @since 1.0
  */
@@ -40,7 +35,7 @@ abstract class CBasePager extends CWidget
 
 	/**
 	 * Sets the pagination information used by this pager.
-	 * @param CPagination $pages the pagination information
+	 * @param CPagination the pagination information
 	 */
 	public function setPages($pages)
 	{
@@ -67,7 +62,7 @@ abstract class CBasePager extends CWidget
 	}
 
 	/**
-	 * @param integer $value number of items in each page
+	 * @param integer number of items in each page
 	 * @see CPagination::setPageSize
 	 */
 	public function setPageSize($value)
@@ -85,7 +80,7 @@ abstract class CBasePager extends CWidget
 	}
 
 	/**
-	 * @param integer $value total number of items.
+	 * @param integer total number of items.
 	 * @see CPagination::setItemCount
 	 */
 	public function setItemCount($value)
@@ -103,7 +98,7 @@ abstract class CBasePager extends CWidget
 	}
 
 	/**
-	 * @param boolean $recalculate whether to recalculate the current page based on the page size and item count.
+	 * @param boolean whether to recalculate the current page based on the page size and item count.
 	 * @return integer the zero-based index of the current page. Defaults to 0.
 	 * @see CPagination::getCurrentPage
 	 */
@@ -113,7 +108,7 @@ abstract class CBasePager extends CWidget
 	}
 
 	/**
-	 * @param integer $value the zero-based index of the current page.
+	 * @param integer the zero-based index of the current page.
 	 * @see CPagination::setCurrentPage
 	 */
 	public function setCurrentPage($value)
@@ -123,7 +118,7 @@ abstract class CBasePager extends CWidget
 
 	/**
 	 * Creates the URL suitable for pagination.
-	 * @param integer $page the page that the URL should point to.
+	 * @param integer the page that the URL should point to.
 	 * @return string the created URL
 	 * @see CPagination::createPageUrl
 	 */

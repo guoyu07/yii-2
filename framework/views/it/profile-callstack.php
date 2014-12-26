@@ -6,13 +6,13 @@
 		</th>
 	</tr>
 	<tr style="background-color: #ccc;">
-	    <th>Procedura</th>
-		<th>Tempo (s)</th>
+	    <th>Procedure</th>
+		<th>Time (s)</th>
 	</tr>
 <?php
 foreach($data as $index=>$entry)
 {
-	$color=($index%2)?'#F5F5F5':'#FFFFFF';
+	$color=($index%2)?'#F5F5F5':'#EBF8FE';
 	list($proc,$time,$level)=$entry;
 	$proc=CHtml::encode($proc);
 	$time=sprintf('%0.5f',$time);

@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -23,9 +23,8 @@
  *
  * Note, PHP SOAP extension is required for this action.
  *
- * @property CWebService $service The Web service instance.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.web.services
  * @since 1.0
  */
@@ -119,9 +118,9 @@ class CWebServiceAction extends CAction
 	/**
 	 * Creates a {@link CWebService} instance.
 	 * You may override this method to customize the created instance.
-	 * @param mixed $provider the web service provider class name or object
-	 * @param string $wsdlUrl the URL for WSDL.
-	 * @param string $serviceUrl the URL for the Web service.
+	 * @param mixed the web service provider class name or object
+	 * @param string the URL for WSDL.
+	 * @param string the URL for the Web service.
 	 * @return CWebService the Web service instance
 	 */
 	protected function createWebService($provider,$wsdlUrl,$serviceUrl)

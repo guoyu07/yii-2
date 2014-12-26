@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -12,6 +12,7 @@
  * CErrorEvent represents the parameter for the {@link CApplication::onError onError} event.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.base
  * @since 1.0
  */
@@ -36,11 +37,11 @@ class CErrorEvent extends CEvent
 
 	/**
 	 * Constructor.
-	 * @param mixed $sender sender of the event
-	 * @param string $code error code
-	 * @param string $message error message
-	 * @param string $file error file
-	 * @param integer $line error line
+	 * @param mixed sender of the event
+	 * @param string error code
+	 * @param string error message
+	 * @param string error file
+	 * @param integer error line
 	 */
 	public function __construct($sender,$code,$message,$file,$line)
 	{

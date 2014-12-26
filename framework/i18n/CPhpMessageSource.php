@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -29,14 +29,15 @@
  * </ul>
  * When {@link cachingDuration} is set as a positive number, message translations will be cached.
  *
- * Messages for an extension class (e.g. a widget, a module) can be specially managed and used.
+ * Starting from version 1.0.10, messages for an extension class (e.g. a widget, a module) can be specially managed and used.
  * In particular, if a message belongs to an extension whose class name is Xyz, then the message category
  * can be specified in the format of 'Xyz.categoryName'. And the corresponding message file
  * is assumed to be 'BasePath/messages/LanguageID/categoryName.php', where 'BasePath' refers to
  * the directory that contains the extension class file. When using Yii::t() to translate an extension message,
- * the category name should be set as 'Xyz.categoryName'.
+ * we should use: Yii::t('Xyz.categoryName', 'message to be translated').
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.i18n
  * @since 1.0
  */
@@ -53,6 +54,7 @@ class CPhpMessageSource extends CMessageSource
 	 * @var string the ID of the cache application component that is used to cache the messages.
 	 * Defaults to 'cache' which refers to the primary cache application component.
 	 * Set this property to false if you want to disable caching the messages.
+	 * @since 1.0.10
 	 */
 	public $cacheID='cache';
 	/**
@@ -60,22 +62,6 @@ class CPhpMessageSource extends CMessageSource
 	 * the "messages" subdirectory of the application directory (e.g. "protected/messages").
 	 */
 	public $basePath;
-	/**
-	 * @var array the message paths for extensions that do not have a base class to use as category prefix.
-	 * The format of the array should be:
-	 * <pre>
-	 * array(
-	 *     'ExtensionName' => 'ext.ExtensionName.messages',
-	 * )
-	 * </pre>
-	 * Where the key is the name of the extension and the value is the alias to the path
-	 * of the "messages" subdirectory of the extension.
-	 * When using Yii::t() to translate an extension message, the category name should be
-	 * set as 'ExtensionName.categoryName'.
-	 * Defaults to an empty array, meaning no extensions registered.
-	 * @since 1.1.13
-	 */
-	public $extensionPaths=array();
 
 	private $_files=array();
 
@@ -97,9 +83,10 @@ class CPhpMessageSource extends CMessageSource
 	 * In this case, the message file will be assumed to be located within the 'messages' subdirectory of
 	 * the directory containing the module class file.
 	 * Otherwise, the message file is assumed to be under the {@link basePath}.
-	 * @param string $category category name
-	 * @param string $language language ID
+	 * @param string category name
+	 * @param string language ID
 	 * @return string the message file path
+	 * @since 1.0.10
 	 */
 	protected function getMessageFile($category,$language)
 	{
@@ -107,17 +94,10 @@ class CPhpMessageSource extends CMessageSource
 		{
 			if(($pos=strpos($category,'.'))!==false)
 			{
-				$extensionClass=substr($category,0,$pos);
-				$extensionCategory=substr($category,$pos+1);
-				// First check if there's an extension registered for this class.
-				if(isset($this->extensionPaths[$extensionClass]))
-					$this->_files[$category][$language]=Yii::getPathOfAlias($this->extensionPaths[$extensionClass]).DIRECTORY_SEPARATOR.$language.DIRECTORY_SEPARATOR.$extensionCategory.'.php';
-				else
-				{
-					// No extension registered, need to find it.
-					$class=new ReflectionClass($extensionClass);
-					$this->_files[$category][$language]=dirname($class->getFileName()).DIRECTORY_SEPARATOR.'messages'.DIRECTORY_SEPARATOR.$language.DIRECTORY_SEPARATOR.$extensionCategory.'.php';
-				}
+				$moduleClass=substr($category,0,$pos);
+				$moduleCategory=substr($category,$pos+1);
+				$class=new ReflectionClass($moduleClass);
+				$this->_files[$category][$language]=dirname($class->getFileName()).DIRECTORY_SEPARATOR.'messages'.DIRECTORY_SEPARATOR.$language.DIRECTORY_SEPARATOR.$moduleCategory.'.php';
 			}
 			else
 				$this->_files[$category][$language]=$this->basePath.DIRECTORY_SEPARATOR.$language.DIRECTORY_SEPARATOR.$category.'.php';
@@ -127,8 +107,8 @@ class CPhpMessageSource extends CMessageSource
 
 	/**
 	 * Loads the message translation for the specified language and category.
-	 * @param string $category the message category
-	 * @param string $language the target language
+	 * @param string the message category
+	 * @param string the target language
 	 * @return array the loaded messages
 	 */
 	protected function loadMessages($category,$language)

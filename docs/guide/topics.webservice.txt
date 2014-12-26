@@ -30,14 +30,15 @@ Defining Service Provider
 As we mentioned above, a service provider is a class defining the methods
 that can be remotely invoked. Yii relies on [doc
 comment](http://java.sun.com/j2se/javadoc/writingdoccomments/) and [class
-reflection](http://php.net/manual/en/book.reflection.php) to
+reflection](http://www.php.net/manual/en/language.oop5.reflection.php) to
 identify which methods can be remotely invoked and what are their
 parameters and return value.
 
 Let's start with a simple stock quoting service. This service allows a
 client to request for the quote of the specified stock. We define the
 service provider as follows. Note that we define the provider class
-`StockController` by extending [CController]. This is not required.
+`StockController` by extending [CController]. This is not required. We will
+explain why we do so shortly.
 
 ~~~
 [php]
@@ -214,10 +215,10 @@ class PostController extends CController
 Intercepting Remote Method Invocation
 -------------------------------------
 
-By implementing the [IWebServiceProvider] interface, a service provider can
+By implementing the [IWebServiceProvider] interface, a sevice provider can
 intercept remote method invocations. In
 [IWebServiceProvider::beforeWebMethod], the provider may retrieve the
-current [CWebService] instance and obtain the name of the method
+current [CWebService] instance and obtain the the name of the method
 currently being requested via [CWebService::methodName]. It can return
 false if the remote method should not be invoked for some reason (e.g.
 unauthorized access).

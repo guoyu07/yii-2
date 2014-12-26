@@ -17,25 +17,6 @@ pre {
     border-left: 6px solid #FFE6BF;
 }
 
-div.code {
-	display: none;
-    color: #000000;
-    background-color: #FFF5E6;
-    font-family: "courier new", "times new roman", monospace;
-    line-height: 1.3em;
-    /* Put a nice border around it. */
-    padding: 1px;
-    width: 90%;
-    /* Don't wrap its contents, and show scrollbars. */
-    /* white-space: nowrap;*/
-    overflow: auto;
-    /* Stop after about 24 lines, and just show a scrollbar. */
-    /* max-height: 24em; */
-    margin: 5px;
-    padding-left: 20px;
-    border-left: 6px solid #FFE6BF;
-}
-
 table.summaryTable {
 	background: #E6ECFF;
 	border-collapse: collapse;
@@ -96,10 +77,4 @@ table.summaryTable th {
 
 .paramTypeCol {
 	width: 12%;
-}
-
-.sourceCode {
-	margin: 5px 0;
-	padding:5px;
-	background:#FFF5E6;
 }

@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -12,6 +12,7 @@
  * CGettextPoFile represents a PO Gettext message file.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.i18n.gettext
  * @since 1.0
  */
@@ -19,35 +20,34 @@ class CGettextPoFile extends CGettextFile
 {
 	/**
 	 * Loads messages from a PO file.
-	 * @param string $file file path
-	 * @param string $context message context
+	 * @param string file path
+	 * @param string message context
 	 * @return array message translations (source message => translated message)
 	 */
 	public function load($file,$context)
 	{
-		$pattern='/(msgctxt\s+"(.*?(?<!\\\\))")?\s+'
-			.'msgid\s+((?:".*(?<!\\\\)"\s*)+)\s+'
-			.'msgstr\s+((?:".*(?<!\\\\)"\s*)+)/';
-		$matches=array();
-		$n=preg_match_all($pattern,file_get_contents($file),$matches);
-
-		$messages=array();
-		for($i=0; $i<$n; $i++)
-		{
-			if($matches[2][$i]===$context)
-			{
-				$id=$this->decode($matches[3][$i]);
-				$message=$this->decode($matches[4][$i]);
-				$messages[$id]=$message;
-			}
-		}
-		return $messages;
+		$pattern='/msgctxt\s+"(.*?(?<!\\\\))"'
+			. '\s+msgid\s+"(.*?(?<!\\\\))"'
+			. '\s+msgstr\s+"(.*?(?<!\\\\))"/';
+		$content=file_get_contents($file);
+        $n=preg_match_all($pattern,$content,$matches);
+        $messages=array();
+        for($i=0;$i<$n;++$i)
+        {
+        	if($matches[1][$i]===$context)
+        	{
+	        	$id=$this->decode($matches[2][$i]);
+	        	$message=$this->decode($matches[3][$i]);
+	        	$messages[$id]=$message;
+	        }
+        }
+        return $messages;
 	}
 
 	/**
 	 * Saves messages to a PO file.
-	 * @param string $file file path
-	 * @param array $messages message translations (message id => translated message).
+	 * @param string file path
+	 * @param array message translations (message id => translated message).
 	 * Note if the message has a context, the message id must be prefixed with
 	 * the context with chr(4) as the separator.
 	 */
@@ -69,30 +69,21 @@ class CGettextPoFile extends CGettextFile
 
 	/**
 	 * Encodes special characters in a message.
-	 * @param string $string message to be encoded
+	 * @param string message to be encoded
 	 * @return string the encoded message
 	 */
 	protected function encode($string)
 	{
-		return str_replace(
-			array('"',"\n","\t","\r"),
-			array('\\"',"\\n",'\\t','\\r'),
-			$string
-		);
+		return str_replace(array('"', "\n", "\t", "\r"),array('\\"', "\\n", '\\t', '\\r'),$string);
 	}
 
 	/**
 	 * Decodes special characters in a message.
-	 * @param string $string message to be decoded
+	 * @param string message to be decoded
 	 * @return string the decoded message
 	 */
 	protected function decode($string)
 	{
-		$string=preg_replace(
-			array('/"\s+"/','/\\\\n/','/\\\\r/','/\\\\t/','/\\\\"/'),
-			array('',"\n","\r","\t",'"'),
-			$string
-		);
-		return substr(rtrim($string),1,-1);
+		return str_replace(array('\\"', "\\n", '\\t', '\\r'),array('"', "\n", "\t", "\r"),$string);
 	}
 }

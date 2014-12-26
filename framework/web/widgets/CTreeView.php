@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -21,6 +21,7 @@
  * {@link url} to be the URL that can serve the tree view data upon request.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.web.widgets
  * @since 1.0
  */
@@ -31,15 +32,13 @@ class CTreeView extends CWidget
 	 * Each array element corresponds to a tree view node with the following structure:
 	 * <ul>
 	 * <li>text: string, required, the HTML text associated with this node.</li>
-	 * <li>expanded: boolean, optional, whether the tree view node is expanded.</li>
+	 * <li>expanded: boolean, optional, whether the tree view node is in expanded.</li>
 	 * <li>id: string, optional, the ID identifying the node. This is used
 	 *   in dynamic loading of tree view (see {@link url}).</li>
 	 * <li>hasChildren: boolean, optional, defaults to false, whether clicking on this
 	 *   node should trigger dynamic loading of more tree view nodes from server.
 	 *   The {@link url} property must be set in order to make this effective.</li>
 	 * <li>children: array, optional, child nodes of this node.</li>
-	 * <li>htmlOptions: array, additional HTML attributes (see {@link CHtml::tag}).
-	 *   This option has been available since version 1.1.7.</li>
 	 * </ul>
 	 * Note, anything enclosed between the beginWidget and endWidget calls will
 	 * also be treated as tree view content, which appends to the content generated
@@ -58,10 +57,10 @@ class CTreeView extends CWidget
 	 * See {@link CHtml::normalizeUrl} for possible URL formats.
 	 * Setting this property will enable the dynamic treeview loading.
 	 * When the page is displayed, the browser will request this URL with a GET parameter
-	 * named 'root' whose value is 'source'. The server script should then generate the
+	 * named 'source' whose value is 'root'. The server script should then generate the
 	 * needed tree view data corresponding to the root of the tree (see {@link saveDataAsJson}.)
 	 * When a node has a CSS class 'hasChildren', then expanding this node will also
-	 * cause a dynamic loading of its child nodes. In this case, the value of the 'root' GET parameter
+	 * cause a dynamic loading of its child nodes. In this case, the value of the 'source' GET parameter
 	 * is the 'id' property of the node.
 	 */
 	public $url;
@@ -146,7 +145,7 @@ class CTreeView extends CWidget
 		$cs->registerScript('Yii.CTreeView#'.$id,"jQuery(\"#{$id}\").treeview($options);");
 		if($this->cssFile===null)
 			$cs->registerCssFile($cs->getCoreScriptUrl().'/treeview/jquery.treeview.css');
-		elseif($this->cssFile!==false)
+		else if($this->cssFile!==false)
 			$cs->registerCssFile($this->cssFile);
 
 		echo CHtml::tag('ul',$this->htmlOptions,false,false)."\n";
@@ -177,7 +176,7 @@ class CTreeView extends CWidget
 
 	/**
 	 * Generates tree view nodes in HTML from the data array.
-	 * @param array $data the data for the tree view (see {@link data} for possible data structure).
+	 * @param array the data for the tree view (see {@link data} for possible data structure).
 	 * @return string the generated HTML for the tree view
 	 */
 	public static function saveDataAsHtml($data)
@@ -189,39 +188,27 @@ class CTreeView extends CWidget
 			{
 				if(!isset($node['text']))
 					continue;
-
+				$id=isset($node['id']) ? (' id="'.$node['id'].'"') : '';
 				if(isset($node['expanded']))
 					$css=$node['expanded'] ? 'open' : 'closed';
 				else
 					$css='';
-
 				if(isset($node['hasChildren']) && $node['hasChildren'])
 				{
 					if($css!=='')
 						$css.=' ';
 					$css.='hasChildren';
 				}
-
-				$options=isset($node['htmlOptions']) ? $node['htmlOptions'] : array();
 				if($css!=='')
-				{
-					if(isset($options['class']))
-						$options['class'].=' '.$css;
-					else
-						$options['class']=$css;
-				}
-
-				if(isset($node['id']))
-					$options['id']=$node['id'];
-
-				$html.=CHtml::tag('li',$options,$node['text'],false);
-				if(!empty($node['children']))
+					$css=' class="'.$css.'"';
+				$html.="<li{$id}{$css}>{$node['text']}";
+				if(isset($node['children']))
 				{
 					$html.="\n<ul>\n";
 					$html.=self::saveDataAsHtml($node['children']);
 					$html.="</ul>\n";
 				}
-				$html.=CHtml::closeTag('li')."\n";
+				$html.="</li>\n";
 			}
 		}
 		return $html;
@@ -232,7 +219,7 @@ class CTreeView extends CWidget
 	 * This method is typically used in dynamic tree view loading
 	 * when the server code needs to send to the client the dynamic
 	 * tree view data.
-	 * @param array $data the data for the tree view (see {@link data} for possible data structure).
+	 * @param array the data for the tree view (see {@link data} for possible data structure).
 	 * @return string the JSON representation of the data
 	 */
 	public static function saveDataAsJson($data)

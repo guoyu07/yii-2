@@ -6,31 +6,39 @@
  */
 class HTMLPurifier_ConfigSchema_Builder_ConfigSchema
 {
-
+    
     public function build($interchange) {
         $schema = new HTMLPurifier_ConfigSchema();
+        foreach ($interchange->namespaces as $n) {
+            $schema->addNamespace($n->namespace);
+        }
         foreach ($interchange->directives as $d) {
             $schema->add(
-                $d->id->key,
+                $d->id->namespace,
+                $d->id->directive,
                 $d->default,
                 $d->type,
                 $d->typeAllowsNull
             );
             if ($d->allowed !== null) {
                 $schema->addAllowedValues(
-                    $d->id->key,
+                    $d->id->namespace,
+                    $d->id->directive,
                     $d->allowed
                 );
             }
             foreach ($d->aliases as $alias) {
                 $schema->addAlias(
-                    $alias->key,
-                    $d->id->key
+                    $alias->namespace,
+                    $alias->directive,
+                    $d->id->namespace,
+                    $d->id->directive
                 );
             }
             if ($d->valueAliases !== null) {
                 $schema->addValueAliases(
-                    $d->id->key,
+                    $d->id->namespace,
+                    $d->id->directive,
                     $d->valueAliases
                 );
             }
@@ -38,7 +46,5 @@ class HTMLPurifier_ConfigSchema_Builder_ConfigSchema
         $schema->postProcess();
         return $schema;
     }
-
+    
 }
-
-// vim: et sw=4 sts=4

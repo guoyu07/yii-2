@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -35,44 +35,22 @@
  * <li>{@link setValue}</li>
  * <li>{@link addValue}</li>
  * <li>{@link deleteValue}</li>
- * <li>{@link getValues} (optional)</li>
- * <li>{@link flushValues} (optional)</li>
- * <li>{@link serializer} (optional)</li>
+ * <li>{@link flush} (optional)</li>
  * </ul>
  *
  * CCache also implements ArrayAccess so that it can be used like an array.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.caching
  * @since 1.0
  */
 abstract class CCache extends CApplicationComponent implements ICache, ArrayAccess
 {
 	/**
-	 * @var string a string prefixed to every cache key so that it is unique. Defaults to null which means
-	 * to use the {@link CApplication::getId() application ID}. If different applications need to access the same
-	 * pool of cached data, the same prefix should be set for each of the applications explicitly.
+	 * @var string a string prefixed to every cache key so that it is unique. Defaults to {@link CApplication::getId() application ID}.
 	 */
 	public $keyPrefix;
-	/**
-	 * @var boolean whether to md5-hash the cache key for normalization purposes. Defaults to true. Setting this property to false makes sure the cache
-	 * key will not be tampered when calling the relevant methods {@link get()}, {@link set()}, {@link add()} and {@link delete()}. This is useful if a Yii
-	 * application as well as an external application need to access the same cache pool (also see description of {@link keyPrefix} regarding this use case).
-	 * However, without normalization you should make sure the affected cache backend does support the structure (charset, length, etc.) of all the provided
-	 * cache keys, otherwise there might be unexpected behavior.
-	 * @since 1.1.11
-	 **/
-	public $hashKey=true;
-	/**
-	 * @var array|boolean the functions used to serialize and unserialize cached data. Defaults to null, meaning
-	 * using the default PHP `serialize()` and `unserialize()` functions. If you want to use some more efficient
-	 * serializer (e.g. {@link http://pecl.php.net/package/igbinary igbinary}), you may configure this property with
-	 * a two-element array. The first element specifies the serialization function, and the second the deserialization
-	 * function. If this property is set false, data will be directly sent to and retrieved from the underlying
-	 * cache component without any serialization or deserialization. You should not turn off serialization if
-	 * you are using {@link CCacheDependency cache dependency}, because it relies on data serialization.
-	 */
-	public $serializer;
 
 	/**
 	 * Initializes the application component.
@@ -86,74 +64,65 @@ abstract class CCache extends CApplicationComponent implements ICache, ArrayAcce
 	}
 
 	/**
-	 * @param string $key a key identifying a value to be cached
-	 * @return string a key generated from the provided key which ensures the uniqueness across applications
+	 * @param string a key identifying a value to be cached
+	 * @return sring a key generated from the provided key which ensures the uniqueness across applications
 	 */
 	protected function generateUniqueKey($key)
 	{
-		return $this->hashKey ? md5($this->keyPrefix.$key) : $this->keyPrefix.$key;
+		return md5($this->keyPrefix.$key);
 	}
 
 	/**
 	 * Retrieves a value from cache with a specified key.
-	 * @param string $id a key identifying the cached value
+	 * @param string a key identifying the cached value
 	 * @return mixed the value stored in cache, false if the value is not in the cache, expired or the dependency has changed.
 	 */
 	public function get($id)
 	{
-		$value = $this->getValue($this->generateUniqueKey($id));
-		if($value===false || $this->serializer===false)
-			return $value;
-		if($this->serializer===null)
-			$value=unserialize($value);
-		else
-			$value=call_user_func($this->serializer[1], $value);
-		if(is_array($value) && (!$value[1] instanceof ICacheDependency || !$value[1]->getHasChanged()))
+		if(($value=$this->getValue($this->generateUniqueKey($id)))!==false)
 		{
-			Yii::trace('Serving "'.$id.'" from cache','system.caching.'.get_class($this));
-			return $value[0];
+			$data=unserialize($value);
+			if(!is_array($data))
+				return false;
+			if(!($data[1] instanceof ICacheDependency) || !$data[1]->getHasChanged())
+			{
+				Yii::trace('Serving "'.$id.'" from cache','system.caching.'.get_class($this));
+				return $data[0];
+			}
 		}
-		else
-			return false;
+		return false;
 	}
 
 	/**
 	 * Retrieves multiple values from cache with the specified keys.
 	 * Some caches (such as memcache, apc) allow retrieving multiple cached values at one time,
 	 * which may improve the performance since it reduces the communication cost.
-	 * In case a cache does not support this feature natively, it will be simulated by this method.
-	 * @param array $ids list of keys identifying the cached values
+	 * In case a cache doesn't support this feature natively, it will be simulated by this method.
+	 * @param array list of keys identifying the cached values
 	 * @return array list of cached values corresponding to the specified keys. The array
 	 * is returned in terms of (key,value) pairs.
 	 * If a value is not cached or expired, the corresponding array value will be false.
+	 * @since 1.0.8
 	 */
 	public function mget($ids)
 	{
-		$uids = array();
-		foreach ($ids as $id)
-			$uids[$id] = $this->generateUniqueKey($id);
-
-		$values = $this->getValues($uids);
-		$results = array();
-		if($this->serializer === false)
+		$uniqueIDs=array();
+		$results=array();
+		foreach($ids as $id)
 		{
-			foreach ($uids as $id => $uid)
-				$results[$id] = isset($values[$uid]) ? $values[$uid] : false;
+			$uniqueIDs[$id]=$this->generateUniqueKey($id);
+			$results[$id]=false;
 		}
-		else
+		$values=$this->getValues($uniqueIDs);
+		foreach($uniqueIDs as $id=>$uniqueID)
 		{
-			foreach($uids as $id => $uid)
+			if(!isset($values[$uniqueID]))
+				continue;
+			$data=unserialize($values[$uniqueID]);
+			if(is_array($data) && (!($data[1] instanceof ICacheDependency) || !$data[1]->getHasChanged()))
 			{
-				$results[$id] = false;
-				if(isset($values[$uid]))
-				{
-					$value = $this->serializer === null ? unserialize($values[$uid]) : call_user_func($this->serializer[1], $values[$uid]);
-					if(is_array($value) && (!$value[1] instanceof ICacheDependency || !$value[1]->getHasChanged()))
-					{
-						Yii::trace('Serving "'.$id.'" from cache','system.caching.'.get_class($this));
-						$results[$id] = $value[0];
-					}
-				}
+				Yii::trace('Serving "'.$id.'" from cache','system.caching.'.get_class($this));
+				$results[$id]=$data[0];
 			}
 		}
 		return $results;
@@ -164,71 +133,61 @@ abstract class CCache extends CApplicationComponent implements ICache, ArrayAcce
 	 * If the cache already contains such a key, the existing value and
 	 * expiration time will be replaced with the new ones.
 	 *
-	 * @param string $id the key identifying the value to be cached
-	 * @param mixed $value the value to be cached
-	 * @param integer $expire the number of seconds in which the cached value will expire. 0 means never expire.
-	 * @param ICacheDependency $dependency dependency of the cached item. If the dependency changes, the item is labeled invalid.
+	 * @param string the key identifying the value to be cached
+	 * @param mixed the value to be cached
+	 * @param integer the number of seconds in which the cached value will expire. 0 means never expire.
+	 * @param ICacheDependency dependency of the cached item. If the dependency changes, the item is labeled invalid.
 	 * @return boolean true if the value is successfully stored into cache, false otherwise
 	 */
 	public function set($id,$value,$expire=0,$dependency=null)
 	{
 		Yii::trace('Saving "'.$id.'" to cache','system.caching.'.get_class($this));
-
-		if ($dependency !== null && $this->serializer !== false)
+		if($dependency!==null)
 			$dependency->evaluateDependency();
-
-		if ($this->serializer === null)
-			$value = serialize(array($value,$dependency));
-		elseif ($this->serializer !== false)
-			$value = call_user_func($this->serializer[0], array($value,$dependency));
-
-		return $this->setValue($this->generateUniqueKey($id), $value, $expire);
+		$data=array($value,$dependency);
+		return $this->setValue($this->generateUniqueKey($id),serialize($data),$expire);
 	}
 
 	/**
 	 * Stores a value identified by a key into cache if the cache does not contain this key.
 	 * Nothing will be done if the cache already contains the key.
-	 * @param string $id the key identifying the value to be cached
-	 * @param mixed $value the value to be cached
-	 * @param integer $expire the number of seconds in which the cached value will expire. 0 means never expire.
-	 * @param ICacheDependency $dependency dependency of the cached item. If the dependency changes, the item is labeled invalid.
+	 * @param string the key identifying the value to be cached
+	 * @param mixed the value to be cached
+	 * @param integer the number of seconds in which the cached value will expire. 0 means never expire.
+	 * @param ICacheDependency dependency of the cached item. If the dependency changes, the item is labeled invalid.
 	 * @return boolean true if the value is successfully stored into cache, false otherwise
 	 */
 	public function add($id,$value,$expire=0,$dependency=null)
 	{
 		Yii::trace('Adding "'.$id.'" to cache','system.caching.'.get_class($this));
-
-		if ($dependency !== null && $this->serializer !== false)
+		if($dependency!==null)
 			$dependency->evaluateDependency();
-
-		if ($this->serializer === null)
-			$value = serialize(array($value,$dependency));
-		elseif ($this->serializer !== false)
-			$value = call_user_func($this->serializer[0], array($value,$dependency));
-
-		return $this->addValue($this->generateUniqueKey($id), $value, $expire);
+		$data=array($value,$dependency);
+		return $this->addValue($this->generateUniqueKey($id),serialize($data),$expire);
 	}
 
 	/**
 	 * Deletes a value with the specified key from cache
-	 * @param string $id the key of the value to be deleted
+	 * @param string the key of the value to be deleted
 	 * @return boolean if no error happens during deletion
 	 */
 	public function delete($id)
 	{
-		Yii::trace('Deleting "'.$id.'" from cache','system.caching.'.get_class($this));
+		Yii::trace('Deleting "'.$id.'" to cache','system.caching.'.get_class($this));
 		return $this->deleteValue($this->generateUniqueKey($id));
 	}
 
 	/**
 	 * Deletes all values from cache.
 	 * Be careful of performing this operation if the cache is shared by multiple applications.
-	 * @return boolean whether the flush operation was successful.
+	 * Child classes may implement this method to realize the flush operation.
+	 * @throws CException if this method is not overridden by child classes
 	 */
 	public function flush()
 	{
-		Yii::trace('Flushing cache','system.caching.'.get_class($this));
-		return $this->flushValues();
+		Yii::trace('Flushign cache','system.caching.'.get_class($this));
+		throw new CException(Yii::t('yii','{className} does not support flush() functionality.',
+			array('{className}'=>get_class($this))));
 	}
 
 	/**
@@ -237,9 +196,8 @@ abstract class CCache extends CApplicationComponent implements ICache, ArrayAcce
 	 * from specific cache storage. The uniqueness and dependency are handled
 	 * in {@link get()} already. So only the implementation of data retrieval
 	 * is needed.
-	 * @param string $key a unique key identifying the cached value
-	 * @return string|boolean the value stored in cache, false if the value is not in the cache or expired.
-	 * @throws CException if this method is not overridden by child classes
+	 * @param string a unique key identifying the cached value
+	 * @return string the value stored in cache, false if the value is not in the cache or expired.
 	 */
 	protected function getValue($key)
 	{
@@ -253,8 +211,9 @@ abstract class CCache extends CApplicationComponent implements ICache, ArrayAcce
 	 * times to retrieve the cached values one by one.
 	 * If the underlying cache storage supports multiget, this method should
 	 * be overridden to exploit that feature.
-	 * @param array $keys a list of keys identifying the cached values
+	 * @param array a list of keys identifying the cached values
 	 * @return array a list of cached values indexed by the keys
+	 * @since 1.0.8
 	 */
 	protected function getValues($keys)
 	{
@@ -271,11 +230,10 @@ abstract class CCache extends CApplicationComponent implements ICache, ArrayAcce
 	 * in {@link set()} already. So only the implementation of data storage
 	 * is needed.
 	 *
-	 * @param string $key the key identifying the value to be cached
-	 * @param string $value the value to be cached
-	 * @param integer $expire the number of seconds in which the cached value will expire. 0 means never expire.
+	 * @param string the key identifying the value to be cached
+	 * @param string the value to be cached
+	 * @param integer the number of seconds in which the cached value will expire. 0 means never expire.
 	 * @return boolean true if the value is successfully stored into cache, false otherwise
-	 * @throws CException if this method is not overridden by child classes
 	 */
 	protected function setValue($key,$value,$expire)
 	{
@@ -290,11 +248,10 @@ abstract class CCache extends CApplicationComponent implements ICache, ArrayAcce
 	 * in {@link add()} already. So only the implementation of data storage
 	 * is needed.
 	 *
-	 * @param string $key the key identifying the value to be cached
-	 * @param string $value the value to be cached
-	 * @param integer $expire the number of seconds in which the cached value will expire. 0 means never expire.
+	 * @param string the key identifying the value to be cached
+	 * @param string the value to be cached
+	 * @param integer the number of seconds in which the cached value will expire. 0 means never expire.
 	 * @return boolean true if the value is successfully stored into cache, false otherwise
-	 * @throws CException if this method is not overridden by child classes
 	 */
 	protected function addValue($key,$value,$expire)
 	{
@@ -305,9 +262,8 @@ abstract class CCache extends CApplicationComponent implements ICache, ArrayAcce
 	/**
 	 * Deletes a value with the specified key from cache
 	 * This method should be implemented by child classes to delete the data from actual cache storage.
-	 * @param string $key the key of the value to be deleted
+	 * @param string the key of the value to be deleted
 	 * @return boolean if no error happens during deletion
-	 * @throws CException if this method is not overridden by child classes
 	 */
 	protected function deleteValue($key)
 	{
@@ -316,22 +272,9 @@ abstract class CCache extends CApplicationComponent implements ICache, ArrayAcce
 	}
 
 	/**
-	 * Deletes all values from cache.
-	 * Child classes may implement this method to realize the flush operation.
-	 * @return boolean whether the flush operation was successful.
-	 * @throws CException if this method is not overridden by child classes
-	 * @since 1.1.5
-	 */
-	protected function flushValues()
-	{
-		throw new CException(Yii::t('yii','{className} does not support flushValues() functionality.',
-			array('{className}'=>get_class($this))));
-	}
-
-	/**
 	 * Returns whether there is a cache entry with a specified key.
 	 * This method is required by the interface ArrayAccess.
-	 * @param string $id a key identifying the cached value
+	 * @param string a key identifying the cached value
 	 * @return boolean
 	 */
 	public function offsetExists($id)
@@ -342,7 +285,7 @@ abstract class CCache extends CApplicationComponent implements ICache, ArrayAcce
 	/**
 	 * Retrieves the value from cache with a specified key.
 	 * This method is required by the interface ArrayAccess.
-	 * @param string $id a key identifying the cached value
+	 * @param string a key identifying the cached value
 	 * @return mixed the value stored in cache, false if the value is not in the cache or expired.
 	 */
 	public function offsetGet($id)
@@ -355,8 +298,8 @@ abstract class CCache extends CApplicationComponent implements ICache, ArrayAcce
 	 * If the cache already contains such a key, the existing value will be
 	 * replaced with the new ones. To add expiration and dependencies, use the set() method.
 	 * This method is required by the interface ArrayAccess.
-	 * @param string $id the key identifying the value to be cached
-	 * @param mixed $value the value to be cached
+	 * @param string the key identifying the value to be cached
+	 * @param mixed the value to be cached
 	 */
 	public function offsetSet($id, $value)
 	{
@@ -366,7 +309,7 @@ abstract class CCache extends CApplicationComponent implements ICache, ArrayAcce
 	/**
 	 * Deletes the value with the specified key from cache
 	 * This method is required by the interface ArrayAccess.
-	 * @param string $id the key of the value to be deleted
+	 * @param string the key of the value to be deleted
 	 * @return boolean if no error happens during deletion
 	 */
 	public function offsetUnset($id)

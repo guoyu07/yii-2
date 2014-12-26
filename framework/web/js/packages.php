@@ -1,81 +1,88 @@
 <?php
-/**
- * Built-in client script packages.
- *
- * Please see {@link CClientScript::packages} for explanation of the structure
- * of the returned array.
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
- * @license http://www.yiiframework.com/license/
- */
 
-return array(
+$packages=array(
 	'jquery'=>array(
-		'js'=>array(YII_DEBUG ? 'jquery.js' : 'jquery.min.js'),
+		YII_DEBUG ? 'jquery.js' : 'jquery.min.js',
 	),
 	'yii'=>array(
-		'js'=>array('jquery.yii.js'),
-		'depends'=>array('jquery'),
+		'jquery.yii.js',
 	),
 	'yiitab'=>array(
-		'js'=>array('jquery.yiitab.js'),
-		'depends'=>array('jquery'),
-	),
-	'yiiactiveform'=>array(
-		'js'=>array('jquery.yiiactiveform.js'),
-		'depends'=>array('jquery'),
-	),
-	'jquery.ui'=>array(
-		'js'=>array('jui/js/jquery-ui.min.js'),
-		'depends'=>array('jquery'),
+		'jquery.yiitab.js',
 	),
 	'bgiframe'=>array(
-		'js'=>array('jquery.bgiframe.js'),
-		'depends'=>array('jquery'),
+		'jquery.bgiframe.js',
+	),
+	'dimensions'=>array(
+		'jquery.dimensions.js',
 	),
 	'ajaxqueue'=>array(
-		'js'=>array('jquery.ajaxqueue.js'),
-		'depends'=>array('jquery'),
+		'jquery.ajaxqueue.js',
 	),
 	'autocomplete'=>array(
-		'js'=>array('jquery.autocomplete.js'),
-		'depends'=>array('jquery', 'bgiframe', 'ajaxqueue'),
+		'jquery.autocomplete.js',
 	),
 	'maskedinput'=>array(
-		'js'=>array(YII_DEBUG ? 'jquery.maskedinput.js' : 'jquery.maskedinput.min.js'),
-		'depends'=>array('jquery'),
+		'jquery.maskedinput.js',
 	),
 	'cookie'=>array(
-		'js'=>array('jquery.cookie.js'),
-		'depends'=>array('jquery'),
+		'jquery.cookie.js',
 	),
 	'treeview'=>array(
-		'js'=>array('jquery.treeview.js', 'jquery.treeview.edit.js', 'jquery.treeview.async.js'),
-		'depends'=>array('jquery', 'cookie'),
+		'jquery.treeview.js',
+		'jquery.treeview.async.js',
 	),
 	'multifile'=>array(
-		'js'=>array('jquery.multifile.js'),
-		'depends'=>array('jquery'),
+		'jquery.multifile.js',
 	),
 	'rating'=>array(
-		'js'=>array('jquery.rating.js'),
-		'depends'=>array('jquery', 'metadata'),
+		'jquery.rating.js',
 	),
 	'metadata'=>array(
-		'js'=>array('jquery.metadata.js'),
-		'depends'=>array('jquery'),
-	),
-	'bbq'=>array(
-		'js'=>array(YII_DEBUG ? 'jquery.ba-bbq.js' : 'jquery.ba-bbq.min.js'),
-		'depends'=>array('jquery'),
-	),
-	'history'=>array(
-		'js'=>array('jquery.history.js'),
-		'depends'=>array('jquery'),
-	),
-	'punycode'=>array(
-		'js'=>array(YII_DEBUG ? 'punycode.js' : 'punycode.min.js'),
+		'jquery.metadata.js',
 	),
 );
+
+$dependencies=array(
+	'yii'=>array(
+		'jquery',
+	),
+	'yiitab'=>array(
+		'jquery',
+	),
+	'bgiframe'=>array(
+		'jquery',
+	),
+	'dimensions'=>array(
+		'jquery',
+	),
+	'ajaxqueue'=>array(
+		'jquery',
+	),
+	'autocomplete'=>array(
+		'jquery',
+		'bgiframe',
+		'dimensions',
+		'ajaxqueue',
+	),
+	'maskedinput'=>array(
+		'jquery',
+	),
+	'cookie'=>array(
+		'jquery',
+	),
+	'treeview'=>array(
+		'jquery',
+		'cookie',
+	),
+	'multifile'=>array(
+		'jquery',
+	),
+	'rating'=>array(
+		'jquery',
+		'dimensions',
+		'metadata',
+	),
+);
+
+return array($packages,$dependencies);

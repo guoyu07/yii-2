@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -27,11 +27,8 @@
  * To extend CList by doing additional operations with each addition or removal
  * operation (e.g. performing type check), override {@link insertAt()}, and {@link removeAt()}.
  *
- * @property boolean $readOnly Whether this list is read-only or not. Defaults to false.
- * @property Iterator $iterator An iterator for traversing the items in the list.
- * @property integer $count The number of items in the list.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.collections
  * @since 1.0
  */
@@ -53,8 +50,8 @@ class CList extends CComponent implements IteratorAggregate,ArrayAccess,Countabl
 	/**
 	 * Constructor.
 	 * Initializes the list with an array or an iterable object.
-	 * @param array $data the initial data. Default is null, meaning no initialization.
-	 * @param boolean $readOnly whether the list is read-only
+	 * @param array the initial data. Default is null, meaning no initialization.
+	 * @param boolean whether the list is read-only
 	 * @throws CException If data is not null and neither an array nor an iterator.
 	 */
 	public function __construct($data=null,$readOnly=false)
@@ -73,7 +70,7 @@ class CList extends CComponent implements IteratorAggregate,ArrayAccess,Countabl
 	}
 
 	/**
-	 * @param boolean $value whether this list is read-only or not
+	 * @param boolean whether this list is read-only or not
 	 */
 	protected function setReadOnly($value)
 	{
@@ -101,7 +98,6 @@ class CList extends CComponent implements IteratorAggregate,ArrayAccess,Countabl
 	}
 
 	/**
-	 * Returns the number of items in the list.
 	 * @return integer the number of items in the list
 	 */
 	public function getCount()
@@ -112,7 +108,7 @@ class CList extends CComponent implements IteratorAggregate,ArrayAccess,Countabl
 	/**
 	 * Returns the item at the specified offset.
 	 * This method is exactly the same as {@link offsetGet}.
-	 * @param integer $index the index of the item
+	 * @param integer the index of the item
 	 * @return mixed the item at the index
 	 * @throws CException if the index is out of the range
 	 */
@@ -120,7 +116,7 @@ class CList extends CComponent implements IteratorAggregate,ArrayAccess,Countabl
 	{
 		if(isset($this->_d[$index]))
 			return $this->_d[$index];
-		elseif($index>=0 && $index<$this->_c) // in case the value is null
+		else if($index>=0 && $index<$this->_c) // in case the value is null
 			return $this->_d[$index];
 		else
 			throw new CException(Yii::t('yii','List index "{index}" is out of bound.',
@@ -129,7 +125,7 @@ class CList extends CComponent implements IteratorAggregate,ArrayAccess,Countabl
 
 	/**
 	 * Appends an item at the end of the list.
-	 * @param mixed $item new item
+	 * @param mixed new item
 	 * @return integer the zero-based index at which the item is added
 	 */
 	public function add($item)
@@ -142,8 +138,8 @@ class CList extends CComponent implements IteratorAggregate,ArrayAccess,Countabl
 	 * Inserts an item at the specified position.
 	 * Original item at the position and the next items
 	 * will be moved one step towards the end.
-	 * @param integer $index the specified position.
-	 * @param mixed $item new item
+	 * @param integer the specified position.
+	 * @param mixed new item
 	 * @throws CException If the index specified exceeds the bound or the list is read-only
 	 */
 	public function insertAt($index,$item)
@@ -152,7 +148,7 @@ class CList extends CComponent implements IteratorAggregate,ArrayAccess,Countabl
 		{
 			if($index===$this->_c)
 				$this->_d[$this->_c++]=$item;
-			elseif($index>=0 && $index<$this->_c)
+			else if($index>=0 && $index<$this->_c)
 			{
 				array_splice($this->_d,$index,0,array($item));
 				$this->_c++;
@@ -169,7 +165,7 @@ class CList extends CComponent implements IteratorAggregate,ArrayAccess,Countabl
 	 * Removes an item from the list.
 	 * The list will first search for the item.
 	 * The first item found will be removed from the list.
-	 * @param mixed $item the item to be removed.
+	 * @param mixed the item to be removed.
 	 * @return integer the index at which the item is being removed
 	 * @throws CException If the item does not exist
 	 */
@@ -186,7 +182,7 @@ class CList extends CComponent implements IteratorAggregate,ArrayAccess,Countabl
 
 	/**
 	 * Removes an item at the specified position.
-	 * @param integer $index the index of the item to be removed.
+	 * @param integer the index of the item to be removed.
 	 * @return mixed the removed item.
 	 * @throws CException If the index specified exceeds the bound or the list is read-only
 	 */
@@ -224,7 +220,7 @@ class CList extends CComponent implements IteratorAggregate,ArrayAccess,Countabl
 	}
 
 	/**
-	 * @param mixed $item the item
+	 * @param mixed the item
 	 * @return boolean whether the list contains the item
 	 */
 	public function contains($item)
@@ -233,7 +229,7 @@ class CList extends CComponent implements IteratorAggregate,ArrayAccess,Countabl
 	}
 
 	/**
-	 * @param mixed $item the item
+	 * @param mixed the item
 	 * @return integer the index of the item in the list (0 based), -1 if not found.
 	 */
 	public function indexOf($item)
@@ -255,7 +251,7 @@ class CList extends CComponent implements IteratorAggregate,ArrayAccess,Countabl
 	/**
 	 * Copies iterable data into the list.
 	 * Note, existing data in the list will be cleared first.
-	 * @param mixed $data the data to be copied from, must be an array or object implementing Traversable
+	 * @param mixed the data to be copied from, must be an array or object implementing Traversable
 	 * @throws CException If data is neither an array nor a Traversable.
 	 */
 	public function copyFrom($data)
@@ -269,14 +265,14 @@ class CList extends CComponent implements IteratorAggregate,ArrayAccess,Countabl
 			foreach($data as $item)
 				$this->add($item);
 		}
-		elseif($data!==null)
+		else if($data!==null)
 			throw new CException(Yii::t('yii','List data must be an array or an object implementing Traversable.'));
 	}
 
 	/**
 	 * Merges iterable data into the map.
 	 * New data will be appended to the end of the existing data.
-	 * @param mixed $data the data to be merged with, must be an array or object implementing Traversable
+	 * @param mixed the data to be merged with, must be an array or object implementing Traversable
 	 * @throws CException If data is neither an array nor an iterator.
 	 */
 	public function mergeWith($data)
@@ -288,14 +284,14 @@ class CList extends CComponent implements IteratorAggregate,ArrayAccess,Countabl
 			foreach($data as $item)
 				$this->add($item);
 		}
-		elseif($data!==null)
+		else if($data!==null)
 			throw new CException(Yii::t('yii','List data must be an array or an object implementing Traversable.'));
 	}
 
 	/**
 	 * Returns whether there is an item at the specified offset.
 	 * This method is required by the interface ArrayAccess.
-	 * @param integer $offset the offset to check on
+	 * @param integer the offset to check on
 	 * @return boolean
 	 */
 	public function offsetExists($offset)
@@ -306,7 +302,7 @@ class CList extends CComponent implements IteratorAggregate,ArrayAccess,Countabl
 	/**
 	 * Returns the item at the specified offset.
 	 * This method is required by the interface ArrayAccess.
-	 * @param integer $offset the offset to retrieve item.
+	 * @param integer the offset to retrieve item.
 	 * @return mixed the item at the offset
 	 * @throws CException if the offset is invalid
 	 */
@@ -318,8 +314,8 @@ class CList extends CComponent implements IteratorAggregate,ArrayAccess,Countabl
 	/**
 	 * Sets the item at the specified offset.
 	 * This method is required by the interface ArrayAccess.
-	 * @param integer $offset the offset to set item
-	 * @param mixed $item the item value
+	 * @param integer the offset to set item
+	 * @param mixed the item value
 	 */
 	public function offsetSet($offset,$item)
 	{
@@ -335,7 +331,7 @@ class CList extends CComponent implements IteratorAggregate,ArrayAccess,Countabl
 	/**
 	 * Unsets the item at the specified offset.
 	 * This method is required by the interface ArrayAccess.
-	 * @param integer $offset the offset to unset item
+	 * @param integer the offset to unset item
 	 */
 	public function offsetUnset($offset)
 	{

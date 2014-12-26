@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -14,16 +14,14 @@
  * PHP SOAP extension is required.
  *
  * CWebService makes use of {@link CWsdlGenerator} and can generate the WSDL
- * on-the-fly without requiring you to write complex WSDL. However WSDL generator
- * could be customized through {@link generatorConfig} property.
+ * on-the-fly without requiring you to write complex WSDL.
  *
  * To generate the WSDL based on doc comment blocks in the service provider class,
  * call {@link generateWsdl} or {@link renderWsdl}. To process the web service
  * requests, call {@link run}.
  *
- * @property string $methodName The currently requested method name. Empty if no method is being requested.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.web.services
  * @since 1.0
  */
@@ -51,6 +49,7 @@ class CWebService extends CComponent
 	 * @var string the ID of the cache application component that is used to cache the generated WSDL.
 	 * Defaults to 'cache' which refers to the primary cache application component.
 	 * Set this property to false if you want to disable caching WSDL.
+	 * @since 1.0.10
 	 */
 	public $cacheID='cache';
 	/**
@@ -61,7 +60,7 @@ class CWebService extends CComponent
 	 * @var array a list of classes that are declared as complex types in WSDL.
 	 * This should be an array with WSDL types as keys and names of PHP classes as values.
 	 * A PHP class can also be specified as a path alias.
-	 * @see http://www.php.net/manual/en/soapserver.soapserver.php
+	 * @see http://www.php.net/manual/en/function.soap-soapserver-construct.php
 	 */
 	public $classMap=array();
 	/**
@@ -74,27 +73,18 @@ class CWebService extends CComponent
 	public $soapVersion;
 	/**
 	 * @var integer the persistence mode of the SOAP server.
-	 * @see http://www.php.net/manual/en/soapserver.setpersistence.php
+	 * @see http://www.php.net/manual/en/function.soap-soapserver-setpersistence.php
 	 */
 	public $persistence;
-	/**
-	 * @var string|array WSDL generator configuration. This property may be useful in purpose of enhancing features
-	 * of the standard {@link CWsdlGenerator} class by extending it. For example, some developers may need support
-	 * of the <code>xsd:xsd:base64Binary</code> elements. Another use case is to change initial values
-	 * at instantiation of the default {@link CWsdlGenerator}. The value of this property will be passed
-	 * to {@link Yii::createComponent} to create the generator object. Default value is 'CWsdlGenerator'.
-	 * @since 1.1.12
-	 */
-	public $generatorConfig='CWsdlGenerator';
 
 	private $_method;
 
 
 	/**
 	 * Constructor.
-	 * @param mixed $provider the web service provider class name or object
-	 * @param string $wsdlUrl the URL for WSDL. This is required by {@link run()}.
-	 * @param string $serviceUrl the URL for the Web service. This is required by {@link generateWsdl()} and {@link renderWsdl()}.
+	 * @param mixed the web service provider class name or object
+	 * @param string the URL for WSDL. This is required by {@link run()}.
+	 * @param string the URL for the Web service. This is required by {@link generateWsdl()} and {@link renderWsdl()}.
 	 */
 	public function __construct($provider,$wsdlUrl,$serviceUrl)
 	{
@@ -105,7 +95,7 @@ class CWebService extends CComponent
 
 	/**
 	 * The PHP error handler.
-	 * @param CErrorEvent $event the PHP error event
+	 * @param CErrorEvent the PHP error event
 	 */
 	public function handleError($event)
 	{
@@ -128,7 +118,7 @@ class CWebService extends CComponent
 	{
 		$wsdl=$this->generateWsdl();
 		header('Content-Type: text/xml;charset='.$this->encoding);
-		header('Content-Length: '.(function_exists('mb_strlen') ? mb_strlen($wsdl,'8bit') : strlen($wsdl)));
+		header('Content-Length: '.strlen($wsdl));
 		echo $wsdl;
 	}
 
@@ -147,7 +137,7 @@ class CWebService extends CComponent
 			if(($wsdl=$cache->get($key))!==false)
 				return $wsdl;
 		}
-		$generator=Yii::createComponent($this->generatorConfig);
+		$generator=new CWsdlGenerator;
 		$wsdl=$generator->generateWsdl($providerClass,$this->serviceUrl,$this->encoding);
 		if(isset($key))
 			$cache->set($key,$wsdl,$this->wsdlCacheDuration);
@@ -174,29 +164,9 @@ class CWebService extends CComponent
 				$provider=$this->provider;
 
 			if(method_exists($server,'setObject'))
-			{
-				if (is_array($this->generatorConfig) && isset($this->generatorConfig['bindingStyle'])
-					&& $this->generatorConfig['bindingStyle']==='document')
-				{
-					$server->setObject(new CDocumentSoapObjectWrapper($provider));
-				}
-				else
-				{
-					$server->setObject($provider);
-				}
-			}
+				$server->setObject($provider);
 			else
-			{
-				if (is_array($this->generatorConfig) && isset($this->generatorConfig['bindingStyle'])
-					&& $this->generatorConfig['bindingStyle']==='document')
-				{
-					$server->setClass('CDocumentSoapObjectWrapper',$provider);
-				}
-				else
-				{
-					$server->setClass('CSoapObjectWrapper',$provider);
-				}
-			}
+				$server->setClass('CSoapObjectWrapper',$provider);
 
 			if($provider instanceof IWebServiceProvider)
 			{
@@ -211,21 +181,18 @@ class CWebService extends CComponent
 		}
 		catch(Exception $e)
 		{
-			if($e->getCode()!==self::SOAP_ERROR) // non-PHP error
+			if($e->getCode()===self::SOAP_ERROR) // a PHP error
+				$message=$e->getMessage();
+			else
 			{
+				$message=$e->getMessage().' ('.$e->getFile().':'.$e->getLine().')';
 				// only log for non-PHP-error case because application's error handler already logs it
 				// php <5.2 doesn't support string conversion auto-magically
 				Yii::log($e->__toString(),CLogger::LEVEL_ERROR,'application');
 			}
-			$message=$e->getMessage();
 			if(YII_DEBUG)
-				$message.=' ('.$e->getFile().':'.$e->getLine().")\n".$e->getTraceAsString();
-
-			// We need to end application explicitly because of
-			// http://bugs.php.net/bug.php?id=49513
-			Yii::app()->onEndRequest(new CEvent($this));
+				$message.="\n".$e->getTraceAsString();
 			$server->fault(get_class($e),$message);
-			exit(1);
 		}
 	}
 
@@ -250,14 +217,14 @@ class CWebService extends CComponent
 
 	/**
 	 * @return array options for creating SoapServer instance
-	 * @see http://www.php.net/manual/en/soapserver.soapserver.php
+	 * @see http://www.php.net/manual/en/function.soap-soapserver-construct.php
 	 */
 	protected function getOptions()
 	{
 		$options=array();
 		if($this->soapVersion==='1.1')
 			$options['soap_version']=SOAP_1_1;
-		elseif($this->soapVersion==='1.2')
+		else if($this->soapVersion==='1.2')
 			$options['soap_version']=SOAP_1_2;
 		if($this->actor!==null)
 			$options['actor']=$this->actor;
@@ -278,7 +245,9 @@ class CWebService extends CComponent
  * CSoapObjectWrapper is a wrapper class internally used when SoapServer::setObject() is not defined.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.web.services
+ * @since 1.0.5
  */
 class CSoapObjectWrapper
 {
@@ -289,7 +258,7 @@ class CSoapObjectWrapper
 
 	/**
 	 * Constructor.
-	 * @param object $object the service provider
+	 * @param object the service provider
 	 */
 	public function __construct($object)
 	{
@@ -299,57 +268,13 @@ class CSoapObjectWrapper
 	/**
 	 * PHP __call magic method.
 	 * This method calls the service provider to execute the actual logic.
-	 * @param string $name method name
-	 * @param array $arguments method arguments
+	 * @param string method name
+	 * @param array method arguments
 	 * @return mixed method return value
 	 */
 	public function __call($name,$arguments)
 	{
 		return call_user_func_array(array($this->object,$name),$arguments);
-	}
-}
-
-/**
- * CDocumentSoapObjectWrapper is a wrapper class internally used
- * when generatorConfig contains bindingStyle key set to document value.
- *
- * @author Jan Was <jwas@nets.com.pl>
- * @package system.web.services
- */
-class CDocumentSoapObjectWrapper
-{
-	/**
-	 * @var object the service provider
-	 */
-	public $object=null;
-
-	/**
-	 * Constructor.
-	 * @param object $object the service provider
-	 */
-	public function __construct($object)
-	{
-		$this->object=$object;
-	}
-
-	/**
-	 * PHP __call magic method.
-	 * This method calls the service provider to execute the actual logic.
-	 * @param string $name method name
-	 * @param array $arguments method arguments
-	 * @return mixed method return value
-	 */
-	public function __call($name,$arguments)
-	{
-		if (is_array($arguments) && isset($arguments[0]))
-		{
-			$result = call_user_func_array(array($this->object, $name), (array)$arguments[0]);
-		}
-		else
-		{
-			$result = call_user_func_array(array($this->object, $name), $arguments);
-		}
-		return $result === null ? $result : array($name . 'Result' => $result); 
 	}
 }
 

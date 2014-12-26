@@ -1,31 +1,21 @@
-<?php
-$this->breadcrumbs=array(
-	'Manage Posts',
-);
-?>
-<h1>Manage Posts</h1>
+<h2>Manage Posts</h2>
 
-<?php $this->widget('zii.widgets.grid.CGridView', array(
-	'dataProvider'=>$model->search(),
-	'filter'=>$model,
-	'columns'=>array(
-		array(
-			'name'=>'title',
-			'type'=>'raw',
-			'value'=>'CHtml::link(CHtml::encode($data->title), $data->url)'
-		),
-		array(
-			'name'=>'status',
-			'value'=>'Lookup::item("PostStatus",$data->status)',
-			'filter'=>Lookup::items('PostStatus'),
-		),
-		array(
-			'name'=>'create_time',
-			'type'=>'datetime',
-			'filter'=>false,
-		),
-		array(
-			'class'=>'CButtonColumn',
-		),
-	),
-)); ?>
+<table class="dataGrid">
+  <tr>
+    <th><?php echo $sort->link('status'); ?></th>
+    <th><?php echo $sort->link('title'); ?></th>
+    <th><?php echo $sort->link('createTime'); ?></th>
+    <th><?php echo $sort->link('updateTime'); ?></th>
+  </tr>
+<?php foreach($posts as $n=>$post): ?>
+  <tr class="<?php echo $n%2?'even':'odd';?>">
+    <td><?php echo CHtml::encode($post->statusText); ?></td>
+    <td><?php echo CHtml::link(CHtml::encode($post->title),array('show','id'=>$post->id)); ?></td>
+    <td><?php echo date('F j, Y',$post->createTime); ?></td>
+    <td><?php echo date('F j, Y',$post->updateTime); ?></td>
+  </tr>
+<?php endforeach; ?>
+</table>
+
+<br/>
+<?php $this->widget('CLinkPager',array('pages'=>$pages)); ?>

@@ -3,8 +3,9 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2010 Yii Software LLC
+ * @copyright Copyright &copy; 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
+ * @version $Id$
  */
 
 ;(function($) {
@@ -19,16 +20,12 @@ $.yii = {
 			f.style.display = 'none';
 			element.parentNode.appendChild(f);
 			f.method = 'POST';
-		}
+		};
 		if (typeof url == 'string' && url != '') {
 			f.action = url;
-		}
-		if (element.target != null) {
-			f.target = element.target;
-		}
-
+		};
 		var inputs = [];
-		$.each(params, function(name, value) {
+		jQuery.each(params, function(name, value) {
 			var input = document.createElement("input");
 			input.setAttribute("type", "hidden");
 			input.setAttribute("name", name);
@@ -37,13 +34,9 @@ $.yii = {
 			inputs.push(input);
 		});
 
-		// remember who triggers the form submission
-		// this is used by jquery.yiiactiveform.js
-		$(f).data('submitObject', $(element));
+		jQuery(f).trigger('submit');
 
-		$(f).trigger('submit');
-
-		$.each(inputs, function() {
+		jQuery.each(inputs, function() {
 			f.removeChild(this);
 		});
 	}

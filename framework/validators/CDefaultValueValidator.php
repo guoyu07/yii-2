@@ -4,18 +4,19 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
 /**
  * CDefaultValueValidator sets the attributes with the specified value.
- * It does not do validation but rather allows setting a default value at the
- * same time validation is performed. Usually this happens when calling either
- * <code>$model->validate()</code> or <code>$model->save()</code>.
+ * It does not do validation. Its existence is mainly to allow
+ * specifying attribute default values in a dynamic way.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.validators
+ * @since 1.0.2
  */
 class CDefaultValueValidator extends CValidator
 {
@@ -32,8 +33,8 @@ class CDefaultValueValidator extends CValidator
 
 	/**
 	 * Validates the attribute of the object.
-	 * @param CModel $object the object being validated
-	 * @param string $attribute the attribute being validated
+	 * @param CModel the object being validated
+	 * @param string the attribute being validated
 	 */
 	protected function validateAttribute($object,$attribute)
 	{

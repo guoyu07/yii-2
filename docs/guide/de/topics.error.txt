@@ -19,11 +19,11 @@ Aufruf der PHP-Funktionen
 [set_exception_handler](http://www.php.net/manual/de/function.set-exception-handler.php)
 und [set_error_handler](http://www.php.net/manual/de/function.set-error-handler.php)
 registriert. Wenn Sie nicht möchten, dass Yii sich um Fehler und Exceptions
-kümmert, können Sie im [Startscript](/doc/guide/basics.entry) die Konstanten 
+kümmert, können Sie im [Eingangsscript](/doc/guide/basics.entry) die Konstanten 
 `YII_ENABLE_ERROR_HANDLER` und `YII_ENABLE_EXCEPTION_HANDLER` als false definieren.
 
-Per Vorgabe löst [handleError|CApplication::handleError] (bzw.
-[handleException|CApplication::handleException]) ein
+Per Vorgabe löst [errorHandler|CApplication::errorHandler] (bzw.
+[exceptionHandler|CApplication::exceptionHandler]) ein
 [onError|CApplication::onError]-Event (bzw.
 [onException|CApplication::onException]-Event) aus. Falls der Fehler (bzw. die
 Exception) von keinem Eventhandler behandelt wird, ruft die Routine die
@@ -38,21 +38,20 @@ folgender Syntax ausgelöst:
 
 ~~~
 [php]
-throw new ExceptionClass('ExceptionMeldung');
+throw new ExceptionClass('ExceptionNachricht');
 ~~~
 
-Yii definiert drei Exceptionklassen: [CException], [CDbException] und [CHttpException].
-[CException] ist die allgemeine Exceptionklasse. [CDbException] steht für
-Exceptions die bei Datenbankoperationen ausgelöst werden. [CHttpException]
-ist eine Exception, die dem Besucher angezeigt werden soll. Sie hat
+Yii definiert zwei Exceptionklassen: [CException] und [CHttpException].
+Erstere ist eine allgemeine Exceptionklasse, während letztere eine Exception
+darstellt, die dem Endanwender angezeigt werden soll. Sie hat auch
 eine [statusCode|CHttpException::statusCode]-Eigenschaft, die für den
-HTTP-Statuscode steht. Wie im folgenden gezeigt, bestimmt die Klasse
+HTTP-Statuscode steht. Wie wir gleich sehen werden, bestimmt die Klasse 
 einer Exception darüber, wie diese angezeigt werden soll.
 
 > Tip|Tipp: Durch das Auslösen einer [CHttpException]-Exception kann man sehr
 einfach auf Fehlfunktionen aufmerksam machen. Falls ein Benutzer z.B. eine
-falsche Beitrags-ID übergibt, kann man mit folgender Anweisung einen 404-Fehler 
-(Seite nicht gefunden) ausgeben:
+falsche Beitrags-ID übergibt, können wir die folgende Anweisung verwenden um
+einen 404-Fehler (Seite nicht gefunden) auszugeben:
 ~~~
 [php]
 // Falls Beitrags-ID ungültig ist:
@@ -82,28 +81,27 @@ herauszufinden.
 [CErrorHandler] sucht in dieser Reihenfolge nach der entsprechenden 
 View-Datei:
 
-   1. `WebVerzeichnis/themes/ThemeName/views/system`: dies ist das Verzeichnis für
-`system`-Views im gerade aktiven Theme.
+   1. `WebRoot/themes/MotivName/views/system`: dies ist das Verzeichnis für
+`system`-Views im gerade aktiven Motiv (engl: theme).
 
-   2. `WebVerzeichnis/protected/views/system`: dies ist das Standardverzeichnis
+   2. `WebRoot/protected/views/system`: dies ist das Standardverzeichnis
 für `system`-Views einer Anwendung.
 
    3. `yii/framework/views`: dies ist das Standardverzeichnis für
 `system`-Views, die das Yii-Framework bereitstellt.
 
-Möchte man die Fehlerdarstellung anpassen, kann man im System-View-Verzeichnis
-der Anwendung oder des Themes Dateien anlegen. Jede dieser View-Datei ist ein 
-gewöhnliches PHP-Script, das
-hauptsächlich aus HTML-Code besteht. Mehr Details finden Sie in den
+Wenn wir also die Darstellung der Fehler anpassen möchten, können wir einfach
+im system-View-Verzeichnis unserer Anwendung oder unseres
+Motivs View-Dateien anlegen. Jede View-Datei ist ein gewöhnliches PHP-Script, das
+hauptsächlich aus HTML-Code besteht. Mehr Details finden sie in den
 vorgegebenen View-Dateien im `view`-Verzeichnis des Frameworks.
 
-Fehlerbehandlung mit einer Action
----------------------------------
+### Fehlerbehandlung mit einer Action
 
-Fehler können auch über eine
-[Controller-Action](/doc/guide/basics.controller#action) angezeigt werden.
-Dazu konfiguriert man die Fehlerroute in der Anwendungskonfiguration wie
-folgt:
+Seit Version 1.0.6 erlaubt Yii die Verwendung einer
+[Controller-Action](/doc/guide/basics.controller#action) zur Anzeige eines
+Fehlers. Dazu müssen wir die Fehlerroute in der Anwendungskonfiguration wie
+folgt konfigurieren:
 
 ~~~
 [php]
@@ -117,11 +115,11 @@ return array(
 );
 ~~~
 
-Hier wird die [CErrorHandler::errorAction]-Eigenschaft auf die Route
-`site/error` gesetzt, was der `error`-Action im `SiteController` entspricht.
-Man kann natürlich auch eine andere Route verwenden.
+Hier setzen wir die [CErrorHandler::errorAction]-Eigenschaft auf die Route
+`site/error`, was sich auf die `error`-Action in `SiteController` bezieht. Bei
+Bedarf können wir auch eine andere Route verwenden.
 
-Die `error`-Action kann einfach so aussehen:
+Die `error`-Action können wir wie folgt schreiben:
 
 ~~~
 [php]
@@ -132,37 +130,37 @@ public function actionError()
 }
 ~~~
 
-In der Action holt man sich zunächst die detaillierte Fehlerinformationen aus
+In der Action holen wir uns zunächst die detaillierte Fehlerinformationen aus
 [CErrorHandler::error]. Falls diese nicht leer ist, wird der `error`-View
 zusammen mit den Fehlerinformationen gerendert. Die von [CErrorHandler::error]
 zurückgegebene Fehlerinformation ist ein Array mit den folgenden Feldern:
 
  * `code`: der HTTP-Statuscode (z.B. 403, 500);
  * `type`: der Fehlertyp (z.B. [CHttpException], `PHP Error`);
- * `message`: die Fehlermeldung;
+ * `message`: die Fehlernachricht;
  * `file`: der Name des PHP-Scripts, in dem der Fehler aufgetreten ist;
  * `line`: die Nummer der Zeile, in der der Fehler aufgetreten ist;
  * `trace`: der Aufrufstapel des Fehlers;
  * `source`: der Quelltextbereich, in dem der Fehler aufgetreten ist.
 
-> Tip|Tipp: Die Prüfung, ob [CErrorHandler::error] leer ist oder nicht, wird
-> durchgeführt, da die `error`-Action auch direkt von einem Endbenutzer
-> aufgerufen werden könnte. In diesem Fall gibt es aber keinen Fehler. Da 
-> das `$error`-Array direkt an den View übergeben wird, wird es automatisch in
-> einzelne Variablen expandiert. Daher kann man im View die Variablen direkt
+> Tip|Tipp: Die Prüfung, ob [CErrorHandler::error] leer ist oder nicht, führen
+> wir durch, da die `error`-Action auch direkt von einem Endbenutzer
+> aufgerufen werden könnte. In diesem Fall gibt es aber keinen Fehler. Da wir
+> das `$error`-Array direkt an den View übergeben, wird es automatisch in
+> einzelne Variablen expandiert. Daher können wir im View die Variablen direkt
 > als `$code`, `$type` usw. ansprechen.
 
 
-Loggen von Meldungen
---------------------
+Loggen von Nachrichten
+----------------------
 
-Immer wenn ein Fehler auftritt, wird eine Meldung mit der Stufe `error`
+Immer wenn ein Fehler auftritt, wird eine Nachricht mit der Stufe `error`
 geloggt. Falls der Fehler von einer PHP-Warnung oder einem PHP-Hinweis stammt,
-wird die Meldung unter der Kategorie `php` geloggt. Stammt der Fehler von
+wird die Nachricht mit der Kategorie `php` geloggt. Stammt der Fehler von
 einer nicht-abgefangenen Exception, lautet die Kategorie
 `exception.ExceptionKlassenName` (bei [CHttpException] wird auch deren
 [statusCode|CHttpException::statusCode] an die Kategorie angehängt). Man kann
 somit die Verfahren zur [Protokollierung](/doc/guide/topics.logging) benutzen,
 um Ausführungsfehler einer Anwendung zu überwachen.
 
-<div class="revision">$Id: topics.error.txt 3374 2011-08-05 23:01:19Z alexander.makarow $</div>
+<div class="revision">$Id: topics.error.txt 1053 2009-05-23 02:34:03Z qiang.xue $</div>

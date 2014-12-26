@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -18,9 +18,8 @@
  * (for example, the authorization data for a personal blog system).
  * Use {@link CDbAuthManager} for more complex authorization data.
  *
- * @property array $authItems The authorization items of the specific type.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.web.auth
  * @since 1.0
  */
@@ -55,52 +54,83 @@ class CPhpAuthManager extends CAuthManager
 
 	/**
 	 * Performs access check for the specified user.
-	 * @param string $itemName the name of the operation that need access check
-	 * @param mixed $userId the user ID. This can be either an integer or a string representing
+	 * @param string the name of the operation that need access check
+	 * @param mixed the user ID. This should can be either an integer and a string representing
 	 * the unique identifier of a user. See {@link IWebUser::getId}.
-	 * @param array $params name-value pairs that would be passed to biz rules associated
+	 * @param array name-value pairs that would be passed to biz rules associated
 	 * with the tasks and roles assigned to the user.
-	 * Since version 1.1.11 a param with name 'userId' is added to this array, which holds the value of <code>$userId</code>.
 	 * @return boolean whether the operations can be performed by the user.
 	 */
 	public function checkAccess($itemName,$userId,$params=array())
 	{
-		if(!isset($this->_items[$itemName]))
-			return false;
-		$item=$this->_items[$itemName];
-		Yii::trace('Checking permission "'.$item->getName().'"','system.web.auth.CPhpAuthManager');
-		if(!isset($params['userId']))
-		    $params['userId'] = $userId;
-		if($this->executeBizRule($item->getBizRule(),$params,$item->getData()))
+		if(!empty($this->defaultRoles) && $this->checkDefaultRoles($itemName,$params))
+			return true;
+
+		// check directly assigned items
+		$names=array();
+		foreach($this->getAuthAssignments($userId) as $assignment)
 		{
-			if(in_array($itemName,$this->defaultRoles))
+			$item=$this->getAuthItem($assignment->getItemName());
+			Yii::trace('Checking permission "'.($item ? $item->getName() : 'unknown').'"','system.web.auth.CPhpAuthManager');
+			if($item!==null && $this->executeBizRule($assignment->getBizRule(),$params,$assignment->getData())
+				&& $this->executeBizRule($item->getBizRule(),$params,$item->getData()))
+			{
+				if($item->getName()===$itemName)
+					return true;
+				$names[]=$item->getName();
+			}
+		}
+
+		// check all descendant items
+		while($names!==array())
+		{
+			$items=$this->getItemChildren($names);
+			$names=array();
+			foreach($items as $item)
+			{
+				Yii::trace('Checking permission "'.$item->getName().'"','system.web.auth.CPhpAuthManager');
+				if($this->executeBizRule($item->getBizRule(),$params,$item->getData()))
+				{
+					if($item->getName()===$itemName)
+						return true;
+					$names[]=$item->getName();
+				}
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Checks the access based on the default roles as declared in {@link defaultRoles}.
+	 * @param string the name of the operation that need access check
+	 * @param array name-value pairs that would be passed to biz rules associated
+	 * with the tasks and roles assigned to the user.
+	 * @return boolean whether the operations can be performed by the user according to the default roles.
+	 * @since 1.0.3
+	 */
+	protected function checkDefaultRoles($itemName,$params)
+	{
+		foreach($this->defaultRoles as $role)
+		{
+			Yii::trace('Checking default role "'.$role.'"','system.web.auth.CPhpAuthManager');			
+			$item=$this->getAuthItem($role);
+			if($item!==null && $item->checkAccess($itemName,$params))
 				return true;
-			if(isset($this->_assignments[$userId][$itemName]))
-			{
-				$assignment=$this->_assignments[$userId][$itemName];
-				if($this->executeBizRule($assignment->getBizRule(),$params,$assignment->getData()))
-					return true;
-			}
-			foreach($this->_children as $parentName=>$children)
-			{
-				if(isset($children[$itemName]) && $this->checkAccess($parentName,$userId,$params))
-					return true;
-			}
 		}
 		return false;
 	}
 
 	/**
 	 * Adds an item as a child of another item.
-	 * @param string $itemName the parent item name
-	 * @param string $childName the child item name
-	 * @return boolean whether the item is added successfully
+	 * @param string the parent item name
+	 * @param string the child item name
 	 * @throws CException if either parent or child doesn't exist or if a loop has been detected.
 	 */
 	public function addItemChild($itemName,$childName)
 	{
 		if(!isset($this->_items[$childName],$this->_items[$itemName]))
-			throw new CException(Yii::t('yii','Either "{parent}" or "{child}" does not exist.',array('{child}'=>$childName,'{parent}'=>$itemName)));
+			throw new CException(Yii::t('yii','Either "{parent}" or "{child}" does not exist.',array('{child}'=>$childName,'{name}'=>$itemName)));
 		$child=$this->_items[$childName];
 		$item=$this->_items[$itemName];
 		$this->checkItemChildType($item->getType(),$child->getType());
@@ -111,14 +141,13 @@ class CPhpAuthManager extends CAuthManager
 			throw new CException(Yii::t('yii','The item "{parent}" already has a child "{child}".',
 				array('{child}'=>$childName,'{parent}'=>$itemName)));
 		$this->_children[$itemName][$childName]=$this->_items[$childName];
-		return true;
 	}
 
 	/**
 	 * Removes a child from its parent.
 	 * Note, the child item is not deleted. Only the parent-child relationship is removed.
-	 * @param string $itemName the parent item name
-	 * @param string $childName the child item name
+	 * @param string the parent item name
+	 * @param string the child item name
 	 * @return boolean whether the removal is successful
 	 */
 	public function removeItemChild($itemName,$childName)
@@ -134,8 +163,8 @@ class CPhpAuthManager extends CAuthManager
 
 	/**
 	 * Returns a value indicating whether a child exists within a parent.
-	 * @param string $itemName the parent item name
-	 * @param string $childName the child item name
+	 * @param string the parent item name
+	 * @param string the child item name
 	 * @return boolean whether the child exists
 	 */
 	public function hasItemChild($itemName,$childName)
@@ -145,8 +174,8 @@ class CPhpAuthManager extends CAuthManager
 
 	/**
 	 * Returns the children of the specified item.
-	 * @param mixed $names the parent item name. This can be either a string or an array.
-	 * The latter represents a list of item names.
+	 * @param mixed the parent item name. This can be either a string or an array.
+	 * The latter represents a list of item names (available since version 1.0.5).
 	 * @return array all child items of the parent
 	 */
 	public function getItemChildren($names)
@@ -165,11 +194,11 @@ class CPhpAuthManager extends CAuthManager
 
 	/**
 	 * Assigns an authorization item to a user.
-	 * @param string $itemName the item name
-	 * @param mixed $userId the user ID (see {@link IWebUser::getId})
-	 * @param string $bizRule the business rule to be executed when {@link checkAccess} is called
+	 * @param string the item name
+	 * @param mixed the user ID (see {@link IWebUser::getId})
+	 * @param string the business rule to be executed when {@link checkAccess} is called
 	 * for this particular authorization item.
-	 * @param mixed $data additional data associated with this assignment
+	 * @param mixed additional data associated with this assignment
 	 * @return CAuthAssignment the authorization assignment information.
 	 * @throws CException if the item does not exist or if the item has already been assigned to the user
 	 */
@@ -177,7 +206,7 @@ class CPhpAuthManager extends CAuthManager
 	{
 		if(!isset($this->_items[$itemName]))
 			throw new CException(Yii::t('yii','Unknown authorization item "{name}".',array('{name}'=>$itemName)));
-		elseif(isset($this->_assignments[$userId][$itemName]))
+		else if(isset($this->_assignments[$userId][$itemName]))
 			throw new CException(Yii::t('yii','Authorization item "{item}" has already been assigned to user "{user}".',
 				array('{item}'=>$itemName,'{user}'=>$userId)));
 		else
@@ -186,8 +215,8 @@ class CPhpAuthManager extends CAuthManager
 
 	/**
 	 * Revokes an authorization assignment from a user.
-	 * @param string $itemName the item name
-	 * @param mixed $userId the user ID (see {@link IWebUser::getId})
+	 * @param string the item name
+	 * @param mixed the user ID (see {@link IWebUser::getId})
 	 * @return boolean whether removal is successful
 	 */
 	public function revoke($itemName,$userId)
@@ -203,8 +232,8 @@ class CPhpAuthManager extends CAuthManager
 
 	/**
 	 * Returns a value indicating whether the item has been assigned to the user.
-	 * @param string $itemName the item name
-	 * @param mixed $userId the user ID (see {@link IWebUser::getId})
+	 * @param string the item name
+	 * @param mixed the user ID (see {@link IWebUser::getId})
 	 * @return boolean whether the item has been assigned to the user.
 	 */
 	public function isAssigned($itemName,$userId)
@@ -214,8 +243,8 @@ class CPhpAuthManager extends CAuthManager
 
 	/**
 	 * Returns the item assignment information.
-	 * @param string $itemName the item name
-	 * @param mixed $userId the user ID (see {@link IWebUser::getId})
+	 * @param string the item name
+	 * @param mixed the user ID (see {@link IWebUser::getId})
 	 * @return CAuthAssignment the item assignment information. Null is returned if
 	 * the item is not assigned to the user.
 	 */
@@ -226,7 +255,7 @@ class CPhpAuthManager extends CAuthManager
 
 	/**
 	 * Returns the item assignments for the specified user.
-	 * @param mixed $userId the user ID (see {@link IWebUser::getId})
+	 * @param mixed the user ID (see {@link IWebUser::getId})
 	 * @return array the item assignment information for the user. An empty array will be
 	 * returned if there is no item assigned to the user.
 	 */
@@ -237,9 +266,9 @@ class CPhpAuthManager extends CAuthManager
 
 	/**
 	 * Returns the authorization items of the specific type and user.
-	 * @param integer $type the item type (0: operation, 1: task, 2: role). Defaults to null,
+	 * @param integer the item type (0: operation, 1: task, 2: role). Defaults to null,
 	 * meaning returning all items regardless of their type.
-	 * @param mixed $userId the user ID. Defaults to null, meaning returning all items even if
+	 * @param mixed the user ID. Defaults to null, meaning returning all items even if
 	 * they are not assigned to a user.
 	 * @return array the authorization items of the specific type.
 	 */
@@ -256,7 +285,7 @@ class CPhpAuthManager extends CAuthManager
 					$items[$name]=$item;
 			}
 		}
-		elseif(isset($this->_assignments[$userId]))
+		else if(isset($this->_assignments[$userId]))
 		{
 			foreach($this->_assignments[$userId] as $assignment)
 			{
@@ -272,14 +301,14 @@ class CPhpAuthManager extends CAuthManager
 	 * Creates an authorization item.
 	 * An authorization item represents an action permission (e.g. creating a post).
 	 * It has three types: operation, task and role.
-	 * Authorization items form a hierarchy. Higher level items inherit permissions representing
+	 * Authorization items form a hierarchy. Higher level items inheirt permissions representing
 	 * by lower level items.
-	 * @param string $name the item name. This must be a unique identifier.
-	 * @param integer $type the item type (0: operation, 1: task, 2: role).
-	 * @param string $description description of the item
-	 * @param string $bizRule business rule associated with the item. This is a piece of
+	 * @param string the item name. This must be a unique identifier.
+	 * @param integer the item type (0: operation, 1: task, 2: role).
+	 * @param string description of the item
+	 * @param string business rule associated with the item. This is a piece of
 	 * PHP code that will be executed when {@link checkAccess} is called for the item.
-	 * @param mixed $data additional data associated with the item.
+	 * @param mixed additional data associated with the item.
 	 * @return CAuthItem the authorization item
 	 * @throws CException if an item with the same name already exists
 	 */
@@ -292,7 +321,7 @@ class CPhpAuthManager extends CAuthManager
 
 	/**
 	 * Removes the specified authorization item.
-	 * @param string $name the name of the item to be removed
+	 * @param string the name of the item to be removed
 	 * @return boolean whether the item exists in the storage and has been removed
 	 */
 	public function removeAuthItem($name)
@@ -312,7 +341,7 @@ class CPhpAuthManager extends CAuthManager
 
 	/**
 	 * Returns the authorization item with the specified name.
-	 * @param string $name the name of the item
+	 * @param string the name of the item
 	 * @return CAuthItem the authorization item. Null if the item cannot be found.
 	 */
 	public function getAuthItem($name)
@@ -322,12 +351,12 @@ class CPhpAuthManager extends CAuthManager
 
 	/**
 	 * Saves an authorization item to persistent storage.
-	 * @param CAuthItem $item the item to be saved.
-	 * @param string $oldName the old item name. If null, it means the item name is not changed.
+	 * @param CAuthItem the item to be saved.
+	 * @param string the old item name. If null, it means the item name is not changed.
 	 */
 	public function saveAuthItem($item,$oldName=null)
 	{
-		if($oldName!==null && ($newName=$item->getName())!==$oldName) // name changed
+		if(($newName=$item->getName())!==$oldName) // name changed
 		{
 			if(isset($this->_items[$newName]))
 				throw new CException(Yii::t('yii','Unable to change the item name. The name "{name}" is already used by another item.',array('{name}'=>$newName)));
@@ -362,7 +391,7 @@ class CPhpAuthManager extends CAuthManager
 
 	/**
 	 * Saves the changes to an authorization assignment.
-	 * @param CAuthAssignment $assignment the assignment that has been changed.
+	 * @param CAuthAssignment the assignment that has been changed.
 	 */
 	public function saveAuthAssignment($assignment)
 	{
@@ -460,8 +489,8 @@ class CPhpAuthManager extends CAuthManager
 
 	/**
 	 * Checks whether there is a loop in the authorization item hierarchy.
-	 * @param string $itemName parent item name
-	 * @param string $childName the name of the child item that is to be added to the hierarchy
+	 * @param string parent item name
+	 * @param string the name of the child item that is to be added to the hierarchy
 	 * @return boolean whether a loop exists
 	 */
 	protected function detectLoop($itemName,$childName)
@@ -481,7 +510,7 @@ class CPhpAuthManager extends CAuthManager
 
 	/**
 	 * Loads the authorization data from a PHP script file.
-	 * @param string $file the file path.
+	 * @param string the file path.
 	 * @return array the authorization data
 	 * @see saveToFile
 	 */
@@ -495,8 +524,8 @@ class CPhpAuthManager extends CAuthManager
 
 	/**
 	 * Saves the authorization data to a PHP script file.
-	 * @param array $data the authorization data
-	 * @param string $file the file path.
+	 * @param array the authorization data
+	 * @param string the file path.
 	 * @see loadFromFile
 	 */
 	protected function saveToFile($data,$file)

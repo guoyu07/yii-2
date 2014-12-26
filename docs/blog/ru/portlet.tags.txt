@@ -1,8 +1,8 @@
 Создание портлета облака тегов
-==============================
+==========================
 
-[Облако тегов](http://ru.wikipedia.org/wiki/Облако_тегов) отображает список
-тегов записей с визуальным оформлением, показывающим популярность каждого тега.
+[Облако тэгов](http://ru.wikipedia.org/wiki/Облако_тегов) отображает список
+тэгов записей с визуальным оформлением, показывающим популярность каждого тэга.
 
 
 Создание класса `TagCloud`
@@ -13,56 +13,57 @@
 
 ~~~
 [php]
-Yii::import('zii.widgets.CPortlet');
-
-class TagCloud extends CPortlet
+<?php
+class TagCloud extends Portlet
 {
 	public $title='Tags';
-	public $maxTags=20;
+
+	public function getTagWeights()
+	{
+		return Tag::model()->findTagWeights();
+	}
 
 	protected function renderContent()
 	{
-		$tags=Tag::model()->findTagWeights($this->maxTags);
-
-		foreach($tags as $tag=>$weight)
-		{
-			$link=CHtml::link(CHtml::encode($tag), array('post/index','tag'=>$tag));
-			echo CHtml::tag('span', array(
-				'class'=>'tag',
-				'style'=>"font-size:{$weight}pt",
-			), $link)."\n";
-		}
+		$this->render('tagCloud');
 	}
 }
 ~~~
 
-Портлет `TagCloud`, в отличие от портлета `UserMenu`, не использует отображение.
-Вместо этого его внешний вид формирует метод `renderContent()` так как нет
-необходимости выводить большое количество HTML.
+В коде выше мы вызываем метод `findTagWeights`, который определен в классе
+`Tag`. Метод возвращает список тэгов с их относительными весами. Если тэг
+связан с большим количеством записей, он получает более высокий вес. Мы будем
+использовать веса для  управления отображением тэгов.
 
-Мы отображаем каждый тег как ссылку на список записей, содержащих его. Размер
-шрифта каждой такой ссылки изменяется в зависимости от относительного веса
-тега по отношению к остальным. Чем более часто используется тег, тем больший
-используется размер шрифта.
+
+Создание представления `tagCloud`
+-------------------------
+
+Представление `tagCloud` сохранено в файле `/wwwroot/blog/protected/components/views/tagCloud.php`.
+Для каждого тэга, возвращенного методом `TagCloud::getTagWeights()`,
+представление отображает гиперссылку, которая ведет к странице записей,
+относящихся к данному тэгу. Размер шрифта ссылки определен согласно значению
+веса тэга. Чем выше вес, тем больше размер шрифта.
 
 
 Использование портлета `TagCloud`
---------------------------------
+-------------------------
 
-Использовать портлет `TagCloud` очень просто. Мы изменяем файл макета
-`/wwwroot/blog/protected/views/layouts/column2.php` следующим образом:
+Использовать портлет `TagCloud` очень просто. Мы изменяем файл макета `/wwwroot/blog/protected/views/layouts/main.php` следующим образом,
 
 ~~~
 [php]
-…
+......
 <div id="sidebar">
 
-	<?php if(!Yii::app()->user->isGuest) $this->widget('UserMenu'); ?>
+<?php $this->widget('UserLogin',array('visible'=>Yii::app()->user->isGuest)); ?>
 
-	<?php $this->widget('TagCloud', array(
-		'maxTags'=>Yii::app()->params['tagCloudCount'],
-	)); ?>
+<?php $this->widget('UserMenu',array('visible'=>!Yii::app()->user->isGuest)); ?>
+
+<?php $this->widget('TagCloud'); ?>
 
 </div>
-…
+......
 ~~~
+
+<div class="revision">$Id: portlet.tags.txt 677 2009-02-14 04:27:48Z qiang.xue $</div>

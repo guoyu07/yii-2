@@ -1,13 +1,4 @@
-CREATE TABLE tbl_lookup
-(
-	id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-	name VARCHAR(128) NOT NULL,
-	code INTEGER NOT NULL,
-	type VARCHAR(128) NOT NULL,
-	position INTEGER NOT NULL
-);
-
-CREATE TABLE tbl_user
+CREATE TABLE User
 (
 	id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 	username VARCHAR(128) NOT NULL,
@@ -16,55 +7,63 @@ CREATE TABLE tbl_user
 	profile TEXT
 );
 
-CREATE TABLE tbl_post
+CREATE TABLE Post
 (
 	id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 	title VARCHAR(128) NOT NULL,
 	content TEXT NOT NULL,
+	contentDisplay TEXT,
 	tags TEXT,
 	status INTEGER NOT NULL,
-	create_time INTEGER,
-	update_time INTEGER,
-	author_id INTEGER NOT NULL,
-	CONSTRAINT FK_post_author FOREIGN KEY (author_id)
-		REFERENCES tbl_user (id) ON DELETE CASCADE ON UPDATE RESTRICT
+	createTime INTEGER,
+	updateTime INTEGER,
+	commentCount INTEGER DEFAULT 0,
+	authorId INTEGER NOT NULL,
+	CONSTRAINT FK_post_author FOREIGN KEY (authorId)
+		REFERENCES User (id) ON DELETE CASCADE ON UPDATE RESTRICT
 );
 
-CREATE TABLE tbl_comment
+CREATE TABLE Comment
 (
 	id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 	content TEXT NOT NULL,
+	contentDisplay TEXT,
 	status INTEGER NOT NULL,
-	create_time INTEGER,
+	createTime INTEGER,
 	author VARCHAR(128) NOT NULL,
 	email VARCHAR(128) NOT NULL,
 	url VARCHAR(128),
-	post_id INTEGER NOT NULL,
-	CONSTRAINT FK_comment_post FOREIGN KEY (post_id)
-		REFERENCES tbl_post (id) ON DELETE CASCADE ON UPDATE RESTRICT
+	postId INTEGER NOT NULL,
+	CONSTRAINT FK_comment_post FOREIGN KEY (postId)
+		REFERENCES Post (id) ON DELETE CASCADE ON UPDATE RESTRICT
 );
 
-CREATE TABLE tbl_tag
+CREATE TABLE Tag
 (
 	id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-	name VARCHAR(128) NOT NULL,
-	frequency INTEGER DEFAULT 1
+	name VARCHAR(128) NOT NULL
 );
 
-INSERT INTO tbl_lookup (name, type, code, position) VALUES ('Draft', 'PostStatus', 1, 1);
-INSERT INTO tbl_lookup (name, type, code, position) VALUES ('Published', 'PostStatus', 2, 2);
-INSERT INTO tbl_lookup (name, type, code, position) VALUES ('Archived', 'PostStatus', 3, 3);
-INSERT INTO tbl_lookup (name, type, code, position) VALUES ('Pending Approval', 'CommentStatus', 1, 1);
-INSERT INTO tbl_lookup (name, type, code, position) VALUES ('Approved', 'CommentStatus', 2, 2);
+CREATE TABLE PostTag
+(
+	postId INTEGER NOT NULL,
+	tagId INTEGER NOT NULL,
+	PRIMARY KEY (postId, tagId),
+	CONSTRAINT FK_post FOREIGN KEY (postId)
+		REFERENCES Post (id) ON DELETE CASCADE ON UPDATE RESTRICT,
+	CONSTRAINT FK_tag FOREIGN KEY (tagId)
+		REFERENCES Tag (id) ON DELETE CASCADE ON UPDATE RESTRICT
+);
 
-INSERT INTO tbl_user (username, password, email) VALUES ('demo','$2a$10$JTJf6/XqC94rrOtzuF397OHa4mbmZrVTBOQCmYD9U.obZRUut4BoC','webmaster@example.com');
-INSERT INTO tbl_post (title, content, status, create_time, update_time, author_id, tags) VALUES ('Welcome!','This blog system is developed using Yii. It is meant to demonstrate how to use Yii to build a complete real-world application. Complete source code may be found in the Yii releases.
+INSERT INTO User (username, password, email) VALUES ('demo','fe01ce2a7fbac8fafaed7c982a04e229','webmaster@example.com');
+INSERT INTO Post (title, content, contentDisplay, status, createTime, updateTime, authorId, tags) VALUES ('Welcome to Yii Blog','This blog system is developed using Yii. It is meant to demonstrate how to use Yii to build a complete real-world application. Complete source code may be found in the Yii releases.
 
-Feel free to try this system by writing new posts and leaving comments.',2,1230952187,1230952187,1,'yii, blog');
-INSERT INTO tbl_post (title, content, status, create_time, update_time, author_id, tags) VALUES ('A Test Post', 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', 2,1230952187,1230952187,1,'test');
+Feel free to try this system by writing new posts and posting comments.','<p>This blog system is developed using Yii. It is meant to demonstrate how to use Yii to build a complete real-world application. Complete source code may be found in the Yii releases.</p>
 
-INSERT INTO tbl_comment (content, status, create_time, author, email, post_id) VALUES ('This is a test comment.', 2, 1230952187, 'Tester', 'tester@example.com', 2);
+<p>Feel free to try this system by writing new posts and posting comments.</p>',1,1230952187,1230952187,1,'yii, blog');
 
-INSERT INTO tbl_tag (name) VALUES ('yii');
-INSERT INTO tbl_tag (name) VALUES ('blog');
-INSERT INTO tbl_tag (name) VALUES ('test');
+INSERT INTO Tag (name) VALUES ('yii');
+INSERT INTO Tag (name) VALUES ('blog');
+
+INSERT INTO PostTag (postId, tagId) VALUES (1,1);
+INSERT INTO PostTag (postId, tagId) VALUES (1,2);

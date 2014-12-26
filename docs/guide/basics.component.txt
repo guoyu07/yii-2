@@ -7,8 +7,8 @@ written to a specification. A component is an instance of
 accessing its properties and raising/handling its events. The base class
 [CComponent] specifies how to define properties and events.
 
-Defining and using a Component Property
----------------------------------------
+Component Property
+------------------
 
 A component property is like an object's public member variable. We can
 read its value or assign a value to it. For example,
@@ -19,77 +19,29 @@ $width=$component->textWidth;     // get the textWidth property
 $component->enableCaching=true;   // set the enableCaching property
 ~~~
 
-There are two different ways of defining a component property. First way is
-to simply declare a public member variable in the component class like the
-following:
+To define a component property, we can simply declare a public member
+variable in the component class. A more flexible way, however, is by
+defining getter and setter methods like the following:
 
 ~~~
 [php]
-class Document extends CComponent
+public function getTextWidth()
 {
-    public $textWidth;
+    return $this->_textWidth;
+}
+
+public function setTextWidth($value)
+{
+    $this->_textWidth=$value;
 }
 ~~~
 
-Another way is to use getters and setters. It is more flexible since additionally
-to normal properties you can declare a read only or write only property.
-
-~~~
-[php]
-class Document extends CComponent
-{
-    private $_textWidth;
-    protected $_completed=false;
-
-    public function getTextWidth()
-    {
-        return $this->_textWidth;
-    }
-
-    public function setTextWidth($value)
-    {
-        $this->_textWidth=$value;
-    }
-
-    public function getTextHeight()
-    {
-        // calculates and returns text height
-    }
-
-    public function setCompleted($value)
-    {
-        $this->_completed=$value;
-    }
-}
-~~~
-
-The component above can be used like the following:
-
-~~~
-[php]
-$document=new Document();
-
-// we can write and read textWidth
-$document->textWidth=100;
-echo $document->textWidth;
-
-// we can only read textHeight
-echo $document->textHeight;
-
-// we can only write completed
-$document->completed=true;
-~~~
-
-When trying to read a component property and the property isn't defined as a
-public class member, Yii is trying to use a getter method i.e. for `textWidth`
-a getter method will be `getTextWidth`. Same thing happens when trying to write a
-property not defined as a public class member.
-
-If there's a getter method but no setter method the component property becomes
-read only and throws an exception if we're trying to write it. If it's the
-other way around, the property is write-only.
-
-Using getter and setter methods to define a property has the
+The above code defines a writable property named `textWidth` (the name is
+case-insensitive). When reading the property, `getTextWidth()` is  invoked
+and its returned value becomes the property value; Similarly, when writing
+the property, `setTextWidth()` is invoked. If the setter method is not
+defined, the property would be read-only and writing it would throw an
+exception. Using getter and setter methods to define a property has the
 benefit that additional logic (e.g. performing validation, raising events)
 can be executed when reading and writing the property.
 
@@ -147,7 +99,8 @@ the `raiseEvent()` call). The `$event` parameter is an instance of [CEvent] or
 its derived class. At the minimum, it contains the information about who
 raises the event.
 
-An event handler can also be an anonymous function which is supported by PHP 5.3 or above. For example,
+Starting from version 1.0.10, an event handler can also be an anonymous function
+which is supported by PHP 5.3 or above. For example,
 
 ~~~
 [php]
@@ -162,14 +115,14 @@ automatically.
 
 An event can be attached with multiple handlers. When the event is raised,
 the handlers will be invoked in the order that they are attached to the event.
-If a handler decides to prevent the rest of the handlers from being invoked, it can set
+If a handler decides to prevent the rest handlers from being invoked, it can set
 [$event->handled|CEvent::handled] to be true.
 
 
 Component Behavior
 ------------------
 
-A component supports the [mixin](http://en.wikipedia.org/wiki/Mixin) pattern
+Starting from version 1.0.2, a component has added support for [mixin](http://en.wikipedia.org/wiki/Mixin)
 and can be attached with one or several behaviors. A *behavior* is an object
 whose methods can be 'inherited' by its attached component through the means of collecting
 functionality instead of specialization (i.e., normal class inheritance).
@@ -178,7 +131,7 @@ A component can be attached with several behaviors and thus achieve 'multiple in
 Behavior classes must implement the [IBehavior] interface. Most behaviors can
 extend from the [CBehavior] base class. If a behavior needs to be attached to
 a [model](/doc/guide/basics.model), it may also extend from [CModelBehavior] or
-[CActiveRecordBehavior] which implements additional features specific for models.
+[CActiveRecordBehavior] which implements additional features specifc for models.
 
 To use a behavior, it must be attached to a component first by calling the behavior's
 [attach()|IBehavior::attach] method. Then we can call a behavior method via the component:
@@ -218,15 +171,9 @@ $component->test();
 It is possible that two behaviors attached to the same component have methods of the same name.
 In this case, the method of the first attached behavior will take precedence.
 
-When used together with [events](/doc/guide/basics.component#component-event), behaviors are even more powerful.
+When used together with [events](#component-event), behaviors are even more powerful.
 A behavior, when being attached to a component, can attach some of its methods to some events
 of the component. By doing so, the behavior gets a chance to observe or change the normal
 execution flow of the component.
-
-A behavior's properties can also be accessed via the component it
-is attached to. The properties include both the public member variables and the properties defined
-via getters and/or setters of the behavior. For example, if a behavior has a property named `xyz`
-and the behavior is attached to a component `$a`. Then we can use the expression `$a->xyz` to access
-the behavior's property.
 
 <div class="revision">$Id$</div>

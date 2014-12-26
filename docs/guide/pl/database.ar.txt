@@ -1,5 +1,5 @@
-Wzorzec Rekordu Aktywnego (ang. Active Record)
-==============================================
+Wzorzec Active Record
+=============
 
 Chociaż Yii DAO może uporać się z wirtualnymi oraz bazodanowymi zadaniami, istnieje 
 szansa, że będziemy spędzać 90% naszego czasu pisząc wyrażenia SQL, które wykonują 
@@ -13,7 +13,7 @@ Każda klasa AR reprezentuje tabelę bazy danych (lub widok), których atrybuty 
 poprzez atrybuty klasy AR a instancja AR reprezentuje wiersz w  tej tabeli. 
 Wspólne operacje CRUD są zaimplementowane jako metody AR. W rezultacie, posiadamy dostęp do 
 naszych danych w bardziej obiektowo zorientowany sposób. Na przykład: możemy użyć poniższego kodu
-aby wstawić nowy wiersz do tabeli `tbl_ost`:
+aby wstawić nowy wiersz do tabeli `Post`:
 
 ~~~
 [php]
@@ -32,11 +32,11 @@ w poniższym kodzie SQL.
 
 ~~~
 [sql]
-CREATE TABLE tbl_post (
+CREATE TABLE Post (
 	id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 	title VARCHAR(128) NOT NULL,
 	content TEXT NOT NULL,
-	create_time INTEGER NOT NULL
+	createTime INTEGER NOT NULL
 );
 ~~~
 
@@ -81,6 +81,9 @@ Wsparcie dla AR jest ograniczone przez DBMS. Aktualnie, tylko następujące DBMS
    - [SQLite 2 oraz 3](http://www.sqlite.org)
    - [Microsoft SQL Server 2000 lub nowsze](http://www.microsoft.com/sqlserver/)
    - [Oracle](http://www.oracle.com)
+   
+> Note|Uwaga: Wsparcie dla Microsoft SQL Server jest dostępne od wersji 1.0.4;
+> a wsparcie dla Oracle'a od wersji 1.0.5.   
 
 Jeśli chcesz używać komponentu aplikacji innego niż `db` lub jeśli chcesz pracować z wieloma 
 bazami danych używając AR, powinieneś nadpisać metodę [CActiveRecord::getDbConnection()]. 
@@ -97,7 +100,7 @@ Definiowanie klasy AR
 Aby uzyskać dostęp do tabeli bazy danych musimy najpierw zdefiniować klasę AR poprzez 
 rozszerzenie [CActiveRecord]. Każda klasa AR reprezentuje jedną tabele bazy danych 
 a jedna instancja reprezentuje wiersz tej tabeli. Następujący przykład pokazuje minimalny 
-kod potrzebny aby klasa AR reprezentowała tabelę `tbl_ost`.
+kod potrzebny aby klasa AR reprezentowała tabelę `Post`.
 
 ~~~
 [php]
@@ -127,19 +130,6 @@ Domyślnie, nazwa klasy AR jest identyczna z nazwą tabeli w bazie danych. Jeśl
 klasy różni się, nadpisz metodę [tableName()|CActiveRecord::tableName]. Metoda [model()|CActiveRecord::model] 
 jest zadeklarowana jako taka dla każdej klasy AR (wyjaśnienie tego nastąpi później).
 
-> Info|Info: Aby móc używać [prefiksów tablic](/doc/guide/database.dao#using-table-prefix)
-> metoda [tableName()|CActiveRecord::tableName] dla klasy AR
-> może być nadpisana następująco,
-> ~~~
-> [php]
-> public function tableName()
-> {
->     return '{{post}}';
-> }
-> ~~~
-> Oznacza to, że zamiast zwracać pełną i dokładną nazwę tabeli, zwracamy jej nazwę bez 
-> prefiksu, dodatkowo zamkniętą w podwójnych nawiasach klamrowych.  
-
 Wartości kolumn wiersza tabeli są dostępne jako właściwości odpowiednich instancji klasy AR.
 Na przykład, następujący kod ustawia kolumnę (atrybut) `title`:
 
@@ -149,9 +139,9 @@ $post=new Post;
 $post->title='przykładowy post';
 ~~~
 
-Chociaż nigdy bezpośrednio nie zdeklarowaliśmy właściwości `title` w klasie `tbl_ost`, 
+Chociaż nigdy bezpośrednio nie zdeklarowaliśmy właściwości `title` w klasie `Post`, 
 jest ona dostępna w powyższym kodzie. Dzieje się tak, ponieważ `title` jest kolumną 
-w tabeli `tbl_ost` a CActiveRecord czyni ją dostępną poprzez właściwość przy pomocy 
+w tabeli `Post` a CActiveRecord czyni ją dostępną poprzez właściwość przy pomocy 
 magicznej metody PHP `__get()`. Jeśli w ten sam sposób spróbujemy uzyskać dostęp 
 do nieistniejącej kolumny wyjątek zostanie rzucony.
 
@@ -164,15 +154,6 @@ używać nazwy kolumn podanej w cudzysłowiu w warunkach zapytania jeśli kolumn
 Z tego powodu, mądrą decyzją jest nazywanie kolumn (a także tabel) jedynie przy użyciu małych liter (np. `create_time`) 
 w celu uniknięcia potencjalnych problemów z wielkością liter.
 
-~~~
-[php]
-public function primaryKey()
-{
-	return 'id';
-	// Dla złożonych kluczy głównych, zwróć następująca tablicę
-	// return array('pk1', 'pk2');
-}
-~~~
 
 Tworzenie rekordu
 ---------------
@@ -186,7 +167,7 @@ klasy AR, ustawiamy jej właściwości powiązane z kolumnami tabel i wołamy me
 $post=new Post;
 $post->title='przykładowy post';
 $post->content='zawartość przykładowego postu';
-$post->create_time=time();
+$post->createTime=time();
 $post->save();
 ~~~
 
@@ -213,7 +194,7 @@ $post=new Post;
 echo $post->title;  // to wyświetli tekst: proszę wprowadź tytuł
 ~~~
 
-Atrybut może mieć przypisaną wartość typu [CDbExpression]
+Poczynając od wersji 1.0.2 atrybut może mieć przypisaną wartość typu [CDbExpression]
 zanim rekord zostanie zapisany (zarówno podczas wstawiania jak i aktualizacji) do bazy danych.
 Na przykład, w celu zapisania stempla czasu (ang. timestamp) zwracanego przez funkcję MYSQL 
 `NOW()`, możemy użyć następującego kodu:
@@ -221,8 +202,8 @@ Na przykład, w celu zapisania stempla czasu (ang. timestamp) zwracanego przez f
 ~~~
 [php]
 $post=new Post;
-$post->create_time=new CDbExpression('NOW()');
-// $post->create_time='NOW()'; nie zadziała gdyż 
+$post->createTime=new CDbExpression('NOW()');
+// $post->createTime='NOW()'; nie zadziała ponieważ 
 // 'NOW()' będzie potraktowany jako łańcuch znaków
 $post->save();
 ~~~
@@ -232,7 +213,7 @@ pisania uciążliwych zapytań SQL, często chcemy wiedzieć jakie zapytanie SQL
 wykonywane w tle przez AR. Możemy uzyskać tą informację poprzez włączenie w Yii 
 [funkcjonalności logowania](/doc/guide/topics.logging). Na przykład, możemy włączyć
 [CWebLogRoute] w konfiguracji aplikacji, dzięki czemu bedziemy widzieć wykonywane zapytania 
-SQL na końcu każdej strony. Możemy ustawić właściwość 
+SQL na końcu każdej strony. Od wersji 1.0.5, możemy ustawić właściwość 
 [CDbConnection::enableParamLogging] jako true w konfiguracji aplikacji, tak, że wartości 
 parametrów powiązanych z instrukcją SQL będą również logowane.
 
@@ -259,7 +240,7 @@ by otrzymać dostęp do metod na poziomie klasy w kontekście obiektu (coś podo
 do statycznych metod klas).
 
 Jeśli metoda `find` znajdzie wiersz spełniający warunki zapytania, zwróci ona instancję 
-`tbl_ost`, której właściwości będą zawierać odpowiadające kolumnom wartości wiersza tabeli.
+`Post`, której właściwości będą zawierać odpowiadające kolumnom wartości wiersza tabeli.
 Możemy wtedy czytać załadowane wartości tak jak to robimy w przypadku właściwości obiektu, 
 na przykład, `echo $post->title;`.
 
@@ -497,7 +478,7 @@ w klasach potomnych aby dostosować ich sterowanie kolejnością zadań (ang. wo
    utworzonej za pomocą operatora `new`.
 
    - [beforeFind|CActiveRecord::beforeFind]: jest wywoływana zanim instancja AR zostanie
-   użyta do wykonania zapytania (np. `find()`, `findAll()`).
+   użyta do wykonania zapytania (np. `find()`, `findAll()`). Dostępna od wersji 1.0.9.
 
    - [afterFind|CActiveRecord::afterFind]: jest wywoływana dla każdej instancji AR utworzonej 
    jako rezultat zapytania.
@@ -532,31 +513,32 @@ catch(Exception $e)
 Nazwane podzbiory (ang. Named Scopes)
 ------------
 
-> Note|Uwaga: Pierwotny pomysł na nazwane podzbiory pochodzi z Ruby on Rails.
+> Note|Uwaga: Wsparcie dla nazwanych podzbiorów zostało udostępnione wraz z wersją 1.0.5.
+> Pierwotny pomysł na nazwane podzbiory pochodzi z Ruby on Rails.
 
 *Nazwany podzbiór* reprezentuje *nazwane* kryteria zapytania, które mogą być połączone z innymi nazwanymi podzbiorami  
 i zastosowane do zapytania generowanego przez rekord aktywny. 
 
 Nazwane podzbiory deklarowane są głównie w metodzie [CActiveRecord::scopes()] jako pary nazwa-kryterium.
-Następujący kod definiuje dwa nazwane podzbiory, `opublikowane` oraz `najnowsze` w klasie modelu `tbl_ost`:
+Następujący kod definiuje dwa nazwane podzbiory, `opublikowane` oraz `najnowsze` w klasie modelu `Post`:
 
 ~~~
 [php]
 class Post extends CActiveRecord
 {
-	......
-	public function scopes()
-	{
-		return array(
-			'published'=>array(
-				'condition'=>'status=1',
-			),
-			'recently'=>array(
-				'order'=>'create_time DESC',
-				'limit'=>5,
-			),
-		);
-	}
+  ......
+  public function scopes()
+  {
+    return array(
+      'opublikowane'=>array(
+        'condition'=>'status=1',
+      ),
+      'najnowsze'=>array(
+        'order'=>'createTime DESC',
+        'limit'=>5,
+      ),
+    );
+  }
 }
 ~~~
 
@@ -576,13 +558,21 @@ Ogólnie rzecz biorąc, nazwane podzbiory musza pojawić się po lewej stronie o
 które są łączone z pozostałymi kryteriami, włączając w to te, które zostały przekazane do metody `find`. Efekt końcowy jest podobny do tego,  
 jakby do zapytania dodano listę filtrów.
 
+Poczynając od wersji 1.0.6, nazwane podzbiory mogą być również używane wraz z metodami 
+`update` oraz `delete`. Na przykład, następujący kod usunie wszystkie aktualnie opublikowane posty: 
+
+~~~
+[php]
+Post::model()->published()->recently()->delete();
+~~~
+
 > Note|Uwaga: Nazwane podzbiory mogą być tylko używane wyłącznie z poziomu metod klasowych.   
 Oznacza to, że muszą one być wywołane w przy użyciu `NazwaKlasy::model()`.
 
 
 ### Parametryzowane nazwane podzbiory (ang. Parameterized Named Scopes)
 
-Nazwane podzbiory mogą by sparametryzowane. Na przykład, chcemy dostosować liczbę postów określoną w nazwanym podzbiorze `najnowsze` 
+Nazwane podzbiory mogą by sparametryzowane. Na przykład, chcemy dostosować liczbę postów określoną w nazwanym podzbiorze `najnowsze`. 
 Aby to zrobić, zamiast deklarować nazwany podzbiór w metodzie [CActiveRecord::scopes], musimy zdefiniować nową metodę, 
 której nazwa jest taka sama jak jak nazwa podzbioru:
 
@@ -590,11 +580,11 @@ której nazwa jest taka sama jak jak nazwa podzbioru:
 [php]
 public function najnowsze($limit=5)
 {
-	$this->getDbCriteria()->mergeWith(array(
-		'order'=>'create_time DESC',
-		'limit'=>$limit,
-	));
-	return $this;
+  $this->getDbCriteria()->mergeWith(array(
+    'order'=>'createTime DESC',
+    'limit'=>$limit,
+  ));
+  return $this;
 }
 ~~~
 
@@ -607,9 +597,14 @@ $posts=Post::model()->opublikowane()->najnowsze(3)->findAll();
 
 Jeśli w powyższym kodzie nie przekazalibyśmy 3, otrzymalibyśmy domyślnie 5 ostatnio opublikowanych postów.
 
-### Domyślne podzbiory
+### Domyślne nazwane podzbiory
 
-Klasa modelu może posiadać domyślne podzbiory, które będą stosowane dla wszystkich zapytań (włączająć w to zapytania relacyjne) dla modelu. Na przykład, strona wspierająca wielojęzyczność może chcież wyświetlać zawartość w aktualnie wybranym języku. Ponieważ, możemy mieć wiele zapytań związanych z zawartością strony, możemy zdecydować się na zdefiniowanie domyślnych podzbiorów, aby rozwiązać ten problem. Aby to zrobić, nadpisujemy  metodę [CActiveRecord::defaultScope] w następujący sposób:
+Klasa modelu może posiadać domyślne nazwane podzbiory, które będą stosowane dla wszystkich zapytań
+(włączająć w to zapytania relacyjne) dla modelu. Na przykład, strona wspierająca wielojęzyczność| 
+może chcież wyświetlać zawartość w aktualnie wybranym języku. Ponieważ, możemy mieć wiele 
+zapytań związanych z zawartością strony, możemy zdecydować się na zdefiniowanie
+domyśnie nazwanych podzbiorów, aby rozwiązać ten problem. Aby to zrobić, nadpisujemy 
+metodę [CActiveRecord::defaultScope] w następujący sposób:
 
 
 ~~~
@@ -633,7 +628,6 @@ kreteriów zapytania:
 $contents=Content::model()->findAll();
 ~~~
 
-> Note|Uwaga: Zauważ, że domyślne i nazwane podzbiory mają zastosowanie tylko dla zapytań `SELECT`. Są one ignorowane dla zapytań `INSERT`, `UPDATE` oraz `DELETE`.
-> Ponadto, podczas deklarowania podzbiorów (domyślnych i nazwanych), klasa rekordu aktywnego nie może być używana do tworzenia zapytań do bazy w metodzie deklarującej podzbiór.
+Zauważ, że domyślne nazwane podzbiory mają zastosowanie tylko dla zapytań `SELECT`. Są one ignorowane dla zapytań `INSERT`, `UPDATE` oraz `DELETE`.
 
-<div class="revision">$Id: database.ar.txt 3318 2011-06-24 21:40:34Z qiang.xue $</div>
+<div class="revision">$Id: database.ar.txt 1391 2009-09-04 19:46:04Z qiang.xue $</d

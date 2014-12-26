@@ -1,4 +1,4 @@
-<script type="text/javascript">
+﻿<script language="javascript" type="text/javascript">
 /*<![CDATA[*/
 if(typeof(console)=='object') {
     console.group("Profiling Callstack Rapport");

@@ -4,14 +4,16 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
+ * @version $Id$
  */
 
 /**
  * CrudCommand generates code implementing CRUD operations.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.cli.commands.shell
  * @since 1.0
  */
@@ -25,15 +27,9 @@ class CrudCommand extends CConsoleCommand
 	 */
 	public $templatePath;
 	/**
-	 * @var string the directory that contains functional test classes.
-	 * Defaults to null, meaning using 'protected/tests/functional'.
-	 * If this is false, it means functional test file should NOT be generated.
-	 */
-	public $functionalTestPath;
-	/**
 	 * @var array list of actions to be created. Each action must be associated with a template file with the same name.
 	 */
-	public $actions=array('create','update','index','view','admin','_form','_view','_search');
+	public $actions=array('create','update','list','show','admin','_form');
 
 	public function getHelp()
 	{
@@ -81,8 +77,7 @@ EOD;
 
 	/**
 	 * Execute the action.
-	 * @param array $args command line parameters specific for this command
-	 * @return integer|null non zero application exit code for help or null on success
+	 * @param array command line parameters specific for this command
 	 */
 	public function run($args)
 	{
@@ -90,7 +85,7 @@ EOD;
 		{
 			echo "Error: data model class is required.\n";
 			echo $this->getHelp();
-			return 1;
+			return;
 		}
 		$module=Yii::app();
 		$modelClass=$args[0];
@@ -144,11 +139,7 @@ EOD;
 		}
 
 		$templatePath=$this->templatePath===null?YII_PATH.'/cli/views/shell/crud':$this->templatePath;
-		$functionalTestPath=$this->functionalTestPath===null?Yii::getPathOfAlias('application.tests.functional'):$this->functionalTestPath;
-
 		$viewPath=$module->viewPath.DIRECTORY_SEPARATOR.str_replace('.',DIRECTORY_SEPARATOR,$controllerID);
-		$fixtureName=$this->pluralize($modelClass);
-		$fixtureName[0]=strtolower($fixtureName);
 		$list=array(
 			basename($controllerFile)=>array(
 				'source'=>$templatePath.'/controller.php',
@@ -157,16 +148,6 @@ EOD;
 				'params'=>array($controllerClass,$modelClass),
 			),
 		);
-
-		if($functionalTestPath!==false)
-		{
-			$list[$modelClass.'Test.php']=array(
-				'source'=>$templatePath.'/test.php',
-				'target'=>$functionalTestPath.DIRECTORY_SEPARATOR.$modelClass.'Test.php',
-				'callback'=>array($this,'generateTest'),
-				'params'=>array($controllerID,$fixtureName,$modelClass),
-			);
-		}
 
 		foreach($this->actions as $action)
 		{
@@ -196,7 +177,7 @@ EOD;
 		$id=$model->tableSchema->primaryKey;
 		if($id===null)
 			throw new ShellException(Yii::t('yii','Error: Table "{table}" does not have a primary key.',array('{table}'=>$model->tableName())));
-		elseif(is_array($id))
+		else if(is_array($id))
 			throw new ShellException(Yii::t('yii','Error: Table "{table}" has a composite primary key which is not supported by crud command.',array('{table}'=>$model->tableName())));
 
 		if(!is_file($source))  // fall back to default ones
@@ -214,24 +195,19 @@ EOD;
 		$model=CActiveRecord::model($modelClass);
 		$table=$model->getTableSchema();
 		$columns=$table->columns;
+		unset($columns[$table->primaryKey]);
+		if(basename($source)==='admin.php')
+		{
+			foreach($columns as $name=>$column)
+				if(stripos($column->dbType,'text')!==false)
+					unset($columns[$name]);
+		}
 		if(!is_file($source))  // fall back to default ones
 			$source=YII_PATH.'/cli/views/shell/crud/'.basename($source);
 		return $this->renderFile($source,array(
 			'ID'=>$table->primaryKey,
 			'modelClass'=>$modelClass,
 			'columns'=>$columns),true);
-	}
-
-	public function generateTest($source,$params)
-	{
-		list($controllerID,$fixtureName,$modelClass)=$params;
-		if(!is_file($source))  // fall back to default ones
-			$source=YII_PATH.'/cli/views/shell/crud/'.basename($source);
-		return $this->renderFile($source, array(
-			'controllerID'=>$controllerID,
-			'fixtureName'=>$fixtureName,
-			'modelClass'=>$modelClass,
-		),true);
 	}
 
 	public function generateInputLabel($modelClass,$column)
@@ -243,7 +219,7 @@ EOD;
 	{
 		if($column->type==='boolean')
 			return "CHtml::activeCheckBox(\$model,'{$column->name}')";
-		elseif(stripos($column->dbType,'text')!==false)
+		else if(stripos($column->dbType,'text')!==false)
 			return "CHtml::activeTextArea(\$model,'{$column->name}',array('rows'=>6, 'cols'=>50))";
 		else
 		{
@@ -261,66 +237,5 @@ EOD;
 				return "CHtml::{$inputField}(\$model,'{$column->name}',array('size'=>$size,'maxlength'=>$maxLength))";
 			}
 		}
-	}
-
-	public function generateActiveLabel($modelClass,$column)
-	{
-		return "\$form->labelEx(\$model,'{$column->name}')";
-	}
-
-	public function generateActiveField($modelClass,$column)
-	{
-		if($column->type==='boolean')
-			return "\$form->checkBox(\$model,'{$column->name}')";
-		elseif(stripos($column->dbType,'text')!==false)
-			return "\$form->textArea(\$model,'{$column->name}',array('rows'=>6, 'cols'=>50))";
-		else
-		{
-			if(preg_match('/^(password|pass|passwd|passcode)$/i',$column->name))
-				$inputField='passwordField';
-			else
-				$inputField='textField';
-
-			if($column->type!=='string' || $column->size===null)
-				return "\$form->{$inputField}(\$model,'{$column->name}')";
-			else
-			{
-				if(($size=$maxLength=$column->size)>60)
-					$size=60;
-				return "\$form->{$inputField}(\$model,'{$column->name}',array('size'=>$size,'maxlength'=>$maxLength))";
-			}
-		}
-	}
-
-	public function guessNameColumn($columns)
-	{
-		foreach($columns as $column)
-		{
-			if(!strcasecmp($column->name,'name'))
-				return $column->name;
-		}
-		foreach($columns as $column)
-		{
-			if(!strcasecmp($column->name,'title'))
-				return $column->name;
-		}
-		foreach($columns as $column)
-		{
-			if($column->isPrimaryKey)
-				return $column->name;
-		}
-		return 'id';
-	}
-
-	public function class2id($className)
-	{
-		return trim(strtolower(str_replace('_','-',preg_replace('/(?<![A-Z])[A-Z]/', '-\0', $className))),'-');
-	}
-
-	public function class2name($className,$pluralize=false)
-	{
-		if($pluralize)
-			$className=$this->pluralize($className);
-		return ucwords(trim(strtolower(str_replace(array('-','_'),' ',preg_replace('/(?<![A-Z])[A-Z]/', ' \0', $className)))));
 	}
 }

@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -20,6 +20,7 @@
  * </pre>
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.utils
  * @since 1.0
  */
@@ -33,9 +34,9 @@ class CVarDumper
 	 * Displays a variable.
 	 * This method achieves the similar functionality as var_dump and print_r
 	 * but is more robust when handling complex objects such as Yii controllers.
-	 * @param mixed $var variable to be dumped
-	 * @param integer $depth maximum depth that the dumper should go into the variable. Defaults to 10.
-	 * @param boolean $highlight whether the result should be syntax-highlighted
+	 * @param mixed variable to be dumped
+	 * @param integer maximum depth that the dumper should go into the variable. Defaults to 10.
+	 * @param boolean whether the result should be syntax-highlighted
 	 */
 	public static function dump($var,$depth=10,$highlight=false)
 	{
@@ -46,9 +47,9 @@ class CVarDumper
 	 * Dumps a variable in terms of a string.
 	 * This method achieves the similar functionality as var_dump and print_r
 	 * but is more robust when handling complex objects such as Yii controllers.
-	 * @param mixed $var variable to be dumped
-	 * @param integer $depth maximum depth that the dumper should go into the variable. Defaults to 10.
-	 * @param boolean $highlight whether the result should be syntax-highlighted
+	 * @param mixed variable to be dumped
+	 * @param integer maximum depth that the dumper should go into the variable. Defaults to 10.
+	 * @param boolean whether the result should be syntax-highlighted
 	 * @return string the string representation of the variable
 	 */
 	public static function dumpAsString($var,$depth=10,$highlight=false)
@@ -65,10 +66,6 @@ class CVarDumper
 		return self::$_output;
 	}
 
-	/*
-	 * @param mixed $var variable to be dumped
-	 * @param integer $level depth level
-	 */
 	private static function dumpInternal($var,$level)
 	{
 		switch(gettype($var))
@@ -83,7 +80,7 @@ class CVarDumper
 				self::$_output.="$var";
 				break;
 			case 'string':
-				self::$_output.="'".addslashes($var)."'";
+				self::$_output.="'$var'";
 				break;
 			case 'resource':
 				self::$_output.='{resource}';
@@ -97,7 +94,7 @@ class CVarDumper
 			case 'array':
 				if(self::$_depth<=$level)
 					self::$_output.='array(...)';
-				elseif(empty($var))
+				else if(empty($var))
 					self::$_output.='array()';
 				else
 				{
@@ -106,10 +103,8 @@ class CVarDumper
 					self::$_output.="array\n".$spaces.'(';
 					foreach($keys as $key)
 					{
-						self::$_output.="\n".$spaces.'    ';
-						self::dumpInternal($key,0);
-						self::$_output.=' => ';
-						self::dumpInternal($var[$key],$level+1);
+						self::$_output.="\n".$spaces."    [$key] => ";
+						self::$_output.=self::dumpInternal($var[$key],$level+1);
 					}
 					self::$_output.="\n".$spaces.')';
 				}
@@ -117,7 +112,7 @@ class CVarDumper
 			case 'object':
 				if(($id=array_search($var,self::$_objects,true))!==false)
 					self::$_output.=get_class($var).'#'.($id+1).'(...)';
-				elseif(self::$_depth<=$level)
+				else if(self::$_depth<=$level)
 					self::$_output.=get_class($var).'(...)';
 				else
 				{

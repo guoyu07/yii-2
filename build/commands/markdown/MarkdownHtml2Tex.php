@@ -40,15 +40,11 @@ class Text_Highlighter_Renderer_Latex extends Text_Highlighter_Renderer_Array
             }
             $iswhitespace = ctype_space($content);
             if (!$iswhitespace)
-			{
-				if ($class === 'special')
-					$class = 'code';
                 $tex_output .= sprintf('\textcolor{%s}{%s}', $class, $this->escape($content));
-			}
 			else
                 $tex_output .= $content;
         }
-		$this->_output = "\\begin{alltt}\n" . $tex_output . "\\end{alltt}";
+		$this->_output = "\begin{alltt}\n" . $tex_output . "\end{alltt}";
 	}
 
 	function escape($str)
@@ -117,13 +113,13 @@ class MarkdownHtml2Tex
 	function escape_verbatim($matches)
 	{
 		$text = html_entity_decode($matches[1]);
-		return "\n\\begin{footnotesize}\\begin{verbatim}".$text."\\end{verbatim}\\end{footnotesize}\n";
+		return "\n\begin{footnotesize}\begin{verbatim}".$text."\end{verbatim}\end{footnotesize}\n";
 	}
 
 	function escape_syntax($matches)
 	{
 		$text = html_entity_decode($matches[1]);
-		return "\n\\begin{footnotesize}".$text."\\end{footnotesize}\n";
+		return "\n\begin{footnotesize}".$text."\end{footnotesize}\n";
 	}
 
 	function escape_verb($matches)
@@ -162,12 +158,12 @@ class MarkdownHtml2Tex
 		$width = sprintf('%0.2f', $info[0]/(135/2.54));
 		$caption = $this->escape($matches[2]);
 		return <<<TEX
-\\begin{figure}[htbp]
-  \\centering
-  \\includegraphics[width={$width}cm]{{$filename}}
-  \\label{fig:{$filename}}
-  \\caption{{$caption}}
-\\end{figure}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width={$width}cm]{{$filename}}
+  \label{fig:{$filename}}
+  \caption{{$caption}}
+\end{figure}
 TEX;
 	}
 
@@ -175,7 +171,7 @@ TEX;
 	{
 		if(strpos($matches[1], '/doc/api/')===0)
 		{
-			$url = 'http://www.yiiframework.com' . $matches[1];
+			$url = 'http://yiiframework.com' . $matches[1];
 			return sprintf('\href{%s}{%s}', $this->escape($url), $this->escape($matches[2]));
 		}
 		else if (strpos($matches[1], 'http://')===0)
@@ -188,21 +184,15 @@ TEX;
 			$href = str_replace('#', '-', $href);
 			return sprintf('\hyperref[%s]{%s}', $this->escape($href), $this->escape($matches[2]));
 		}
-		else if (strpos($matches[1], '/doc/blog/')===0)
-		{
-			$href = str_replace('/doc/blog/','',$matches[1]);
-			$href = str_replace('#', '-', $href);
-			return sprintf('\hyperref[%s]{%s}', $this->escape($href), $this->escape($matches[2]));
-		}
 	}
 
 	function make_sections($matches)
 	{
 		$label = sprintf('\label{%s}', $this->path.'-'.$matches[2]);
-		if(!$this->has_path_label)
+		if(!$this->has_has_path_label)
 		{
-			$label .= sprintf("\n\\label{%s}", $this->path);
-			$this->has_path_label = true;
+			$label .= sprintf("\n\label{%s}", $this->path);
+			$this->has_has_path_label = true;
 		}
 		$section = sprintf('\%ssection{%s}', str_repeat('sub',intval($matches[1])-1), $matches[3]);
 		return $section.$label;
@@ -258,6 +248,6 @@ TEX;
 
 	function mbox($matches)
 	{
-		return "\n\\begin{tipbox}\n".$matches[2]."\n\\end{tipbox}\n";
+		return "\n\begin{tipbox}\n".$matches[2]."\n\end{tipbox}\n";
 	}
 }

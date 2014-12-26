@@ -9,16 +9,16 @@
 	</tr>
 	<tr style="background-color: #ccc;">
 	    <th>Procedura</th>
-		<th>Cont.</th>
+		<th>Count</th>
 		<th>Totale (s)</th>
-		<th>Med. (s)</th>
+		<th>Avg. (s)</th>
 		<th>Min. (s)</th>
 		<th>Max. (s)</th>
 	</tr>
 <?php
 foreach($data as $index=>$entry)
 {
-	$color=($index%2)?'#F5F5F5':'#FFFFFF';
+	$color=($index%2)?'#F5F5F5':'#EBF8FE';
 	$proc=CHtml::encode($entry[0]);
 	$min=sprintf('%0.5f',$entry[2]);
 	$max=sprintf('%0.5f',$entry[3]);

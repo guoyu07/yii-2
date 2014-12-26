@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -17,6 +17,7 @@
  * Child classes may use {@link resolveNameID} and {@link hasModel}.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.web.widgets
  * @since 1.0
  */
@@ -27,8 +28,8 @@ abstract class CInputWidget extends CWidget
 	 */
 	public $model;
 	/**
-	 * @var string the attribute associated with this widget.
-	 * The name can contain square brackets (e.g. 'name[1]') which is used to collect tabular data input.
+	 * @var string the attribute associated with this widget. Starting from version 1.0.9,
+	 * the name can contain square brackets (e.g. 'name[1]') which is used to collect tabular data input.
 	 */
 	public $attribute;
 	/**
@@ -47,15 +48,14 @@ abstract class CInputWidget extends CWidget
 
 	/**
 	 * @return array the name and the ID of the input.
-	 * @throws CException in case input name and ID cannot be resolved.
 	 */
 	protected function resolveNameID()
 	{
 		if($this->name!==null)
 			$name=$this->name;
-		elseif(isset($this->htmlOptions['name']))
+		else if(isset($this->htmlOptions['name']))
 			$name=$this->htmlOptions['name'];
-		elseif($this->hasModel())
+		else if($this->hasModel())
 			$name=CHtml::activeName($this->model,$this->attribute);
 		else
 			throw new CException(Yii::t('yii','{class} must specify "model" and "attribute" or "name" property values.',array('{class}'=>get_class($this))));

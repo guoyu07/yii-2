@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -37,6 +37,7 @@
  * </ul>
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.utils
  * @since 1.0
  */
@@ -47,7 +48,7 @@ class CPropertyValue
 	 * Note, string 'true' (case-insensitive) will be converted to true,
 	 * string 'false' (case-insensitive) will be converted to false.
 	 * If a string represents a non-zero number, it will be treated as true.
-	 * @param mixed $value the value to be converted.
+	 * @param mixed the value to be converted.
 	 * @return boolean
 	 */
 	public static function ensureBoolean($value)
@@ -62,7 +63,7 @@ class CPropertyValue
 	 * Converts a value to string type.
 	 * Note, a boolean value will be converted to 'true' if it is true
 	 * and 'false' if it is false.
-	 * @param mixed $value the value to be converted.
+	 * @param mixed the value to be converted.
 	 * @return string
 	 */
 	public static function ensureString($value)
@@ -75,7 +76,7 @@ class CPropertyValue
 
 	/**
 	 * Converts a value to integer type.
-	 * @param mixed $value the value to be converted.
+	 * @param mixed the value to be converted.
 	 * @return integer
 	 */
 	public static function ensureInteger($value)
@@ -85,7 +86,7 @@ class CPropertyValue
 
 	/**
 	 * Converts a value to float type.
-	 * @param mixed $value the value to be converted.
+	 * @param mixed the value to be converted.
 	 * @return float
 	 */
 	public static function ensureFloat($value)
@@ -99,7 +100,7 @@ class CPropertyValue
 	 * will be returned. If the value is a string and it is not in this form
 	 * then an array consisting of just the string will be returned. If the value
 	 * is not a string then
-	 * @param mixed $value the value to be converted.
+	 * @param mixed the value to be converted.
 	 * @return array
 	 */
 	public static function ensureArray($value)
@@ -122,7 +123,7 @@ class CPropertyValue
 
 	/**
 	 * Converts a value to object type.
-	 * @param mixed $value the value to be converted.
+	 * @param mixed the value to be converted.
 	 * @return object
 	 */
 	public static function ensureObject($value)
@@ -138,8 +139,8 @@ class CPropertyValue
 	 * in the specified enumerable type (class).
 	 * For more details about enumerable, see {@link CEnumerable}.
 	 *
-	 * @param string $value the enumerable value to be checked.
-	 * @param string $enumType the enumerable class name (make sure it is included before calling this function).
+	 * @param string the enumerable value to be checked.
+	 * @param string the enumerable class name (make sure it is included before calling this function).
 	 * @return string the valid enumeration value
 	 * @throws CException if the value is not a valid enumerable value
 	 */

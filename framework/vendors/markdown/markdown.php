@@ -3,13 +3,14 @@
 # Markdown Extra  -  A text-to-HTML conversion tool for web writers
 #
 # PHP Markdown & Extra
-# Copyright (c) 2004-2012 Michel Fortin  
-# <http://michelf.com/projects/php-markdown/>
+# Copyright (c) 2004-2008 Michel Fortin
+# <http://www.michelf.com/projects/php-markdown/>
 #
 # Original Markdown
-# Copyright (c) 2004-2006 John Gruber  
+# Copyright (c) 2004-2006 John Gruber
 # <http://daringfireball.net/projects/markdown/>
 #
+
 
 #
 # Markdown Parser Class
@@ -158,18 +159,14 @@ class Markdown_Parser {
 							  [ ]*
 							  \n?				# maybe *one* newline
 							  [ ]*
-							(?:
-							  <(.+?)>			# url = $2
-							|
-							  (\S+?)			# url = $3
-							)
+							<?(\S+?)>?			# url = $2
 							  [ ]*
 							  \n?				# maybe one newline
 							  [ ]*
 							(?:
 								(?<=\s)			# lookbehind for whitespace
 								["(]
-								(.*?)			# title = $4
+								(.*?)			# title = $3
 								[")]
 								[ ]*
 							)?	# title is optional
@@ -181,9 +178,8 @@ class Markdown_Parser {
 	}
 	public function _stripLinkDefinitions_callback($matches) {
 		$link_id = strtolower($matches[1]);
-		$url = $matches[2] == '' ? $matches[3] : $matches[2];
-		$this->urls[$link_id] = $url;
-		$this->titles[$link_id] =& $matches[4];
+		$this->urls[$link_id] = $matches[2];
+		$this->titles[$link_id] =& $matches[3];
 		return ''; # String that will replace the block
 	}
 
@@ -506,37 +502,37 @@ class Markdown_Parser {
 				('.$this->nested_brackets_re.')	# link text = $2
 			  \]
 			  \(			# literal paren
-				[ \n]*
+				[ ]*
 				(?:
-					<(.+?)>	# href = $3
+					<(\S*)>	# href = $3
 				|
 					('.$this->nested_url_parenthesis_re.')	# href = $4
 				)
-				[ \n]*
+				[ ]*
 				(			# $5
 				  ([\'"])	# quote char = $6
 				  (.*?)		# Title = $7
 				  \6		# matching quote
-				  [ \n]*	# ignore any spaces/tabs between closing quote and )
+				  [ ]*	# ignore any spaces/tabs between closing quote and )
 				)?			# title is optional
 			  \)
 			)
 			}xs',
-			array(&$this, '_doAnchors_inline_callback'), $text);
+			array(&$this, '_DoAnchors_inline_callback'), $text);
 
 		#
 		# Last, handle reference-style shortcuts: [link text]
-		# These must come last in case you've also got [link text][1]
-		# or [link text](/foo)
+		# These must come last in case you've also got [link test][1]
+		# or [link test](/foo)
 		#
-		$text = preg_replace_callback('{
-			(					# wrap whole match in $1
-			  \[
-				([^\[\]]+)		# link text = $2; can\'t contain [ or ]
-			  \]
-			)
-			}xs',
-			array(&$this, '_doAnchors_reference_callback'), $text);
+//		$text = preg_replace_callback('{
+//			(					# wrap whole match in $1
+//			  \[
+//				([^\[\]]+)		# link text = $2; can\'t contain [ or ]
+//			  \]
+//			)
+//			}xs',
+//			array(&$this, '_doAnchors_reference_callback'), $text);
 
 		$this->in_anchor = false;
 		return $text;
@@ -631,18 +627,18 @@ class Markdown_Parser {
 			  \]
 			  \s?			# One optional whitespace character
 			  \(			# literal paren
-				[ \n]*
+				[ ]*
 				(?:
 					<(\S*)>	# src url = $3
 				|
 					('.$this->nested_url_parenthesis_re.')	# src url = $4
 				)
-				[ \n]*
+				[ ]*
 				(			# $5
 				  ([\'"])	# quote char = $6
 				  (.*?)		# title = $7
 				  \6		# matching quote
-				  [ \n]*
+				  [ ]*
 				)?			# title is optional
 			  \)
 			)
@@ -752,25 +748,22 @@ class Markdown_Parser {
 
 		# Re-usable patterns to match list item bullets and number markers:
 		$marker_ul_re  = '[*+-]';
-		$marker_ol_re  = '\d+[\.]';
+		$marker_ol_re  = '\d+[.]';
 		$marker_any_re = "(?:$marker_ul_re|$marker_ol_re)";
 
-		$markers_relist = array(
-			$marker_ul_re => $marker_ol_re,
-			$marker_ol_re => $marker_ul_re,
-			);
+		$markers_relist = array($marker_ul_re, $marker_ol_re);
 
-		foreach ($markers_relist as $marker_re => $other_marker_re) {
+		foreach ($markers_relist as $marker_re) {
 			# Re-usable pattern to match any entirel ul or ol list:
 			$whole_list_re = '
 				(								# $1 = whole list
 				  (								# $2
-					([ ]{0,'.$less_than_tab.'})	# $3 = number of spaces
-					('.$marker_re.')			# $4 = first list item marker
+					[ ]{0,'.$less_than_tab.'}
+					('.$marker_re.')			# $3 = first list item marker
 					[ ]+
 				  )
 				  (?s:.+?)
-				  (								# $5
+				  (								# $4
 					  \z
 					|
 					  \n{2,}
@@ -778,12 +771,6 @@ class Markdown_Parser {
 					  (?!						# Negative lookahead for another list item marker
 						[ ]*
 						'.$marker_re.'[ ]+
-					  )
-					|
-					  (?=						# Lookahead for another kind of list
-					    \n
-						\3						# Must have the same indentation
-						'.$other_marker_re.'[ ]+
 					  )
 				  )
 				)
@@ -810,26 +797,25 @@ class Markdown_Parser {
 
 		return $text;
 	}
-	
 	public function _doLists_callback($matches) {
 		# Re-usable patterns to match list item bullets and number markers:
 		$marker_ul_re  = '[*+-]';
-		$marker_ol_re  = '\d+[\.]';
+		$marker_ol_re  = '\d+[.]';
 		$marker_any_re = "(?:$marker_ul_re|$marker_ol_re)";
-		
+
 		$list = $matches[1];
-		$list_type = preg_match("/$marker_ul_re/", $matches[4]) ? "ul" : "ol";
-		
+		$list_type = preg_match("/$marker_ul_re/", $matches[3]) ? "ul" : "ol";
+
 		$marker_any_re = ( $list_type == "ul" ? $marker_ul_re : $marker_ol_re );
-		
+
 		$list .= "\n";
 		$result = $this->processListItems($list, $marker_any_re);
-		
+
 		$result = $this->hashBlock("<$list_type>\n" . $result . "</$list_type>");
 		return "\n". $result ."\n\n";
 	}
 
-	var $list_level = 0;
+	public $list_level = 0;
 
 	public function processListItems($list_str, $marker_any_re) {
 	#
@@ -944,25 +930,25 @@ class Markdown_Parser {
 
 
 	public $em_relist = array(
-		''  => '(?:(?<!\*)\*(?!\*)|(?<!_)_(?!_))(?=\S|$)(?![\.,:;]\s)',
-		'*' => '(?<=\S|^)(?<!\*)\*(?!\*)',
-		'_' => '(?<=\S|^)(?<!_)_(?!_)',
+		''  => '(?:(?<!\*)\*(?!\*)|(?<!_)_(?!_))(?=\S)(?![.,:;]\s)',
+		'*' => '(?<=\S)(?<!\*)\*(?!\*)',
+		'_' => '(?<=\S)(?<!_)_(?!_)',
 		);
 	public $strong_relist = array(
-		''   => '(?:(?<!\*)\*\*(?!\*)|(?<!_)__(?!_))(?=\S|$)(?![\.,:;]\s)',
-		'**' => '(?<=\S|^)(?<!\*)\*\*(?!\*)',
-		'__' => '(?<=\S|^)(?<!_)__(?!_)',
+		''   => '(?:(?<!\*)\*\*(?!\*)|(?<!_)__(?!_))(?=\S)(?![.,:;]\s)',
+		'**' => '(?<=\S)(?<!\*)\*\*(?!\*)',
+		'__' => '(?<=\S)(?<!_)__(?!_)',
 		);
 	public $em_strong_relist = array(
-		''    => '(?:(?<!\*)\*\*\*(?!\*)|(?<!_)___(?!_))(?=\S|$)(?![\.,:;]\s)',
-		'***' => '(?<=\S|^)(?<!\*)\*\*\*(?!\*)',
-		'___' => '(?<=\S|^)(?<!_)___(?!_)',
+		''    => '(?:(?<!\*)\*\*\*(?!\*)|(?<!_)___(?!_))(?=\S)(?![.,:;]\s)',
+		'***' => '(?<=\S)(?<!\*)\*\*\*(?!\*)',
+		'___' => '(?<=\S)(?<!_)___(?!_)',
 		);
 	public $em_strong_prepared_relist;
-	
+
 	public function prepareItalicsAndBold() {
 	#
-	# Prepare regular expressions for searching emphasis tokens in any
+	# Prepare regular expressions for seraching emphasis tokens in any
 	# context.
 	#
 		foreach ($this->em_relist as $em => $em_re) {
@@ -974,37 +960,37 @@ class Markdown_Parser {
 				}
 				$token_relist[] = $em_re;
 				$token_relist[] = $strong_re;
-				
+
 				# Construct master expression from list.
 				$token_re = '{('. implode('|', $token_relist) .')}';
 				$this->em_strong_prepared_relist["$em$strong"] = $token_re;
 			}
 		}
 	}
-	
+
 	public function doItalicsAndBold($text) {
 		$token_stack = array('');
 		$text_stack = array('');
 		$em = '';
 		$strong = '';
 		$tree_char_em = false;
-		
+
 		while (1) {
 			#
 			# Get prepared regular expression for seraching emphasis tokens
 			# in current context.
 			#
 			$token_re = $this->em_strong_prepared_relist["$em$strong"];
-			
+
 			#
-			# Each loop iteration search for the next emphasis token. 
+			# Each loop iteration seach for the next emphasis token.
 			# Each token is then passed to handleSpanToken.
 			#
 			$parts = preg_split($token_re, $text, 2, PREG_SPLIT_DELIM_CAPTURE);
 			$text_stack[0] .= $parts[0];
 			$token =& $parts[1];
 			$text =& $parts[2];
-			
+
 			if (empty($token)) {
 				# Reached end of text span: empty stack without emitting.
 				# any more emphasis.
@@ -1120,7 +1106,6 @@ class Markdown_Parser {
 
 		return $text;
 	}
-	
 	public function _doBlockQuotes_callback($matches) {
 		$bq = $matches[1];
 		# trim one level of quoting - trim whitespace-only lines
@@ -1128,14 +1113,13 @@ class Markdown_Parser {
 		$bq = $this->runBlockGamut($bq);		# recurse
 
 		$bq = preg_replace('/^/m', "  ", $bq);
-		# These leading spaces cause problem with <pre> content, 
+		# These leading spaces cause problem with <pre> content,
 		# so we need to fix that:
-		$bq = preg_replace_callback('{(\s*<pre>.+?</pre>)}sx', 
-			array(&$this, '_doBlockQuotes_callback2'), $bq);
+		$bq = preg_replace_callback('{(\s*<pre>.+?</pre>)}sx',
+			array(&$this, '_DoBlockQuotes_callback2'), $bq);
 
 		return "\n". $this->hashBlock("<blockquote>\n$bq\n</blockquote>")."\n\n";
 	}
-	
 	public function _doBlockQuotes_callback2($matches) {
 		$pre = $matches[1];
 		$pre = preg_replace('/^  /m', '', $pre);
@@ -1254,17 +1238,9 @@ class Markdown_Parser {
 			<
 			(?:mailto:)?
 			(
-				(?:
-					[-!#$%&\'*+/=?^_`.{|}~\w\x80-\xFF]+
-				|
-					".*?"
-				)
+				[-.\w\x80-\xFF]+
 				\@
-				(?:
-					[-a-z0-9\x80-\xFF]+(\.[-a-z0-9\x80-\xFF]+)*\.[a-z]+
-				|
-					\[[\d.a-fA-F:]+\]	# IPv4 & IPv6
-				)
+				[-a-z0-9\x80-\xFF]+(\.[-a-z0-9\x80-\xFF]+)*\.[a-z]+
 			)
 			>
 			}xi',
@@ -1344,7 +1320,7 @@ class Markdown_Parser {
 				|
 					<\?.*?\?> | <%.*?%>		# processing instruction
 				|
-					<[/!$]?[-a-zA-Z0-9:_]+	# regular tags
+					<[/!$]?[-a-zA-Z0-9:]+	# regular tags
 					(?>
 						\s
 						(?>[^"\'>]+|"[^"]*"|\'[^\']*\')*
@@ -1662,7 +1638,7 @@ class MarkdownExtra_Parser extends Markdown_Parser {
 							(?!\s)'.$enclosing_tag_re.'
 						)
 						(?:
-							(?=[\s"\'/a-zA-Z0-9])	# Allowed characters after tag name.
+							(?=[\s"\'/])		# Allowed characters after tag name.
 							(?>
 								".*?"		|	# Double quotes (can contain `>`)
 								\'.*?\'   	|	# Single quotes (can contain `>`)
@@ -1682,7 +1658,7 @@ class MarkdownExtra_Parser extends Markdown_Parser {
 				'. ( !$span ? ' # If not in span.
 				|
 					# Indented code block
-					(?: ^[ ]*\n | ^ | \n[ ]*\n )
+					(?> ^[ ]*\n? | \n[ ]*\n )
 					[ ]{'.($indent+4).'}[^\n]* \n
 					(?>
 						(?: [ ]{'.($indent+4).'}[^\n]* | [ ]* ) \n
@@ -1690,7 +1666,7 @@ class MarkdownExtra_Parser extends Markdown_Parser {
 				|
 					# Fenced code block marker
 					(?> ^ | \n )
-					[ ]{0,'.($indent).'}~~~+[ ]*\n
+					[ ]{'.($indent).'}~~~+[ ]*\n
 				' : '' ). ' # End (if not is span).
 				)
 			}xs';
@@ -1752,30 +1728,29 @@ class MarkdownExtra_Parser extends Markdown_Parser {
 				}
 			}
 			#
-			# Check for: Fenced code block marker.
+			# Check for: Indented code block or fenced code block marker.
 			#
-			else if (preg_match('{^\n?[ ]{0,'.($indent+3).'}~}', $tag)) {
-				# Fenced code block marker: find matching end marker.
-				$tag_re = preg_quote(trim($tag));
-				if (preg_match('{^(?>.*\n)+?[ ]{0,'.($indent).'}'.$tag_re.'[ ]*\n}', $text, 
-					$matches)) 
-				{
-					# End marker found: pass text unchanged until marker.
-					$parsed .= $tag . $matches[0];
-					$text = substr($text, strlen($matches[0]));
-				}
-				else {
-					# No end marker: just skip it.
+			else if ($tag{0} == "\n" || $tag{0} == "~") {
+				if ($tag{1} == "\n" || $tag{1} == " ") {
+					# Indented code block: pass it unchanged, will be handled
+					# later.
 					$parsed .= $tag;
 				}
-			}
-			#
-			# Check for: Indented code block.
-			#
-			else if ($tag{0} == "\n" || $tag{0} == " ") {
-				# Indented code block: pass it unchanged, will be handled 
-				# later.
-				$parsed .= $tag;
+				else {
+					# Fenced code block marker: find matching end marker.
+					$tag_re = preg_quote(trim($tag));
+					if (preg_match('{^(?>.*\n)+?'.$tag_re.' *\n}', $text,
+						$matches))
+					{
+						# End marker found: pass text unchanged until marker.
+						$parsed .= $tag . $matches[0];
+						$text = substr($text, strlen($matches[0]));
+					}
+					else {
+						# No end marker: just skip it.
+						$parsed .= $tag;
+					}
+				}
 			}
 			#
 			# Check for: Opening Block level tag or
@@ -1875,7 +1850,7 @@ class MarkdownExtra_Parser extends Markdown_Parser {
 					</?					# Any opening or closing tag.
 						[\w:$]+			# Tag name.
 						(?:
-							(?=[\s"\'/a-zA-Z0-9])	# Allowed characters after tag name.
+							(?=[\s"\'/])		# Allowed characters after tag name.
 							(?>
 								".*?"		|	# Double quotes (can contain `>`)
 								\'.*?\'   	|	# Single quotes (can contain `>`)
@@ -2393,19 +2368,19 @@ class MarkdownExtra_Parser extends Markdown_Parser {
 	# work in the middle of a word.
 	#
 	public $em_relist = array(
-		''  => '(?:(?<!\*)\*(?!\*)|(?<![a-zA-Z0-9_])_(?!_))(?=\S|$)(?![\.,:;]\s)',
-		'*' => '(?<=\S|^)(?<!\*)\*(?!\*)',
-		'_' => '(?<=\S|^)(?<!_)_(?![a-zA-Z0-9_])',
+		''  => '(?:(?<!\*)\*(?!\*)|(?<![a-zA-Z0-9_])_(?!_))(?=\S)(?![.,:;]\s)',
+		'*' => '(?<=\S)(?<!\*)\*(?!\*)',
+		'_' => '(?<=\S)(?<!_)_(?![a-zA-Z0-9_])',
 		);
 	public $strong_relist = array(
-		''   => '(?:(?<!\*)\*\*(?!\*)|(?<![a-zA-Z0-9_])__(?!_))(?=\S|$)(?![\.,:;]\s)',
-		'**' => '(?<=\S|^)(?<!\*)\*\*(?!\*)',
-		'__' => '(?<=\S|^)(?<!_)__(?![a-zA-Z0-9_])',
+		''   => '(?:(?<!\*)\*\*(?!\*)|(?<![a-zA-Z0-9_])__(?!_))(?=\S)(?![.,:;]\s)',
+		'**' => '(?<=\S)(?<!\*)\*\*(?!\*)',
+		'__' => '(?<=\S)(?<!_)__(?![a-zA-Z0-9_])',
 		);
 	public $em_strong_relist = array(
-		''    => '(?:(?<!\*)\*\*\*(?!\*)|(?<![a-zA-Z0-9_])___(?!_))(?=\S|$)(?![\.,:;]\s)',
-		'***' => '(?<=\S|^)(?<!\*)\*\*\*(?!\*)',
-		'___' => '(?<=\S|^)(?<!_)___(?![a-zA-Z0-9_])',
+		''    => '(?:(?<!\*)\*\*\*(?!\*)|(?<![a-zA-Z0-9_])___(?!_))(?=\S)(?![.,:;]\s)',
+		'***' => '(?<=\S)(?<!\*)\*\*\*(?!\*)',
+		'___' => '(?<=\S)(?<!_)___(?![a-zA-Z0-9_])',
 		);
 
 
@@ -2416,7 +2391,7 @@ class MarkdownExtra_Parser extends Markdown_Parser {
 	#
 		# Strip leading and trailing lines:
 		$text = preg_replace('/\A\n+|\n+\z/', '', $text);
-		
+
 		$grafs = preg_split('/\n{2,}/', $text, -1, PREG_SPLIT_NO_EMPTY);
 
 		#
@@ -2492,20 +2467,20 @@ class MarkdownExtra_Parser extends Markdown_Parser {
 		return $text;
 	}
 
-	
+
 	public function appendFootnotes($text) {
 	#
 	# Append footnote list to text.
 	#
-		$text = preg_replace_callback('{F\x1Afn:(.*?)\x1A:}', 
+		$text = preg_replace_callback('{F\x1Afn:(.*?)\x1A:}',
 			array(&$this, '_appendFootnotes_callback'), $text);
-	
+
 		if (!empty($this->footnotes_ordered)) {
 			$text .= "\n\n";
 			$text .= "<div class=\"footnotes\">\n";
-			$text .= "<hr". $this->empty_element_suffix ."\n";
+			$text .= "<hr />\n";
 			$text .= "<ol>\n\n";
-			
+
 			$attr = " rev=\"footnote\"";
 			if ($this->fn_backlink_class != "") {
 				$class = $this->fn_backlink_class;

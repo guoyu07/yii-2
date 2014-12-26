@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -22,9 +22,8 @@
  * <li>{@link CMarkdownParser markdown with syntax highlighting}</li>
  * </ul>
  *
- * @property CMarkdownParser $markdownParser The parser instance.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.web.widgets
  * @since 1.0
  */
@@ -48,7 +47,7 @@ class CMarkdown extends COutputProcessor
 	 * Processes the captured output.
      * This method converts the content in markdown syntax to HTML code.
      * If {@link purifyOutput} is true, the HTML code will also be purified.
-	 * @param string $output the captured output to be processed
+	 * @param string the captured output to be processed
 	 * @see convert
 	 */
 	public function processOutput($output)
@@ -65,7 +64,7 @@ class CMarkdown extends COutputProcessor
 	/**
 	 * Converts the content in markdown syntax to HTML code.
 	 * This method uses {@link CMarkdownParser} to do the conversion.
-	 * @param string $output the content to be converted
+	 * @param string the content to be converted
 	 * @return string the converted content
 	 */
 	public function transform($output)
@@ -76,6 +75,7 @@ class CMarkdown extends COutputProcessor
 
 	/**
 	 * Registers the needed CSS and JavaScript.
+	 * @since 1.0.1
 	 */
 	public function registerClientScript()
 	{
@@ -85,7 +85,8 @@ class CMarkdown extends COutputProcessor
 
 	/**
 	 * Registers the needed CSS file.
-	 * @param string $url the CSS URL. If null, a default CSS URL will be used.
+	 * @param string the CSS URL. If null, a default CSS URL will be used.
+	 * @since 1.0.2
 	 */
 	public static function registerCssFile($url=null)
 	{
@@ -96,7 +97,8 @@ class CMarkdown extends COutputProcessor
 	 * Returns the markdown parser instance.
 	 * This method calls {@link createMarkdownParser} to create the parser instance.
 	 * Call this method multipe times will only return the same instance.
-	 * @return CMarkdownParser the parser instance
+	 * @param CMarkdownParser the parser instance
+	 * @since 1.0.1
 	 */
 	public function getMarkdownParser()
 	{

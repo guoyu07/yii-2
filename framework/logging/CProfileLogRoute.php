@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -20,9 +20,8 @@
  * <li>callstack: list the mark code blocks in a hierarchical view reflecting their calling sequence.</li>
  * </ul>
  *
- * @property string $report The type of the profiling report to display. Defaults to 'summary'.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.logging
  * @since 1.0
  */
@@ -33,6 +32,7 @@ class CProfileLogRoute extends CWebLogRoute
 	 * If false, the results will be aggregated by categories.
 	 * Defaults to true. Note that this property only affects the summary report
 	 * that is enabled when {@link report} is 'summary'.
+	 * @since 1.0.6
 	 */
 	public $groupByToken=true;
 	/**
@@ -58,8 +58,7 @@ class CProfileLogRoute extends CWebLogRoute
 	}
 
 	/**
-	 * @param string $value the type of the profiling report to display. Valid values include 'summary' and 'callstack'.
-	 * @throws CException if given value is not "summary" or "callstack"
+	 * @param string the type of the profiling report to display. Valid values include 'summary' and 'callstack'.
 	 */
 	public function setReport($value)
 	{
@@ -72,7 +71,7 @@ class CProfileLogRoute extends CWebLogRoute
 
 	/**
 	 * Displays the log messages.
-	 * @param array $logs list of log messages
+	 * @param array list of log messages
 	 */
 	public function processLogs($logs)
 	{
@@ -88,12 +87,12 @@ class CProfileLogRoute extends CWebLogRoute
 
 	/**
 	 * Displays the callstack of the profiling procedures for display.
-	 * @param array $logs list of logs
-	 * @throws CException if Yii::beginProfile() and Yii::endProfile() are not matching
+	 * @param array list of logs
 	 */
 	protected function displayCallstack($logs)
 	{
 		$stack=array();
+		$level=0;
 		$results=array();
 		$n=0;
 		foreach($logs as $log)
@@ -108,7 +107,7 @@ class CProfileLogRoute extends CWebLogRoute
 				$stack[]=$log;
 				$n++;
 			}
-			elseif(!strncasecmp($message,'end:',4))
+			else if(!strncasecmp($message,'end:',4))
 			{
 				$token=substr($message,4);
 				if(($last=array_pop($stack))!==null && $last[0]===$token)
@@ -131,13 +130,11 @@ class CProfileLogRoute extends CWebLogRoute
 
 	/**
 	 * Displays the summary report of the profiling result.
-	 * @param array $logs list of logs
-	 * @throws CException if Yii::beginProfile() and Yii::endProfile() are not matching
+	 * @param array list of logs
 	 */
 	protected function displaySummary($logs)
 	{
 		$stack=array();
-		$results=array();
 		foreach($logs as $log)
 		{
 			if($log[1]!==CLogger::LEVEL_PROFILE)
@@ -148,7 +145,7 @@ class CProfileLogRoute extends CWebLogRoute
 				$log[0]=substr($message,6);
 				$stack[]=$log;
 			}
-			elseif(!strncasecmp($message,'end:',4))
+			else if(!strncasecmp($message,'end:',4))
 			{
 				$token=substr($message,4);
 				if(($last=array_pop($stack))!==null && $last[0]===$token)
@@ -187,16 +184,15 @@ class CProfileLogRoute extends CWebLogRoute
 
 	/**
 	 * Aggregates the report result.
-	 * @param array $result log result for this code block
-	 * @param float $delta time spent for this code block
-	 * @return array
+	 * @param array log result for this code block
+	 * @param float time spent for this code block
 	 */
 	protected function aggregateResult($result,$delta)
 	{
 		list($token,$calls,$min,$max,$total)=$result;
 		if($delta<$min)
 			$min=$delta;
-		elseif($delta>$max)
+		else if($delta>$max)
 			$max=$delta;
 		$calls++;
 		$total+=$delta;

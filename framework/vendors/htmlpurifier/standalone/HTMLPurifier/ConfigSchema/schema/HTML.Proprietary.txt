@@ -9,4 +9,3 @@ DEFAULT: false
     <strong>Warning:</strong> This can cause your documents to stop
     validating!
 </p>
---# vim: et sw=4 sts=4

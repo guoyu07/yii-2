@@ -1,53 +1,32 @@
-<?php
-/* @var $this SiteController */
-/* @var $model LoginForm */
-/* @var $form CActiveForm  */
-
-$this->pageTitle=Yii::app()->name . ' - Login';
-$this->breadcrumbs=array(
-	'Login',
-);
-?>
+<?php $this->pageTitle=Yii::app()->name . ' - Login'; ?>
 
 <h1>Login</h1>
 
-<p>Please fill out the following form with your login credentials:</p>
+<div class="yiiForm">
+<?php echo CHtml::beginForm(); ?>
 
-<div class="form">
-<?php $form=$this->beginWidget('CActiveForm', array(
-	'id'=>'login-form',
-	'enableClientValidation'=>true,
-	'clientOptions'=>array(
-		'validateOnSubmit'=>true,
-	),
-)); ?>
+<?php echo CHtml::errorSummary($form); ?>
 
-	<p class="note">Fields with <span class="required">*</span> are required.</p>
+<div class="simple">
+<?php echo CHtml::activeLabel($form,'username'); ?>
+<?php echo CHtml::activeTextField($form,'username') ?>
+</div>
 
-	<div class="row">
-		<?php echo $form->labelEx($model,'username'); ?>
-		<?php echo $form->textField($model,'username'); ?>
-		<?php echo $form->error($model,'username'); ?>
-	</div>
+<div class="simple">
+<?php echo CHtml::activeLabel($form,'password'); ?>
+<?php echo CHtml::activePasswordField($form,'password') ?>
+<p class="hint">
+Hint: You may login with <tt>demo/demo</tt> or <tt>admin/admin</tt>.
+</p>
+</div>
 
-	<div class="row">
-		<?php echo $form->labelEx($model,'password'); ?>
-		<?php echo $form->passwordField($model,'password'); ?>
-		<?php echo $form->error($model,'password'); ?>
-		<p class="hint">
-			Hint: You may login with <kbd>demo</kbd>/<kbd>demo</kbd> or <kbd>admin</kbd>/<kbd>admin</kbd>.
-		</p>
-	</div>
+<div class="action">
+<?php echo CHtml::activeCheckBox($form,'rememberMe'); ?>
+<?php echo CHtml::activeLabel($form,'rememberMe'); ?>
+<br/>
+<?php echo CHtml::submitButton('Login'); ?>
+</div>
 
-	<div class="row rememberMe">
-		<?php echo $form->checkBox($model,'rememberMe'); ?>
-		<?php echo $form->label($model,'rememberMe'); ?>
-		<?php echo $form->error($model,'rememberMe'); ?>
-	</div>
+<?php echo CHtml::endForm(); ?>
 
-	<div class="row buttons">
-		<?php echo CHtml::submitButton('Login'); ?>
-	</div>
-
-<?php $this->endWidget(); ?>
-</div><!-- form -->
+</div><!-- yiiForm -->

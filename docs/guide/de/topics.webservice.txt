@@ -34,14 +34,15 @@ Wie erwähnt, ist ein Dienstanbieter eine Klasse mit entfernt aufrufbaren
 Methoden. Yii verwendet [Doc
 Comments](http://java.sun.com/j2se/javadoc/writingdoccomments/) und
 [Reflection von
-Klassen](http://www.php.net/manual/de/book.reflection.php)
+Klassen](http://www.php.net/manual/de/language.oop5.reflection.php),
 um herauszufinden, welche Methoden entfernt aufrufbar sind und wie deren
 Parameter und Rückgabewerte aussehen.
 
 Beginnen wir mit einem einfachen Dienst zur Abfrage von Börsenkursen. Mit
 diesem Dienst kann ein Client den Kurs einer bestimmten Aktie abfragen. Wir
 definieren den Dienstanbieter wie folgt. Beachten Sie, dass wir die
-Anbieterklasse von [CController] ableiten, dies ist aber nicht unbedingt nötigt.
+Anbieterklasse von `CController` ableiten. Das ist nicht unbedingt nötigt. Wir
+erklären in Kürze, warum wir das machen.
 
 ~~~
 [php]
@@ -231,4 +232,4 @@ von [CWebService] beziehen und den Namen der angeforderten Methode über
 entfernte Methode aus irgendeinem Grund nicht ausgeführt werden soll (z.B.
 bei unberechtigtem Zugriff).
 
-<div class="revision">$Id: topics.webservice.txt 1808 2010-02-17 21:49:42Z qiang.xue $</div>
+<div class="revision">$Id: topics.webservice.txt 1300 2009-08-07 00:39:21Z qiang.xue $</div>

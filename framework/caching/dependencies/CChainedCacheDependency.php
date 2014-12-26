@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -18,27 +18,14 @@
  * which gives a {@link CTypedList} instance and can be used like an array
  * (see {@link CList} for more details}).
  *
- * @property CTypedList $dependencies List of dependency objects.
- * @property boolean $hasChanged Whether the dependency is changed or not.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.caching.dependencies
  * @since 1.0
  */
 class CChainedCacheDependency extends CComponent implements ICacheDependency
 {
 	private $_dependencies=null;
-
-	/**
-	 * Constructor.
-	 * @param array $dependencies the dependencies to be added to this chain.
-	 * @since 1.1.4
-	 */
-	public function __construct($dependencies=array())
-	{
-		if(!empty($dependencies))
-			$this->setDependencies($dependencies);
-	}
 
 	/**
 	 * @return CTypedList list of dependency objects
@@ -51,19 +38,14 @@ class CChainedCacheDependency extends CComponent implements ICacheDependency
 	}
 
 	/**
-	 * @param array $values list of dependency objects or configurations to be added to this chain.
-	 * If a dependency is specified as a configuration, it must be an array that can be recognized
-	 * by {@link YiiBase::createComponent}.
+	 * @param array list of dependency objects to be added to this chain.
+	 * @since 1.0.10
 	 */
 	public function setDependencies($values)
 	{
 		$dependencies=$this->getDependencies();
 		foreach($values as $value)
-		{
-			if(is_array($value))
-				$value=Yii::createComponent($value);
 			$dependencies->add($value);
-		}
 	}
 
 	/**

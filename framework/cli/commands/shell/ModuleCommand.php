@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  * @version $Id: ModuleCommand.php 433 2008-12-30 22:59:17Z qiang.xue $
  */
@@ -15,6 +15,7 @@
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @version $Id: ModuleCommand.php 433 2008-12-30 22:59:17Z qiang.xue $
  * @package system.cli.commands.shell
+ * @since 1.0.3
  */
 class ModuleCommand extends CConsoleCommand
 {
@@ -43,8 +44,7 @@ EOD;
 
 	/**
 	 * Execute the action.
-	 * @param array $args command line parameters specific for this command
-	 * @return integer|null non zero application exit code for help or null on success
+	 * @param array command line parameters specific for this command
 	 */
 	public function run($args)
 	{
@@ -52,7 +52,7 @@ EOD;
 		{
 			echo "Error: module ID is required.\n";
 			echo $this->getHelp();
-			return 1;
+			return;
 		}
 
 		$moduleID=$args[0];

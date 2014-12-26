@@ -1,23 +1,17 @@
 <?php
-/**
- * The followings are the available columns in table 'tbl_comment':
- * @property integer $id
- * @property string $content
- * @property integer $status
- * @property integer $create_time
- * @property string $author
- * @property string $email
- * @property string $url
- * @property integer $post_id
- */
+
 class Comment extends CActiveRecord
 {
-	const STATUS_PENDING=1;
-	const STATUS_APPROVED=2;
+	const STATUS_PENDING=0;
+	const STATUS_APPROVED=1;
+	/**
+	 * @var string this property is used to collect user verification code input
+	 */
+	public $verifyCode;
 
 	/**
 	 * Returns the static model of the specified AR class.
-	 * @return static the static model class
+	 * @return CActiveRecord the static model class
 	 */
 	public static function model($className=__CLASS__)
 	{
@@ -29,7 +23,7 @@ class Comment extends CActiveRecord
 	 */
 	public function tableName()
 	{
-		return '{{comment}}';
+		return 'Comment';
 	}
 
 	/**
@@ -37,13 +31,12 @@ class Comment extends CActiveRecord
 	 */
 	public function rules()
 	{
-		// NOTE: you should only define rules for those attributes that
-		// will receive user inputs.
 		return array(
-			array('content, author, email', 'required'),
-			array('author, email, url', 'length', 'max'=>128),
+			array('author,email,url','length','max'=>128),
+			array('author,email,content', 'required'),
 			array('email','email'),
 			array('url','url'),
+			array('verifyCode', 'captcha', 'on'=>'insert', 'allowEmpty'=>!Yii::app()->user->isGuest || !extension_loaded('gd')),
 		);
 	}
 
@@ -52,10 +45,8 @@ class Comment extends CActiveRecord
 	 */
 	public function relations()
 	{
-		// NOTE: you may need to adjust the relation name and the related
-		// class name for the relations automatically generated below.
 		return array(
-			'post' => array(self::BELONGS_TO, 'Post', 'post_id'),
+			'post'=>array(self::BELONGS_TO, 'Post', 'postId', 'joinType'=>'INNER JOIN'),
 		);
 	}
 
@@ -65,36 +56,45 @@ class Comment extends CActiveRecord
 	public function attributeLabels()
 	{
 		return array(
-			'id' => 'Id',
-			'content' => 'Comment',
-			'status' => 'Status',
-			'create_time' => 'Create Time',
-			'author' => 'Name',
-			'email' => 'Email',
-			'url' => 'Website',
-			'post_id' => 'Post',
+			'author'=>'Name',
+			'url'=>'Website',
+			'content'=>'Comment',
+			'verifyCode'=>'Verification Code',
 		);
 	}
 
 	/**
-	 * Approves a comment.
+	 * @return array attributes that can be massively assigned
 	 */
-	public function approve()
+	public function safeAttributes()
 	{
-		$this->status=Comment::STATUS_APPROVED;
-		$this->update(array('status'));
+		return array(
+			'author',
+			'email',
+			'url',
+			'content',
+			'verifyCode',
+		);
 	}
 
 	/**
-	 * @param Post the post that this comment belongs to. If null, the method
-	 * will query for the post.
-	 * @return string the permalink URL for this comment
+	 * @return array comment status names indexed by status IDs
 	 */
-	public function getUrl($post=null)
+	public function getStatusOptions()
 	{
-		if($post===null)
-			$post=$this->post;
-		return $post->url.'#c'.$this->id;
+		return array(
+			self::STATUS_PENDING=>'Pending',
+			self::STATUS_APPROVED=>'Approved',
+		);
+	}
+
+	/**
+	 * @return string the status display for the current comment
+	 */
+	public function getStatusText()
+	{
+		$options=$this->statusOptions;
+		return isset($options[$this->status]) ? $options[$this->status] : "unknown ({$this->status})";
 	}
 
 	/**
@@ -113,7 +113,7 @@ class Comment extends CActiveRecord
 	 */
 	public function getPendingCommentCount()
 	{
-		return $this->count('status='.self::STATUS_PENDING);
+		return Comment::model()->count('status='.self::STATUS_PENDING);
 	}
 
 	/**
@@ -122,26 +122,54 @@ class Comment extends CActiveRecord
 	 */
 	public function findRecentComments($limit=10)
 	{
-		return $this->with('post')->findAll(array(
-			'condition'=>'t.status='.self::STATUS_APPROVED,
-			'order'=>'t.create_time DESC',
+		$criteria=array(
+			'condition'=>'Comment.status='.self::STATUS_APPROVED,
+			'order'=>'Comment.createTime DESC',
 			'limit'=>$limit,
-		));
+		);
+		return $this->with('post')->findAll($criteria);
 	}
 
 	/**
-	 * This is invoked before the record is saved.
-	 * @return boolean whether the record should be saved.
+	 * Approves a comment.
 	 */
-	protected function beforeSave()
+	public function approve()
 	{
-		if(parent::beforeSave())
+		if($this->status==Comment::STATUS_PENDING)
 		{
-			if($this->isNewRecord)
-				$this->create_time=time();
-			return true;
+			$this->status=Comment::STATUS_APPROVED;
+			$this->save();
+			Post::model()->updateCounters(array('commentCount'=>1), "id={$this->postId}");
 		}
-		else
-			return false;
+	}
+
+	/**
+	 * Prepares attributes before performing validation.
+	 */
+	protected function beforeValidate($on)
+	{
+		$parser=new CMarkdownParser;
+		$this->contentDisplay=$parser->safeTransform($this->content);
+		if($this->isNewRecord)
+			$this->createTime=time();
+		return true;
+	}
+
+	/**
+	 * Postprocessing after the record is saved
+	 */
+	protected function afterSave()
+	{
+		if($this->isNewRecord && $this->status==Comment::STATUS_APPROVED)
+			Post::model()->updateCounters(array('commentCount'=>1), "id={$this->postId}");
+	}
+
+	/**
+	 * Postprocessing after the record is deleted
+	 */
+	protected function afterDelete()
+	{
+		if($this->status==Comment::STATUS_APPROVED)
+			Post::model()->updateCounters(array('commentCount'=>-1), "id={$this->postId}");
 	}
 }

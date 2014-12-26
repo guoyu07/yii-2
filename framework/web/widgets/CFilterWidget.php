@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -20,9 +20,8 @@
  *
  * CFilterWidget provides all properties and methods of {@link CWidget} and {@link CFilter}.
  *
- * @property boolean $isFilter Whether this widget is used as a filter.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.web.widgets
  * @since 1.0
  */
@@ -39,7 +38,7 @@ class CFilterWidget extends CWidget implements IFilter
 
 	/**
 	 * Constructor.
-	 * @param CBaseController $owner owner/creator of this widget. It could be either a widget or a controller.
+	 * @param CBaseController owner/creator of this widget. It could be either a widget or a controller.
 	 */
 	public function __construct($owner=null)
 	{
@@ -49,6 +48,7 @@ class CFilterWidget extends CWidget implements IFilter
 
 	/**
 	 * @return boolean whether this widget is used as a filter.
+	 * @since 1.0.4
 	 */
 	public function getIsFilter()
 	{
@@ -60,7 +60,7 @@ class CFilterWidget extends CWidget implements IFilter
 	 * The default implementation simply calls {@link init()},
 	 * {@link CFilterChain::run()} and {@link run()} in order
 	 * Derived classes may want to override this method to change this behavior.
-	 * @param CFilterChain $filterChain the filter chain that the filter is on.
+	 * @param CFilterChain the filter chain that the filter is on.
 	 */
 	public function filter($filterChain)
 	{

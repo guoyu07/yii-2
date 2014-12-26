@@ -69,7 +69,7 @@ Förutom dessa cachningsmetoder på applikationsnivå, kan även cachningslösni
 på servernivå användas för att förbättra applikationsprestanda. Faktum är att, 
 [APC-cachning](/doc/guide/topics.performance#enabling-apc-extension) som 
 beskrevs tidigare, hör till denna kategori. Det finns andra serverbaserade 
-metoder, som [Zend Optimizer](http://www.zend.com/en/products/guard/zend-optimizer), 
+metoder, som [Zend Optimizer](http://Zend.com/ZendOptimizer), 
 [eAccelerator](http://eaccelerator.net/), [Squid](http://www.squid-cache.org/), 
 för att nämna några.
 
@@ -113,6 +113,8 @@ i nätverket reduceras. Det finns ett flertal verktyg att tillgå för hjälp ur
 För en sida som genererats av Yii, är det stor risk att en del skriptfiler har renderats av 
 komponenter som vi inte vill ändra (t.ex. Yii:s kärnkomponenter, tredjepartskomponenter). 
 För att minimera dessa skriptfiler behöver vi göra det i två steg.
+
+> Note|Märk: Finessen `scriptMap` som beskrivs nedan har varit tillgänglig fr o m version 1.0.3.
 
 Först deklarerar vi att skripten skall minimeras genom att konfigurera propertyn 
 [scriptMap|CClientScript::scriptMap] i applikationskomponenten [clientScript|CWebApplication::clientScript]. 
@@ -170,4 +172,4 @@ I stället lägger vi in följande kod i våra sidor för att uttryckligen inklu
 </head>
 ~~~
 
-<div class="revision">$Id: topics.performance.txt 2890 2011-01-18 15:58:34Z qiang.xue $</div>
+<div class="revision">$Id: topics.performance.txt 1110 2009-06-10 12:43:21Z qiang.xue $</div>

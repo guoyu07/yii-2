@@ -1,10 +1,6 @@
-<?php
-$this->breadcrumbs=array(
-	$model->title=>$model->url,
-	'Update',
-);
-?>
+<h2>Update Post <?php echo CHtml::link('#'.$post->id, array('post/show','id'=>$post->id)); ?></h2>
 
-<h1>Update <i><?php echo CHtml::encode($model->title); ?></i></h1>
-
-<?php echo $this->renderPartial('_form', array('model'=>$model)); ?>
+<?php $this->renderPartial('_form', array(
+	'post'=>$post,
+	'update'=>true,
+)); ?>

@@ -5,7 +5,7 @@
  * @author Wei Zhuo <weizhuo[at]gmail[dot]com>
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -13,11 +13,11 @@
  * CDateFormatter provides date/time localization functionalities.
  *
  * CDateFormatter allows you to format dates and times in a locale-sensitive manner.
- * Patterns are interpreted in the locale that the CDateFormatter instance
+ * Patterns are interpretted in the locale that the CDateFormatter instance
  * is associated with. For example, month names and weekday names may vary
  * under different locales, which yields different formatting results.
  * The patterns that CDateFormatter recognizes are as defined in
- * {@link http://www.unicode.org/reports/tr35/tr35-dates.html#Date_Format_Patterns CLDR}.
+ * {@link http://www.unicode.org/reports/tr35/#Date_Format_Patterns CLDR}.
  *
  * CDateFormatter supports predefined patterns as well as customized ones:
  * <ul>
@@ -30,6 +30,7 @@
  *
  * @author Wei Zhuo <weizhuo[at]gmail[dot]com>
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.i18n
  * @since 1.0
  */
@@ -42,15 +43,12 @@ class CDateFormatter extends CComponent
 		'G'=>'formatEra',
 		'y'=>'formatYear',
 		'M'=>'formatMonth',
-		'L'=>'formatMonth',
 		'd'=>'formatDay',
 		'h'=>'formatHour12',
 		'H'=>'formatHour24',
 		'm'=>'formatMinutes',
 		's'=>'formatSeconds',
 		'E'=>'formatDayInWeek',
-		'c'=>'formatDayInWeek',
-		'e'=>'formatDayInWeek',
 		'D'=>'formatDayInYear',
 		'F'=>'formatDayInMonth',
 		'w'=>'formatWeekInYear',
@@ -67,7 +65,7 @@ class CDateFormatter extends CComponent
 
 	/**
 	 * Constructor.
-	 * @param mixed $locale locale ID (string) or CLocale instance
+	 * @param mixed locale ID (string) or CLocale instance
 	 */
 	public function __construct($locale)
 	{
@@ -79,18 +77,15 @@ class CDateFormatter extends CComponent
 
 	/**
 	 * Formats a date according to a customized pattern.
-	 * @param string $pattern the pattern (See {@link http://www.unicode.org/reports/tr35/tr35-dates.html#Date_Format_Patterns})
-	 * @param mixed $time UNIX timestamp or a string in strtotime format
-	 * @return string formatted date time. Null if $time is null. (the null value check is available since Yii 1.1.11)
+	 * @param string the pattern (See {@link http://www.unicode.org/reports/tr35/#Date_Format_Patterns})
+	 * @param mixed UNIX timestamp or a string in strtotime format
+	 * @return string formatted date time.
 	 */
 	public function format($pattern,$time)
 	{
-		if($time===null)
-			return null;
-
 		if(is_string($time))
 		{
-			if(ctype_digit($time) || ($time{0}=='-' && ctype_digit(substr($time, 1))))
+			if(ctype_digit($time))
 				$time=(int)$time;
 			else
 				$time=strtotime($time);
@@ -108,10 +103,10 @@ class CDateFormatter extends CComponent
 	/**
 	 * Formats a date according to a predefined pattern.
 	 * The predefined pattern is determined based on the date pattern width and time pattern width.
-	 * @param mixed $timestamp UNIX timestamp or a string in strtotime format
-	 * @param string $dateWidth width of the date pattern. It can be 'full', 'long', 'medium' and 'short'.
+	 * @param mixed UNIX timestamp or a string in strtotime format
+	 * @param string width of the date pattern. It can be 'full', 'long', 'medium' and 'short'.
 	 * If null, it means the date portion will NOT appear in the formatting result
-	 * @param string $timeWidth width of the time pattern. It can be 'full', 'long', 'medium' and 'short'.
+	 * @param string width of the time pattern. It can be 'full', 'long', 'medium' and 'short'.
 	 * If null, it means the time portion will NOT appear in the formatting result
 	 * @return string formatted date time.
 	 */
@@ -128,15 +123,15 @@ class CDateFormatter extends CComponent
 			$dateTimePattern=$this->_locale->getDateTimeFormat();
 			return strtr($dateTimePattern,array('{0}'=>$time,'{1}'=>$date));
 		}
-		elseif(isset($date))
+		else if(isset($date))
 			return $date;
-		elseif(isset($time))
+		else if(isset($time))
 			return $time;
 	}
 
 	/**
 	 * Parses the datetime format pattern.
-	 * @param string $pattern the pattern to be parsed
+	 * @param string the pattern to be parsed
 	 * @return array tokenized parsing result
 	 */
 	protected function parseFormat($pattern)
@@ -158,7 +153,7 @@ class CDateFormatter extends CComponent
 					$tokens[]="'";
 					$i++;
 				}
-				elseif($isLiteral)
+				else if($isLiteral)
 				{
 					$tokens[]=$literal;
 					$literal='';
@@ -170,7 +165,7 @@ class CDateFormatter extends CComponent
 					$literal='';
 				}
 			}
-			elseif($isLiteral)
+			else if($isLiteral)
 				$literal.=$c;
 			else
 			{
@@ -197,8 +192,8 @@ class CDateFormatter extends CComponent
 	 * Get the year.
  	 * "yy" will return the last two digits of year.
  	 * "y...y" will pad the year with 0 in the front, e.g. "yyyyy" will generate "02008" for year 2008.
-	 * @param string $pattern a pattern.
-	 * @param array $date result of {@link CTimestamp::getdate}.
+	 * @param string a pattern.
+	 * @param array result of {@link CTimestamp::getdate}.
 	 * @return string formatted year
 	 */
 	protected function formatYear($pattern,$date)
@@ -212,14 +207,13 @@ class CDateFormatter extends CComponent
 
 	/**
 	 * Get the month.
-	 * "M" will return integer 1 through 12;
-	 * "MM" will return two digits month number with necessary zero padding, e.g. 05;
-	 * "MMM" will return the abrreviated month name, e.g. "Jan";
-	 * "MMMM" will return the full month name, e.g. "January";
-	 * "MMMMM" will return the narrow month name, e.g. "J";
-	 * @param string $pattern a pattern.
-	 * @param array $date result of {@link CTimestamp::getdate}.
-	 * @throws CException if "month" pattern is unknown
+ 	 * "M" will return integer 1 through 12;
+ 	 * "MM" will return two digits month number with necessary zero padding, e.g. 05;
+ 	 * "MMM" will return the abrreviated month name, e.g. "Jan";
+ 	 * "MMMM" will return the full month name, e.g. "January";
+ 	 * "MMMMM" will return the narrow month name, e.g. "J";
+	 * @param string a pattern.
+	 * @param array result of {@link CTimestamp::getdate}.
 	 * @return string month name
 	 */
 	protected function formatMonth($pattern,$date)
@@ -237,27 +231,16 @@ class CDateFormatter extends CComponent
 				return $this->_locale->getMonthName($month,'wide');
 			case 'MMMMM':
 				return $this->_locale->getMonthName($month,'narrow');
-			case 'L':
-				return $month;
-			case 'LL':
-				return str_pad($month,2,'0',STR_PAD_LEFT);
-			case 'LLL':
-				return $this->_locale->getMonthName($month,'abbreviated', true);
-			case 'LLLL':
-				return $this->_locale->getMonthName($month,'wide', true);
-			case 'LLLLL':
-				return $this->_locale->getMonthName($month,'narrow', true);
 			default:
-				throw new CException(Yii::t('yii','The pattern for month must be "M", "MM", "MMM", "MMMM", "L", "LL", "LLL" or "LLLL".'));
+				throw new CException(Yii::t('yii','The pattern for month must be "M", "MM", "MMM", or "MMMM".'));
 		}
 	}
 
 	/**
 	 * Get the day of the month.
  	 * "d" for non-padding, "dd" will always return 2 digits day numbers, e.g. 05.
-	 * @param string $pattern a pattern.
-	 * @param array $date result of {@link CTimestamp::getdate}.
-	 * @throws CException if "day" pattern is unknown
+	 * @param string a pattern.
+	 * @param array result of {@link CTimestamp::getdate}.
 	 * @return string day of the month
 	 */
 	protected function formatDay($pattern,$date)
@@ -265,7 +248,7 @@ class CDateFormatter extends CComponent
 		$day=$date['mday'];
 		if($pattern==='d')
 			return $day;
-		elseif($pattern==='dd')
+		else if($pattern==='dd')
 			return str_pad($day,2,'0',STR_PAD_LEFT);
 		else
 			throw new CException(Yii::t('yii','The pattern for day of the month must be "d" or "dd".'));
@@ -273,10 +256,9 @@ class CDateFormatter extends CComponent
 
 	/**
 	 * Get the day in the year, e.g. [1-366]
-	 * @param string $pattern a pattern.
-	 * @param array $date result of {@link CTimestamp::getdate}.
-	 * @throws CException is "dayInYear" pattern is unknown
-	 * @return integer hours in AM/PM format.
+	 * @param string a pattern.
+	 * @param array result of {@link CTimestamp::getdate}.
+	 * @return int hours in AM/PM format.
 	 */
 	protected function formatDayInYear($pattern,$date)
 	{
@@ -289,11 +271,9 @@ class CDateFormatter extends CComponent
 
 	/**
 	 * Get day of week in the month, e.g. 2nd Wed in July.
-	 * @param string $pattern a pattern.
-	 * @param array $date result of {@link CTimestamp::getdate}.
-	 * @throws CException if "dayInMonth" pattern is unknown
-	 * @return integer day in month
-	 * @see http://www.unicode.org/reports/tr35/#Date_Format_Patterns
+	 * @param string a pattern.
+	 * @param array result of {@link CTimestamp::getdate}.
+	 * @return int day in month
 	 */
 	protected function formatDayInMonth($pattern,$date)
 	{
@@ -308,11 +288,9 @@ class CDateFormatter extends CComponent
  	 * "E", "EE", "EEE" will return abbreviated week day name, e.g. "Tues";
  	 * "EEEE" will return full week day name;
  	 * "EEEEE" will return the narrow week day name, e.g. "T";
-	 * @param string $pattern a pattern.
-	 * @param array $date result of {@link CTimestamp::getdate}.
-	 * @throws CException if "dayInWeek" pattern is unknown
+	 * @param string a pattern.
+	 * @param array result of {@link CTimestamp::getdate}.
 	 * @return string day of the week.
-	 * @see http://www.unicode.org/reports/tr35/#Date_Format_Patterns
 	 */
 	protected function formatDayInWeek($pattern,$date)
 	{
@@ -322,34 +300,20 @@ class CDateFormatter extends CComponent
 			case 'E':
 			case 'EE':
 			case 'EEE':
-			case 'eee':
 				return $this->_locale->getWeekDayName($day,'abbreviated');
 			case 'EEEE':
-			case 'eeee':
 				return $this->_locale->getWeekDayName($day,'wide');
 			case 'EEEEE':
-			case 'eeeee':
 				return $this->_locale->getWeekDayName($day,'narrow');
-			case 'e':
-			case 'ee':
-			case 'c':
-				return $day ? $day : 7;
-			case 'ccc':
-				return $this->_locale->getWeekDayName($day,'abbreviated',true);
-			case 'cccc':
-				return $this->_locale->getWeekDayName($day,'wide',true);
-			case 'ccccc':
-				return $this->_locale->getWeekDayName($day,'narrow',true);
 			default:
-				throw new CException(Yii::t('yii','The pattern for day of the week must be "E", "EE", "EEE", "EEEE", "EEEEE", "e", "ee", "eee", "eeee", "eeeee", "c", "cccc" or "ccccc".'));
+				throw new CException(Yii::t('yii','The pattern for day of the week must be "E", "EE", "EEE", "EEEE" or "EEEEE".'));
 		}
 	}
 
 	/**
 	 * Get the AM/PM designator, 12 noon is PM, 12 midnight is AM.
-	 * @param string $pattern a pattern.
-	 * @param array $date result of {@link CTimestamp::getdate}.
-	 * @throws CException if "period" pattern is unknown
+	 * @param string a pattern.
+	 * @param array result of {@link CTimestamp::getdate}.
 	 * @return string AM or PM designator
 	 */
 	protected function formatPeriod($pattern,$date)
@@ -368,9 +332,8 @@ class CDateFormatter extends CComponent
 	/**
 	 * Get the hours in 24 hour format, i.e. [0-23].
 	 * "H" for non-padding, "HH" will always return 2 characters.
-	 * @param string $pattern a pattern.
-	 * @param array $date result of {@link CTimestamp::getdate}.
-	 * @throws CException if "hour24" pattern is unknown
+	 * @param string a pattern.
+	 * @param array result of {@link CTimestamp::getdate}.
 	 * @return string hours in 24 hour format.
 	 */
 	protected function formatHour24($pattern,$date)
@@ -378,7 +341,7 @@ class CDateFormatter extends CComponent
 		$hour=$date['hours'];
 		if($pattern==='H')
 			return $hour;
-		elseif($pattern==='HH')
+		else if($pattern==='HH')
 			return str_pad($hour,2,'0',STR_PAD_LEFT);
 		else
 			throw new CException(Yii::t('yii','The pattern for 24 hour format must be "H" or "HH".'));
@@ -387,9 +350,8 @@ class CDateFormatter extends CComponent
 	/**
 	 * Get the hours in 12 hour format, i.e., [1-12]
 	 * "h" for non-padding, "hh" will always return 2 characters.
-	 * @param string $pattern a pattern.
-	 * @param array $date result of {@link CTimestamp::getdate}.
-	 * @throws CException if "hour12" pattern is unknown
+	 * @param string a pattern.
+	 * @param array result of {@link CTimestamp::getdate}.
 	 * @return string hours in 12 hour format.
 	 */
 	protected function formatHour12($pattern,$date)
@@ -398,7 +360,7 @@ class CDateFormatter extends CComponent
 		$hour=($hour==12|$hour==0)?12:($hour)%12;
 		if($pattern==='h')
 			return $hour;
-		elseif($pattern==='hh')
+		else if($pattern==='hh')
 			return str_pad($hour,2,'0',STR_PAD_LEFT);
 		else
 			throw new CException(Yii::t('yii','The pattern for 12 hour format must be "h" or "hh".'));
@@ -407,17 +369,16 @@ class CDateFormatter extends CComponent
 	/**
 	 * Get the hours [1-24].
 	 * 'k' for non-padding, and 'kk' with 2 characters padding.
-	 * @param string $pattern a pattern.
-	 * @param array $date result of {@link CTimestamp::getdate}.
-	 * @throws CException if "hourInDay" pattern is unknown
-	 * @return integer hours [1-24]
+	 * @param string a pattern.
+	 * @param array result of {@link CTimestamp::getdate}.
+	 * @return int hours [1-24]
 	 */
 	protected function formatHourInDay($pattern,$date)
 	{
 		$hour=$date['hours']==0?24:$date['hours'];
 		if($pattern==='k')
 			return $hour;
-		elseif($pattern==='kk')
+		else if($pattern==='kk')
 			return str_pad($hour,2,'0',STR_PAD_LEFT);
 		else
 			throw new CException(Yii::t('yii','The pattern for hour in day must be "k" or "kk".'));
@@ -426,17 +387,16 @@ class CDateFormatter extends CComponent
 	/**
 	 * Get the hours in AM/PM format, e.g [0-11]
 	 * "K" for non-padding, "KK" will always return 2 characters.
-	 * @param string $pattern a pattern.
-	 * @param array $date result of {@link CTimestamp::getdate}.
-	 * @throws CException if "hourInPeriod" pattern is unknown
-	 * @return integer hours in AM/PM format.
+	 * @param string a pattern.
+	 * @param array result of {@link CTimestamp::getdate}.
+	 * @return int hours in AM/PM format.
 	 */
 	protected function formatHourInPeriod($pattern,$date)
 	{
 		$hour=$date['hours']%12;
 		if($pattern==='K')
 			return $hour;
-		elseif($pattern==='KK')
+		else if($pattern==='KK')
 			return str_pad($hour,2,'0',STR_PAD_LEFT);
 		else
 			throw new CException(Yii::t('yii','The pattern for hour in AM/PM must be "K" or "KK".'));
@@ -445,9 +405,8 @@ class CDateFormatter extends CComponent
 	/**
 	 * Get the minutes.
 	 * "m" for non-padding, "mm" will always return 2 characters.
-	 * @param string $pattern a pattern.
-	 * @param array $date result of {@link CTimestamp::getdate}.
-	 * @throws CException if "minutes" pattern is unknown
+	 * @param string a pattern.
+	 * @param array result of {@link CTimestamp::getdate}.
 	 * @return string minutes.
 	 */
 	protected function formatMinutes($pattern,$date)
@@ -455,7 +414,7 @@ class CDateFormatter extends CComponent
 		$minutes=$date['minutes'];
 		if($pattern==='m')
 			return $minutes;
-		elseif($pattern==='mm')
+		else if($pattern==='mm')
 			return str_pad($minutes,2,'0',STR_PAD_LEFT);
 		else
 			throw new CException(Yii::t('yii','The pattern for minutes must be "m" or "mm".'));
@@ -464,9 +423,8 @@ class CDateFormatter extends CComponent
 	/**
 	 * Get the seconds.
 	 * "s" for non-padding, "ss" will always return 2 characters.
-	 * @param string $pattern a pattern.
-	 * @param array $date result of {@link CTimestamp::getdate}.
-	 * @throws CException if "seconds" pattern is unknown
+	 * @param string a pattern.
+	 * @param array result of {@link CTimestamp::getdate}.
 	 * @return string seconds
 	 */
 	protected function formatSeconds($pattern,$date)
@@ -474,7 +432,7 @@ class CDateFormatter extends CComponent
 		$seconds=$date['seconds'];
 		if($pattern==='s')
 			return $seconds;
-		elseif($pattern==='ss')
+		else if($pattern==='ss')
 			return str_pad($seconds,2,'0',STR_PAD_LEFT);
 		else
 			throw new CException(Yii::t('yii','The pattern for seconds must be "s" or "ss".'));
@@ -482,10 +440,9 @@ class CDateFormatter extends CComponent
 
 	/**
 	 * Get the week in the year.
-	 * @param string $pattern a pattern.
-	 * @param array $date result of {@link CTimestamp::getdate}.
-	 * @throws CException if "weekInYear" pattern is unknown
-	 * @return integer week in year
+	 * @param string a pattern.
+	 * @param array result of {@link CTimestamp::getdate}.
+	 * @return int week in year
 	 */
 	protected function formatWeekInYear($pattern,$date)
 	{
@@ -497,45 +454,39 @@ class CDateFormatter extends CComponent
 
 	/**
 	 * Get week in the month.
-	 * @param array $pattern result of {@link CTimestamp::getdate}.
-	 * @param string $date a pattern.
-	 * @throws CException if "weekInMonth" pattern is unknown
-	 * @return integer week in month
+	 * @param array result of {@link CTimestamp::getdate}.
+	 * @param string a pattern.
+	 * @return int week in month
 	 */
 	protected function formatWeekInMonth($pattern,$date)
 	{
 		if($pattern==='W')
-		{
-			$weekDay=date('N',mktime(0,0,0,$date['mon'],1,$date['year']));
-			return floor(($weekDay+$date['mday']-2)/7)+1;
-		}
+			return @date('W',@mktime(0,0,0,$date['mon'], $date['mday'],$date['year']))-date('W', mktime(0,0,0,$date['mon'],1,$date['year']))+1;
 		else
 			throw new CException(Yii::t('yii','The pattern for week in month must be "W".'));
 	}
 
 	/**
 	 * Get the timezone of the server machine.
-	 * @param string $pattern a pattern.
-	 * @param array $date result of {@link CTimestamp::getdate}.
-	 * @throws CException if "timeZone" pattern is unknown
+	 * @param string a pattern.
+	 * @param array result of {@link CTimestamp::getdate}.
 	 * @return string time zone
 	 * @todo How to get the timezone for a different region?
 	 */
 	protected function formatTimeZone($pattern,$date)
 	{
-		if($pattern[0]==='z' || $pattern[0]==='v')
+		if($pattern==='z' | $pattern==='v')
 			return @date('T', @mktime($date['hours'], $date['minutes'], $date['seconds'], $date['mon'], $date['mday'], $date['year']));
-		elseif($pattern[0]==='Z')
-			return @date('P', @mktime($date['hours'], $date['minutes'], $date['seconds'], $date['mon'], $date['mday'], $date['year']));
+		elseif($pattern==='Z')
+			return @date('O', @mktime($date['hours'], $date['minutes'], $date['seconds'], $date['mon'], $date['mday'], $date['year']));
 		else
 			throw new CException(Yii::t('yii','The pattern for time zone must be "z" or "v".'));
 	}
 
 	/**
 	 * Get the era. i.e. in gregorian, year > 0 is AD, else BC.
-	 * @param string $pattern a pattern.
-	 * @param array $date result of {@link CTimestamp::getdate}.
-	 * @throws CException if "era" pattern is unknown
+	 * @param string a pattern.
+	 * @param array result of {@link CTimestamp::getdate}.
 	 * @return string era
 	 * @todo How to support multiple Eras?, e.g. Japanese.
 	 */

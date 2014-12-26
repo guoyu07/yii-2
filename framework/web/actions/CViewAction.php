@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -22,10 +22,8 @@
  * Note, the user specified view can only contain word characters, dots and dashes and
  * the first letter must be a word letter.
  *
- * @property string $requestedView The name of the view requested by the user.
- * This is in the format of 'path.to.view'.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.web.actions
  * @since 1.0
  */
@@ -81,7 +79,7 @@ class CViewAction extends CAction
 	{
 		if($this->_viewPath===null)
 		{
-			if(!empty($_GET[$this->viewParam]) && is_string($_GET[$this->viewParam]))
+			if(!empty($_GET[$this->viewParam]))
 				$this->_viewPath=$_GET[$this->viewParam];
 			else
 				$this->_viewPath=$this->defaultView;
@@ -91,9 +89,9 @@ class CViewAction extends CAction
 
 	/**
 	 * Resolves the user-specified view into a valid view name.
-	 * @param string $viewPath user-specified view in the format of 'path.to.view'.
+	 * @param string user-specified view in the format of 'path.to.view'.
 	 * @return string fully resolved view in the format of 'path/to/view'.
-	 * @throws CHttpException if the user-specified view is invalid
+	 * @throw CHttpException if the user-specified view is invalid
 	 */
 	protected function resolveView($viewPath)
 	{
@@ -109,7 +107,7 @@ class CViewAction extends CAction
 				return;
 			}
 		}
-		throw new CHttpException(404,Yii::t('yii','The requested view "{name}" was not found.',
+		throw new CHttpException(404,Yii::t('yii','The requested view "{name}" is not found.',
 			array('{name}'=>$viewPath)));
 	}
 
@@ -149,7 +147,7 @@ class CViewAction extends CAction
 	 * Raised right before the action invokes the render method.
 	 * Event handlers can set the {@link CEvent::handled} property
 	 * to be true to stop further view rendering.
-	 * @param CEvent $event event parameter
+	 * @param CEvent event parameter
 	 */
 	public function onBeforeRender($event)
 	{
@@ -158,7 +156,7 @@ class CViewAction extends CAction
 
 	/**
 	 * Raised right after the action invokes the render method.
-	 * @param CEvent $event event parameter
+	 * @param CEvent event parameter
 	 */
 	public function onAfterRender($event)
 	{

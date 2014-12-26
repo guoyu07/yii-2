@@ -1,29 +1,26 @@
 データベースのセットアップ
 ===================
 
-スケルトンアプリケーションを作り、データベースの設計が終りました。 このセクションではブログデータベースを作成し、スケルトンアプリケーションの中でデータベースとの接続を確立します。 
+スケルトンアプリケーションを作り、データベースの設計が終わりました。 このセクションでは実際にブログデータベースを作成し、スケルトンアプリケーションとの接続を確立します。 
 
 
 データベースの作成
 -----------------
 
-データベースは SQLite を使うことにします。 Yii のデータベースサポートは [PDO](http://www.php.net/manual/en/book.pdo.php) の上に構築されているため、 アプリケーションコードを変更することなく、MySQL や PostgreSQL といった異なる DBMS を利用することができます。
+ データベースはSQLiteを使います。 Yiiのデータベースサポートは [PDO](http://www.php.net/manual/en/book.pdo.php) の上に構築されているため、 アプリケーションコードを変更することなく、MySQLやPostgreSQLといった異なるDBMSを利用することができます。
 
-ディレクトリ `/wwwroot/blog/protected/data` にデータベースファイル `blog.db` を作成します。
-SQLite による要求として、ディレクトリとデータベースファイルの両方が Web サーバプロセスから書き込み可能である必要がある、ということに注意して下さい。
-このデータベースの作成は、インストールされた Yii のブログデモから、データベースファイルをコピーしてくるだけで構いません。データベースファイルは `/wwwroot/yii/demos/blog/protected/data/blog.db` にあります。
-または、`/wwwroot/yii/demos/blog/protected/data/schema.sqlite.sql` というファイルにある SQL 文を実行してデータベースを生成することも出来ます。
+データベースファイルとして、ディレクトリ `/wwwroot/blog/protected/data` に `blog.db` を作ります。ディレクトリとファイルはともにWebサーバプロセスと SQLite により書き込み可能である必要があります。ここでは単に `/wwwroot/yii/demos/blog/protected/data/blog.db` にあるブログデモのデータベースファイルをコピーすることにします。もしくは `/wwwroot/yii/demos/blog/protected/data/schema.sqlite.sql` にある、SQLファイルを実行することでもデータベースを生成できます。
 
-> Tip|ヒント: SQL 文の実行には、[SQLite 公式ウェブサイト](http://www.sqlite.org/download.html) にある `sqlite3` コマンドラインツールを利用できます。
+> Tip|ヒント: SQL文の実行には、 `sqlite3` コマンドラインツールを利用できます。 詳しくは [SQLite 公式ウェブサイト](http://www.sqlite.org/download.html)を参照してください。 
 
 
-データベース接続を確立する
+データベースとの接続を確立する
 --------------------------------
 
-作ったスケルトンアプリケーションでブログデータベースを使うには、`/wwwroot/blog/protected/config/main.php` という PHP スクリプトに保存されている [アプリケーション初期構成](http://www.yiiframework.com/doc/guide/ja/basics.application#sec-2) を変更する必要があります。
-このスクリプトは "名前-値" のペアで構成された連想配列を返します。これらの値は [アプリケーションインスタンス](http://www.yiiframework.com/doc/guide/ja/basics.application) の書き込み可能なプロパティを初期化するために使われます。
+作ったスケルトンアプリケーションでブログデータベースを使うには、`/wwwroot/blog/protected/config/main.php` に保存されている PHP スクリプトで[アプリケーション初期構成](http://www.yiiframework.com/doc/guide/basics.application#application-configuration) を変更する必要があります。
+このスクリプトはキーと値のペアで構成された連想配列を返します。 これらの値は[アプリケーションインスタンス](http://www.yiiframework.com/doc/guide/basics.application)を初期化するために使われます。
 
-`db` コンポーネントを以下のように構成します。
+以下のようにアプリケーションの `components` プロパティに、 `db` という名前のエントリを追加します。 
 
 ~~~
 [php]
@@ -32,52 +29,18 @@ return array(
 	'components'=>array(
 		......
 		'db'=>array(
+			'class'=>'CDbConnection',
 			'connectionString'=>'sqlite:/wwwroot/blog/protected/data/blog.db',
-			'tablePrefix'=>'tbl_',
 		),
 	),
 	......
 );
 ~~~
 
-上記の設定は、このアプリケーションが `db` [アプリケーションコンポーネント](http://www.yiiframework.com/doc/guide/ja/basics.application#sec-4) を持っており、その `connectionString` プロパティが `sqlite:/wwwroot/blog/protected/data/blog.db` として初期化されるべきこと、および、`tablePrefix` プロパティが `tbl_` であるべきことを示しています。
+上記の設定は、 [CDbConnection] クラスの `db` [アプリケーションコンポーネント](http://www.yiiframework.com/doc/guide/basics.application#application-component)を持ち、`connectionString` プロパティが `sqlite:/wwwroot/blog/protected/data/blog.db` に初期化されることを示します。
 
-この設定によって、アプリケーションのコードのどこからでも `Yii::app()->db` を通じて DB 接続オブジェクトにアクセスすることができます。
-`Yii::app()` は、エントリスクリプトで作成されたアプリケーションインスタンスを返すことに注意して下さい。
-DB 接続が持つことができるメソッドやプロパティに興味があれば、[クラスリファレンス|CDbConnection] を参照して下さい。
-しかし、多くの場合、この DB 接続を直接に利用することはありません。
-その代りに、いわゆる [アクティブレコード](http://www.yiiframework.com/doc/guide/ja/database.ar) を使ってデータベースにアクセスします。
+> Note|訳者注:yii-1.0.3以降のデモでは、'class'=>'CDbConnection'の記述はなくなっています。
 
-構成ファイルで設定した `tablePrefix` プロパティについて、もう少し説明したいと思います。
-これはデータベーステーブル名のプレフィクスとして `tbl_` を使用していることを `db` 接続オブジェクトに伝えます。
-具体的には、もし SQL 文の中に二重波括弧で囲まれたトークンがある場合(例えば `{{post}}`)、`db` 接続は
-それをテーブルプレフィクスを付けた名前(例えば `tbl_post`)に変換してから、DBMS に送信して実行させます。
-この機能は、将来テーブルプレフィクスを変更する必要が生じた場合でもソースコードを触る必要がない、という点で非常に有用です。
-例えば、汎用のコンテンツ管理システム(CMS)を開発する場合、この機能を利用すると、CMS を新しい環境にインストールするときに
-ユーザがテーブルプレフィクスを自由に選択できるようにすることが出来ます。
+この設定の場合、コードのどこからでも、`Yii::app()->db` を通じて DB コネクションオブジェクトにアクセスすることができます。`Yii::app()` は、エントリスクリプトで作成されたアプリケーションインスタンスを返すことに注意して下さい。DB コネクションのメソッドやプロパティに興味があれば、[クラスリファレンス|CDbConnection]を参照して下さい。 しかし、多くの場合このDBコネクションを直接利用することはありません。 そのかわりにいわゆる [ActiveRecord](http://www.yiiframework.com/doc/guide/database.ar) を利用してデータベースにアクセスします。 
 
-> Tip|ヒント: もし SQLite ではなく MySQL をデータの格納に使いたい場合には、
-> `/wwwroot/yii/demos/blog/protected/data/schema.mysql.sql` の SQL 文を使用して、`blog` という名前の MySQL データベースを作成することが出来ます。
-> そして、アプリケーション初期構成ファイルを以下のように修正します。
->
-> ~~~
-> [php]
-> return array(
->     ......
->     'components'=>array(
->         ......
->         'db'=>array(
->             'connectionString' => 'mysql:host=localhost;dbname=blog',
->             'emulatePrepare' => true,
->             'username' => 'root',
->             'password' => '',
->             'charset' => 'utf8',
->             'tablePrefix' => 'tbl_',
->         ),
->     ),
->       ......
-> );
-> ~~~
-
-
-<div class="revision">$Id$</div>
+<div class="revision">$Id: prototype.database.txt 683 2009-02-16 05:20:17Z qiang.xue $</div>

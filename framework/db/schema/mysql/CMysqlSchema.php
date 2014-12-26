@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -12,53 +12,31 @@
  * CMysqlSchema is the class for retrieving metadata information from a MySQL database (version 4.1.x and 5.x).
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.db.schema.mysql
  * @since 1.0
  */
 class CMysqlSchema extends CDbSchema
 {
-	/**
-	 * @var array the abstract column types mapped to physical column types.
-	 * @since 1.1.6
-	 */
-	public $columnTypes=array(
-		'pk' => 'int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY',
-		'bigpk' => 'bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY',
-		'string' => 'varchar(255)',
-		'text' => 'text',
-		'integer' => 'int(11)',
-		'bigint' => 'bigint(20)',
-		'float' => 'float',
-		'decimal' => 'decimal',
-		'datetime' => 'datetime',
-		'timestamp' => 'timestamp',
-		'time' => 'time',
-		'date' => 'date',
-		'binary' => 'blob',
-		'boolean' => 'tinyint(1)',
-		'money' => 'decimal(19,4)',
-	);
+	private $_tableNames;
+	private $_schemaNames;
 
 	/**
 	 * Quotes a table name for use in a query.
-	 * A simple table name does not schema prefix.
-	 * @param string $name table name
+	 * @param string table name
 	 * @return string the properly quoted table name
-	 * @since 1.1.6
 	 */
-	public function quoteSimpleTableName($name)
+	public function quoteTableName($name)
 	{
 		return '`'.$name.'`';
 	}
 
 	/**
 	 * Quotes a column name for use in a query.
-	 * A simple column name does not contain prefix.
-	 * @param string $name column name
+	 * @param string column name
 	 * @return string the properly quoted column name
-	 * @since 1.1.6
 	 */
-	public function quoteSimpleColumnName($name)
+	public function quoteColumnName($name)
 	{
 		return '`'.$name.'`';
 	}
@@ -67,8 +45,8 @@ class CMysqlSchema extends CDbSchema
 	 * Compares two table names.
 	 * The table names can be either quoted or unquoted. This method
 	 * will consider both cases.
-	 * @param string $name1 table name 1
-	 * @param string $name2 table name 2
+	 * @param string table name 1
+	 * @param string table name 2
 	 * @return boolean whether the two table names refer to the same table.
 	 */
 	public function compareTableNames($name1,$name2)
@@ -77,50 +55,10 @@ class CMysqlSchema extends CDbSchema
 	}
 
 	/**
-	 * Resets the sequence value of a table's primary key.
-	 * The sequence will be reset such that the primary key of the next new row inserted
-	 * will have the specified value or max value of a primary key plus one (i.e. sequence trimming).
-	 * @param CDbTableSchema $table the table schema whose primary key sequence will be reset
-	 * @param integer|null $value the value for the primary key of the next new row inserted.
-	 * If this is not set, the next new row's primary key will have the max value of a primary
-	 * key plus one (i.e. sequence trimming).
-	 * @since 1.1
-	 */
-	public function resetSequence($table,$value=null)
-	{
-		if($table->sequenceName===null)
-			return;
-		if($value!==null)
-			$value=(int)$value;
-		else
-		{
-			$value=(int)$this->getDbConnection()
-				->createCommand("SELECT MAX(`{$table->primaryKey}`) FROM {$table->rawName}")
-				->queryScalar();
-			$value++;
-		}
-		$this->getDbConnection()
-			->createCommand("ALTER TABLE {$table->rawName} AUTO_INCREMENT=$value")
-			->execute();
-	}
-
-	/**
-	 * Enables or disables integrity check.
-	 * @param boolean $check whether to turn on or off the integrity check.
-	 * @param string $schema the schema of the tables. Defaults to empty string, meaning the current or default schema.
-	 * @since 1.1
-	 */
-	public function checkIntegrity($check=true,$schema='')
-	{
-		$this->getDbConnection()->createCommand('SET FOREIGN_KEY_CHECKS='.($check?1:0))->execute();
-	}
-
-	/**
-	 * Loads the metadata for the specified table.
-	 * @param string $name table name
+	 * Creates a table instance representing the metadata for the named table.
 	 * @return CMysqlTableSchema driver dependent table metadata. Null if the table does not exist.
 	 */
-	protected function loadTable($name)
+	protected function createTable($name)
 	{
 		$table=new CMysqlTableSchema;
 		$this->resolveTableNames($table,$name);
@@ -136,12 +74,12 @@ class CMysqlSchema extends CDbSchema
 
 	/**
 	 * Generates various kinds of table names.
-	 * @param CMysqlTableSchema $table the table instance
-	 * @param string $name the unquoted table name
+	 * @param CMysqlTableSchema the table instance
+	 * @param string the unquoted table name
 	 */
 	protected function resolveTableNames($table,$name)
 	{
-		$parts=explode('.',str_replace(array('`','"'),'',$name));
+		$parts=explode('.',str_replace('`','',$name));
 		if(isset($parts[1]))
 		{
 			$table->schemaName=$parts[0];
@@ -157,12 +95,12 @@ class CMysqlSchema extends CDbSchema
 
 	/**
 	 * Collects the table column metadata.
-	 * @param CMysqlTableSchema $table the table metadata
+	 * @param CMysqlTableSchema the table metadata
 	 * @return boolean whether the table exists in the database
 	 */
 	protected function findColumns($table)
 	{
-		$sql='SHOW FULL COLUMNS FROM '.$table->rawName;
+		$sql='SHOW COLUMNS FROM '.$table->rawName;
 		try
 		{
 			$columns=$this->getDbConnection()->createCommand($sql)->queryAll();
@@ -179,11 +117,11 @@ class CMysqlSchema extends CDbSchema
 			{
 				if($table->primaryKey===null)
 					$table->primaryKey=$c->name;
-				elseif(is_string($table->primaryKey))
+				else if(is_string($table->primaryKey))
 					$table->primaryKey=array($table->primaryKey,$c->name);
 				else
 					$table->primaryKey[]=$c->name;
-				if($c->autoIncrement)
+				if(strpos(strtolower($column['Extra']),'auto_increment')!==false)
 					$table->sequenceName='';
 			}
 		}
@@ -192,7 +130,7 @@ class CMysqlSchema extends CDbSchema
 
 	/**
 	 * Creates a table column.
-	 * @param array $column column metadata
+	 * @param array column metadata
 	 * @return CDbColumnSchema normalized column metadata
 	 */
 	protected function createColumn($column)
@@ -204,10 +142,6 @@ class CMysqlSchema extends CDbSchema
 		$c->isPrimaryKey=strpos($column['Key'],'PRI')!==false;
 		$c->isForeignKey=false;
 		$c->init($column['Type'],$column['Default']);
-		$c->autoIncrement=strpos(strtolower($column['Extra']),'auto_increment')!==false;
-		if(isset($column['Comment']))
-			$c->comment=$column['Comment'];
-
 		return $c;
 	}
 
@@ -224,7 +158,7 @@ class CMysqlSchema extends CDbSchema
 
 	/**
 	 * Collects the foreign key column details for the given table.
-	 * @param CMysqlTableSchema $table the table metadata
+	 * @param CMysqlTableSchema the table metadata
 	 */
 	protected function findConstraints($table)
 	{
@@ -236,13 +170,14 @@ class CMysqlSchema extends CDbSchema
 			if(preg_match_all($regexp,$sql,$matches,PREG_SET_ORDER))
 				break;
 		}
+		$foreign = array();
 		foreach($matches as $match)
 		{
-			$keys=array_map('trim',explode(',',str_replace(array('`','"'),'',$match[1])));
-			$fks=array_map('trim',explode(',',str_replace(array('`','"'),'',$match[3])));
+			$keys=array_map('trim',explode(',',str_replace('`','',$match[1])));
+			$fks=array_map('trim',explode(',',str_replace('`','',$match[3])));
 			foreach($keys as $k=>$name)
 			{
-				$table->foreignKeys[$name]=array(str_replace(array('`','"'),'',$match[2]),$fks[$k]);
+				$table->foreignKeys[$name]=array(str_replace('`','',$match[2]),$fks[$k]);
 				if(isset($table->columns[$name]))
 					$table->columns[$name]->isForeignKey=true;
 			}
@@ -251,9 +186,8 @@ class CMysqlSchema extends CDbSchema
 
 	/**
 	 * Returns all table names in the database.
-	 * @param string $schema the schema of the tables. Defaults to empty string, meaning the current or default schema.
-	 * If not empty, the returned table names will be prefixed with the schema name.
 	 * @return array all table names in the database.
+	 * @since 1.0.2
 	 */
 	protected function findTableNames($schema='')
 	{
@@ -263,101 +197,5 @@ class CMysqlSchema extends CDbSchema
 		foreach($names as &$name)
 			$name=$schema.'.'.$name;
 		return $names;
-	}
-
-	/**
-	 * Creates a command builder for the database.
-	 * This method overrides parent implementation in order to create a MySQL specific command builder
-	 * @return CDbCommandBuilder command builder instance
-	 * @since 1.1.13
-	 */
-	protected function createCommandBuilder()
-	{
-		return new CMysqlCommandBuilder($this);
-	}
-
-	/**
-	 * Builds a SQL statement for renaming a column.
-	 * @param string $table the table whose column is to be renamed. The name will be properly quoted by the method.
-	 * @param string $name the old name of the column. The name will be properly quoted by the method.
-	 * @param string $newName the new name of the column. The name will be properly quoted by the method.
-	 * @throws CDbException if specified column is not found in given table
-	 * @return string the SQL statement for renaming a DB column.
-	 * @since 1.1.6
-	 */
-	public function renameColumn($table, $name, $newName)
-	{
-		$db=$this->getDbConnection();
-		$row=$db->createCommand('SHOW CREATE TABLE '.$db->quoteTableName($table))->queryRow();
-		if($row===false)
-			throw new CDbException(Yii::t('yii','Unable to find "{column}" in table "{table}".',array('{column}'=>$name,'{table}'=>$table)));
-		if(isset($row['Create Table']))
-			$sql=$row['Create Table'];
-		else
-		{
-			$row=array_values($row);
-			$sql=$row[1];
-		}
-		if(preg_match_all('/^\s*[`"](.*?)[`"]\s+(.*?),?$/m',$sql,$matches))
-		{
-			foreach($matches[1] as $i=>$c)
-			{
-				if($c===$name)
-				{
-					return "ALTER TABLE ".$db->quoteTableName($table)
-						. " CHANGE ".$db->quoteColumnName($name)
-						. ' '.$db->quoteColumnName($newName).' '.$matches[2][$i];
-				}
-			}
-		}
-
-		// try to give back a SQL anyway
-		return "ALTER TABLE ".$db->quoteTableName($table)
-			. " CHANGE ".$db->quoteColumnName($name).' '.$newName;
-	}
-
-	/**
-	 * Builds a SQL statement for dropping a foreign key constraint.
-	 * @param string $name the name of the foreign key constraint to be dropped. The name will be properly quoted by the method.
-	 * @param string $table the table whose foreign is to be dropped. The name will be properly quoted by the method.
-	 * @return string the SQL statement for dropping a foreign key constraint.
-	 * @since 1.1.6
-	 */
-	public function dropForeignKey($name, $table)
-	{
-		return 'ALTER TABLE '.$this->quoteTableName($table)
-			.' DROP FOREIGN KEY '.$this->quoteColumnName($name);
-	}
-
-
-	/**
-	 * Builds a SQL statement for removing a primary key constraint to an existing table.
-	 * @param string $name the name of the primary key constraint to be removed.
-	 * @param string $table the table that the primary key constraint will be removed from.
-	 * @return string the SQL statement for removing a primary key constraint from an existing table.
-	 * @since 1.1.13
-	 */
-	public function dropPrimaryKey($name,$table)
-	{
-		return 'ALTER TABLE ' . $this->quoteTableName($table) . ' DROP PRIMARY KEY';
-
-	}
-	
-	/**
-	 * Builds a SQL statement for adding a primary key constraint to a table.
-	 * @param string $name not used in the MySQL syntax, the primary key is always called PRIMARY and is reserved.
-	 * @param string $table the table that the primary key constraint will be added to.
-	 * @param string|array $columns comma separated string or array of columns that the primary key will consist of.
-	 * @return string the SQL statement for adding a primary key constraint to an existing table.
-	 * @since 1.1.14
-	 */
-	public function addPrimaryKey($name,$table,$columns)
-	{
-		if(is_string($columns))
-			$columns=preg_split('/\s*,\s*/',$columns,-1,PREG_SPLIT_NO_EMPTY);
-		foreach($columns as $i=>$col)
-			$columns[$i]=$this->quoteColumnName($col);
-		return 'ALTER TABLE ' . $this->quoteTableName($table) . ' ADD PRIMARY KEY ('
-			. implode(', ', $columns). ' )';
 	}
 }

@@ -5,14 +5,14 @@
  * @author Wei Zhuo <weizhuo[at]gmail[dot]com>
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
 /**
  * CNumberFormatter provides number localization functionalities.
  *
- * CNumberFormatter formats a number (integer or float) and outputs a string
+ * CNumberFormatter formats a number (integer or double) and outputs a string
  * based on the specified format. A CNumberFormatter instance is associated with a locale,
  * and thus generates the string representation of the number in a locale-dependent fashion.
  *
@@ -27,7 +27,7 @@
  * <li>zero (0): required digit. This specifies the places where a digit must appear (will pad 0 if not).</li>
  * <li>hash (#): optional digit. This is mainly used to specify the location of decimal point and grouping separators.</li>
  * <li>currency (¤): the currency placeholder. It will be replaced with the localized currency symbol.</li>
- * <li>percentage (%): the percentage mark. If appearing, the number will be multiplied by 100 before being formatted.</li>
+ * <li>percentage (%): the percetage mark. If appearing, the number will be multiplied by 100 before being formatted.</li>
  * <li>permillage (‰): the permillage mark. If appearing, the number will be multiplied by 1000 before being formatted.</li>
  * <li>semicolon (;): the character separating positive and negative number sub-patterns.</li>
  * </ul>
@@ -54,6 +54,7 @@
  *
  * @author Wei Zhuo <weizhuo[at]gmail[dot]com>
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.i18n
  * @since 1.0
  */
@@ -64,7 +65,7 @@ class CNumberFormatter extends CComponent
 
 	/**
 	 * Constructor.
-	 * @param mixed $locale locale ID (string) or CLocale instance
+	 * @param mixed locale ID (string) or CLocale instance
 	 */
 	public function __construct($locale)
 	{
@@ -80,9 +81,9 @@ class CNumberFormatter extends CComponent
 	 * If the format contains '‰', the number will be multiplied by 1000.
 	 * If the format contains currency placeholder, it will be replaced by
 	 * the specified localized currency symbol.
-	 * @param string $pattern format pattern
-	 * @param mixed $value the number to be formatted
-	 * @param string $currency 3-letter ISO 4217 code. For example, the code "USD" represents the US Dollar and "EUR" represents the Euro currency.
+	 * @param string format pattern
+	 * @param mixed the number to be formatted
+	 * @param string 3-letter ISO 4217 code. For example, the code "USD" represents the US Dollar and "EUR" represents the Euro currency.
 	 * The currency placeholder in the pattern will be replaced with the currency symbol.
 	 * If null, no replacement will be done.
 	 * @return string the formatting result.
@@ -93,15 +94,15 @@ class CNumberFormatter extends CComponent
 		$result=$this->formatNumber($format,$value);
 		if($currency===null)
 			return $result;
-		elseif(($symbol=$this->_locale->getCurrencySymbol($currency))===null)
+		else if(($symbol=$this->_locale->getCurrencySymbol($currency))===null)
 			$symbol=$currency;
 		return str_replace('¤',$symbol,$result);
 	}
 
 	/**
 	 * Formats a number using the currency format defined in the locale.
-	 * @param mixed $value the number to be formatted
-	 * @param string $currency 3-letter ISO 4217 code. For example, the code "USD" represents the US Dollar and "EUR" represents the Euro currency.
+	 * @param mixed the number to be formatted
+	 * @param string 3-letter ISO 4217 code. For example, the code "USD" represents the US Dollar and "EUR" represents the Euro currency.
 	 * The currency placeholder in the pattern will be replaced with the currency symbol.
 	 * @return string the formatting result.
 	 */
@@ -114,7 +115,7 @@ class CNumberFormatter extends CComponent
 	 * Formats a number using the percentage format defined in the locale.
 	 * Note, if the percentage format contains '%', the number will be multiplied by 100 first.
 	 * If the percentage format contains '‰', the number will be multiplied by 1000.
-	 * @param mixed $value the number to be formatted
+	 * @param mixed the number to be formatted
 	 * @return string the formatting result.
 	 */
 	public function formatPercentage($value)
@@ -124,7 +125,7 @@ class CNumberFormatter extends CComponent
 
 	/**
 	 * Formats a number using the decimal format defined in the locale.
-	 * @param mixed $value the number to be formatted
+	 * @param mixed the number to be formatted
 	 * @return string the formatting result.
 	 */
 	public function formatDecimal($value)
@@ -135,23 +136,14 @@ class CNumberFormatter extends CComponent
 	/**
 	 * Formats a number based on a format.
 	 * This is the method that does actual number formatting.
-	 * @param array $format format with the following structure:
+	 * @param array format with the following structure:
 	 * <pre>
 	 * array(
-	 * 	// number of required digits after the decimal point,
-	 * 	// will be padded with 0 if not enough digits,
-	 * 	// -1 means we should drop the decimal point
-	 * 	'decimalDigits'=>2,
-	 * 	// maximum number of digits after the decimal point,
-	 * 	// additional digits will be truncated.
-	 * 	'maxDecimalDigits'=>3,
-	 * 	// number of required digits before the decimal point,
-	 * 	// will be padded with 0 if not enough digits
-	 * 	'integerDigits'=>1,
-	 * 	// the primary grouping size, 0 means no grouping
-	 * 	'groupSize1'=>3,
-	 * 	// the secondary grouping size, 0 means no secondary grouping
-	 * 	'groupSize2'=>0,
+	 * 	'decimalDigits'=>2,     // number of required digits after decimal point; 0s will be padded if not enough digits; if -1, it means we should drop decimal point
+	 *  'maxDecimalDigits'=>3,  // maximum number of digits after decimal point. Additional digits will be truncated.
+	 * 	'integerDigits'=>1,     // number of required digits before decimal point; 0s will be padded if not enough digits
+	 * 	'groupSize1'=>3,        // the primary grouping size; if 0, it means no grouping
+	 * 	'groupSize2'=>0,        // the secondary grouping size; if 0, it means no secondary grouping
 	 * 	'positivePrefix'=>'+',  // prefix to positive number
 	 * 	'positiveSuffix'=>'',   // suffix to positive number
 	 * 	'negativePrefix'=>'(',  // prefix to negative number
@@ -159,7 +151,7 @@ class CNumberFormatter extends CComponent
 	 * 	'multiplier'=>1,        // 100 for percent, 1000 for per mille
 	 * );
 	 * </pre>
-	 * @param mixed $value the number to be formatted
+	 * @param mixed the number to be formatted
 	 * @return string the formatted result
 	 */
 	protected function formatNumber($format,$value)
@@ -167,9 +159,9 @@ class CNumberFormatter extends CComponent
 		$negative=$value<0;
 		$value=abs($value*$format['multiplier']);
 		if($format['maxDecimalDigits']>=0)
-			$value=number_format($value,$format['maxDecimalDigits'],'.','');
+			$value=round($value,$format['maxDecimalDigits']);
 		$value="$value";
-		if(false !== $pos=strpos($value,'.'))
+		if(($pos=strpos($value,'.'))!==false)
 		{
 			$integer=substr($value,0,$pos);
 			$decimal=substr($value,$pos+1);
@@ -179,16 +171,9 @@ class CNumberFormatter extends CComponent
 			$integer=$value;
 			$decimal='';
 		}
+
 		if($format['decimalDigits']>strlen($decimal))
 			$decimal=str_pad($decimal,$format['decimalDigits'],'0');
-		elseif($format['decimalDigits']<strlen($decimal))
-		{
-			$decimal_temp='';
-			for($i=strlen($decimal)-1;$i>=0;$i--)
-				if($decimal[$i]!=='0' || strlen($decimal_temp)>0)
-					$decimal_temp=$decimal[$i].$decimal_temp;
-			$decimal=$decimal_temp;
-		}
 		if(strlen($decimal)>0)
 			$decimal=$this->_locale->getNumberSymbol('decimal').$decimal;
 
@@ -212,7 +197,7 @@ class CNumberFormatter extends CComponent
 
 	/**
 	 * Parses a given string pattern.
-	 * @param string $pattern the pattern to be parsed
+	 * @param string the pattern to be parsed
 	 * @return array the parsed pattern
 	 * @see formatNumber
 	 */
@@ -247,7 +232,7 @@ class CNumberFormatter extends CComponent
 		// find out multiplier
 		if(strpos($pat,'%')!==false)
 			$format['multiplier']=100;
-		elseif(strpos($pat,'‰')!==false)
+		else if(strpos($pat,'‰')!==false)
 			$format['multiplier']=1000;
 		else
 			$format['multiplier']=1;

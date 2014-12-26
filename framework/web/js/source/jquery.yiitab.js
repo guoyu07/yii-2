@@ -3,8 +3,9 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2010 Yii Software LLC
+ * @copyright Copyright &copy; 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
+ * @version $Id$
  */
 
 ;(function($) {
@@ -26,7 +27,7 @@
 			}
 
 			this.find('>ul a').click(function(event) {
-				var href=$(this).attr('href');
+				var href=$(event.target).attr('href');
 				var pos=href.indexOf('#');
 				activate(href);
 				if(pos==0 || (pos>0 && (window.location.pathname=='' || window.location.pathname==href.substring(0,pos))))

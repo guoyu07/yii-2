@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -15,9 +15,8 @@
  * (without the .swf suffix), and set {@link baseUrl} to be URL (without the ending slash)
  * of the directory containing the SWF file of the Flex application.
  *
- * @property string $flashVarsAsString The flash parameter string.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.web.widgets
  * @since 1.0
  */
@@ -58,11 +57,6 @@ class CFlexWidget extends CWidget
 	 */
 	public $allowScriptAccess='sameDomain';
 	/**
-	 * @var boolean whether to allow running the Flash in full screen mode. Defaults to false.
-	 * @since 1.1.1
-	 */
-	public $allowFullScreen=false;
-	/**
 	 * @var string the HTML content to be displayed if Flash player is not installed.
 	 */
 	public $altHtmlContent;
@@ -94,6 +88,7 @@ class CFlexWidget extends CWidget
 
 	/**
 	 * Registers the needed CSS and JavaScript.
+	 * @since 1.0.1
 	 */
 	public function registerClientScript()
 	{

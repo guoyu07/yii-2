@@ -57,11 +57,6 @@ caches the content fragment for at most one hour:
 If we do not set the duration, it would default to 60, meaning the cached
 content will be invalidated after 60 seconds.
 
-Starting from version 1.1.8, if the duration is set 0, any existing cached
-content will be removed from the cache. If the duration is a negative value,
-the cache will be disabled, but existing cached content will remain in the cache.
-Prior to version 1.1.8, if the duration is 0 or negative, the cache will be disabled.
-
 ### Dependency
 
 Like [data caching](/doc/guide/caching.data), content fragment being
@@ -96,7 +91,7 @@ IDs when calling [beginCache()|CBaseController::beginCache()].
 Instead of asking developers to variate the IDs according to some scheme,
 [COutputCache] is built-in with such a feature. Below is a summary.
 
-   - [varyByRoute|COutputCache::varyByRoute]: by setting this option
+   - [varyByRoute|CoutputCache::varyByRoute]: by setting this option
 to true, the cached content will be variated according to
 [route](/doc/guide/basics.controller#route). Therefore, each combination
 of the requested controller and action will have a separate cached content.
@@ -116,7 +111,8 @@ able to cache a single post.
 
    - [varyByExpression|COutputCache::varyByExpression]: by setting this option
 to a PHP expression, we can make the cached content to be variated according
-to the result of this PHP expression.
+to the result of this PHP expression. This option has been available since
+version 1.0.4.
 
 ### Request Types
 
@@ -159,12 +155,10 @@ post content in an outer fragment cache.
 
 Different caching options can be set to the nested caches. For example,
 the inner cache and the outer cache in the above example can be set with
-different duration values. Even when the data cached in the outer cache is
-invalidated, the inner cache may still provide the valid inner fragment.
-However, it is not true vice versa. If the outer cache is evaluated to be valid,
-it will continue to provide the same cached copy even after the content in the
-inner cache has been invalidated.
-You must be careful in setting the durations or the dependencies of the nested caches,
-otherwise the outdated inner fragments may be kept in the outer fragment.
+different duration values. When the data cached in the outer cache is
+invalidated, the inner cache may still provide valid inner fragment.
+However, it is not true vice versa. If the outer cache contains valid data,
+it will always provide the cached copy, even though the content in the
+inner cache already expires.
 
 <div class="revision">$Id$</div>

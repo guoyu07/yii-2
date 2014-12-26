@@ -15,29 +15,10 @@ wszystkich rozszerzeń. Biorąc pod uwagę rozszerzenie nazwane `xyz`, możemy z
 użyć aliasu ścieżki `ext.xyz` by zlokalizować jego główny katalog, 
 który zawiera wszystkie pliki z `xyz`.
 
+
 Różne rozszerzenia posiadają różne wymagania dotyczące importowania, konfiguracji
 oraz użycia. W dalszej części, podsumujemy najczęściej używane scenariusze dotyczące
 rozszerzeń, zgodnie z kategoriami opisanymi w [przeglądzie](/doc/guide/extension.overview).
-
-Rozszerzenie Zii
---------------
-
-Zanim rozpoczniemy opisywanie jak używać rozszerzenia firm trzecich, chcielibyśmy przedstawić
-bibliotekę rozszerzeń Zii, która jest zestawem rozszerzeń oprogranowanych przez zespół 
-programistów Yii. Jest ona dołączana do każdego wydania.
-
-Podczas używanie rozszerzenia Zii, należy odnosić się do odpowiednich klas używając aliasu ścieżki
-w formacie `zii.ścieżka.do.NazwyKlasy`. Główny alias  `zii` został zdefiniowany w Yii. Wskazuje on na 
-główny katalog biblioteki Zii. Na przykład, aby używać klasy [CGridView], będziemy używali 
-następującego kodu w skrypcie widoku gdy będziemy odnosić się do rozszerzenia:
-
-~~~
-[php]
-$this->widget('zii.widgets.grid.CGridView', array(
-	'dataProvider'=>$dataProvider,
-));
-~~~
-
 
 
 Komponent aplikacji
@@ -111,7 +92,8 @@ zrobić ze wzdlędu na to, że [CApplicationComponent] definiuje właściwość 
 Poprzez przypisanie tej właściwości listy zawierającej konfigurację zachowań, komponent 
 dołączy odpowiednie zachowanie w momencie inicjalizacji komponentu.
 
-Dla klas [CController], [CFormModel] oraz [CActiveRecord], które zazwyczaj są rozszerzane dołączanie zachowań może odbywać się poprzez nadpisanie ich metody `behaviors()`. Klasy automatycznie dołączą każde zachowanie zadeklarowane w tej metodzie podczas inicjalizacji. Na przukład:
+Dla klas [CController], [CFormModel] oraz [CActiveModel], które zazwyczaj są rozszerzane 
+dołączanie zachowań odbywa się poprzez nadpisanie ich metody `behaviors()`. Na przykład:
 
 ~~~
 [php]
@@ -300,7 +282,7 @@ aby zobaczyć jak używać modułów.
 Komponenty generyczne
 -----------------
 Aby używać generycznych [komponentów](/doc/guide/basics.component), najpierw musimy 
-dołączyć ich plik klasy używając:
+dołączyć ich plik klasy używając
 
 ~~~
 Yii::import('ext.xyz.XyzClass');
@@ -310,4 +292,4 @@ Następnie, możemy utworzyć instancję tej klasy, skonfigurować jej właściw
 oraz zawołać jej metody. Możemy również rozszerzyć go do tworzenia nowych
 klas potomnych.
 
-<div class="revision">$Id: extension.use.txt 2890 2011-01-18 15:58:34Z qiang.xue $</div>
+<div class="revision">$Id: extension.use.txt 1392 2009-09-04 20:39:11Z qiang.xue $</div>

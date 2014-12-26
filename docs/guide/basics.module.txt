@@ -1,6 +1,8 @@
 Module
 ======
 
+> Note: Support for module has been available since version 1.0.3.
+
 A module is a self-contained software unit that consists of [models](/doc/guide/basics.model), [views](/doc/guide/basics.view), [controllers](/doc/guide/basics.controller) and other supporting components. In many aspects, a module resembles to an [application](/doc/guide/basics.application). The main difference is that a module cannot be deployed alone and it must reside inside of an application. Users can access the controllers in a module like they do with normal application controllers.
 
 Modules are useful in several scenarios. For a large-scale application, we may divide it into several modules, each being developed and maintained separately. Some commonly used features, such as user management, comment management, may be developed in terms of modules so that they can be reused easily in future projects.
@@ -28,7 +30,15 @@ forum/
 
 A module must have a module class that extends from [CWebModule]. The class name is determined using the expression `ucfirst($id).'Module'`, where `$id` refers to the module ID (or the module directory name). The module class serves as the central place for storing information shared among the module code. For example, we can use [CWebModule::params] to store module parameters, and use [CWebModule::components] to share [application components](/doc/guide/basics.application#application-component) at the module level.
 
-> Tip: We can use the module generator in Gii to create the basic skeleton of a new module.
+> Tip: We can use the `yiic` tool to create the basic skeleton of a new module. For example, to create the above `forum` module, we can execute the following commands in a command line window:
+>
+> ~~~
+> % cd WebRoot/testdrive
+> % protected/yiic shell
+> Yii Interactive Tool v1.0
+> Please type 'help' for help. Type 'exit' to quit.
+> >> module forum
+> ~~~
 
 
 Using Module
@@ -77,9 +87,7 @@ A controller action in a module can be accessed using the [route](/doc/guide/bas
 Nested Module
 -------------
 
-Modules can be nested in unlimited levels. That is, a module can contain another module which can contain yet another module. We call the former *parent module* while the latter *child module*. Child modules must be declared in the [modules|CWebModule::modules] property of their parent module, like we declare modules in the application configuration shown as above.
-
-To access a controller action in a child module, we should use the route `parentModuleID/childModuleID/controllerID/actionID`.
+Modules can be nested. That is, a module can contain another module. We call the former *parent module* while the latter *child module*. Child modules must be placed under the `modules` directory of the parent module. To access a controller action in a child module, we should use the route `parentModuleID/childModuleID/controllerID/actionID`.
 
 
 <div class="revision">$Id$</div>

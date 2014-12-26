@@ -1,8 +1,8 @@
-<script type="text/javascript">
+<script language="javascript" type="text/javascript">
 /*<![CDATA[*/
 if(typeof(console)=='object')
 {
-	console.group("Profiling Callstack ï¿½ï¿½ï¿½i");
+	console.group("Profiling Callstack ³ø§i");
 <?php
 foreach($data as $index=>$entry)
 {

@@ -1,108 +1,102 @@
 Controller
 ==========
 
-Ein `Controller` ist eine Instanz von [CController] oder einer davon
-abgeleiteten Klasse. Er wird von der Applikation erzeugt, wenn ein Request
-dafür vorliegt. Wird ein Controller gestartet,
-führt er die angeforderte Action aus, die dann in der Regel die benötigten Models
-einbindet und einen passenden View rendert (sinngem.: macht).
-Die einfachste Form einer `Action` ist eine Methode im Controller,
-deren Name mit `action` anfängt.
+Ein `Controller` ist eine Instanz vom Typ [CController] oder dessen
+Kindklassen. Er wird von der Applikation erzeugt, wenn eine Benutzeranfrage
+dafür vorliegt. Wenn ein Controller gestartet wird, 
+führt er die angeforderte Action aus, welche in der Regel die benötigten Models 
+einbindet und einen passenden View rendert (sinngem.: machen, darstellen) . 
+Eine `Action` ist in ihrer einfachsten Form lediglich eine Klassenmethode des Controllers, 
+deren Name mit `action` anfängt. 
 
-Jeder Controller hat eine Standardaction. Sie wird ausgeführt, wenn aus
-dem Request nicht hervorgeht, welche Action ausgeführt werden soll.
-Als Vorgabewert ist dafür die Action `index` definiert.
-Überschreibt man [CController::defaultAction], kann die Standardaction verändert werden.
+Ein Controller hat eine Standardaction. Wenn im Benutzer-Request nicht
+festgelegt wurde, welche Action ausgeführt werden soll, wird die
+Standardaction ausgeführt. Als Vorgabewert ist die Standardaction `index`
+definiert. Sie kann durch Setzen der [CController::defaultAction] verändert 
+werden.
 
-Der folgende Code definiert einen Controller `site` sowie die beiden Actions
-`index` (die Standardaction) und `contact`.
+Unten steht der Minimalcode, den ein Controller benötigt. Da dieser
+Controller keine Action enthält, würde bei seinem Aufruf eine Exception
+ausgelöst.
 
 ~~~
 [php]
 class SiteController extends CController
 {
-	public function actionIndex()
-	{
-		// ...
-	}
-
-	public function actionContact()
-	{
-		// ...
-	}
 }
 ~~~
 
 Route
 -----
 
-Controller und Action werden über ihre ID identifiziert. Eine Controller-ID
-hat das Format `pfad/zu/xyz`, was dem Controller
-`protected/controllers/pfad/zu/XyzController.php` entspricht. Das Kürzel
-`xyz` sollte natürlich durch echte Namen ersetzt werden (z.B. entspricht `post`
-der Datei `protected/controllers/PostController.php`). Die Action-ID
-entspricht dem Namen einer Actionmethode, ohne das vorangestellte `action`.
-Enthält ein Controller z.B. die Methode `actionEdit` ist die ID dieser Action
+Controller und Actions werden durch ihre IDs identifiziert. Eine Controller-ID
+hat das Format `pfad/zu/xyz`, was der Controller-Datei 
+`protected/controllers/pfad/zu/XyzController.php` entspricht, wobei das Kürzel
+`xyz` durch echte Namen ersetzt werden sollte (z.B. entspricht `post`
+der Datei `protected/controllers/PostController.php`). Die Action-ID ist der
+Name der Action-Methode ohne die `action`-Präfix. Wenn eine Controller-Klasse
+z.B. eine Methode namens `actionEdit` enthält, entspricht dies der Action-ID
 `edit`.
 
-Um eine bestimmte Controlleraction aufzurufen, wird im Request eine sogenannte
-`Route` angefordert. Sie setzt sich aus Controller- und Action-ID zusammen,
-getrennt durch einen Schrägstrich (/). Die Route `post/edit` bezieht sich
-somit auf die `edit`-Action im `PostController`. In der Voreinstellung
-würde diese Action über die URL `http://hostname/index.php?r=post/edit` aufgerufen.
+> Note|Hinweis: Vor Version 1.0.3 war das Format der Controller-ID
+`pfad.zu.xyz` statt `pfad/zu/xyz`.
 
->Note|Hinweis: Normalerweise ist die Schreibweise (groß/klein) bei Routen von
->Bedeutung. Dies kann man aber deaktivieren, indem man
->[CUrlManager::caseSensitive] in der Konfiguration auf false setzt.
+Eine bestimmte Controller-/Action-Kombination wird von Benutzern in Form einer
+sogenannten Route angefordert. Eine Route setzt sich aus Controller- und
+Action-ID zusammen, getrennt durch einen Schrägstrich (/). Zum Beispiel bezieht 
+sich die Route `post/edit` auf den `PostController` und dessen `edit`-Action. 
+Standardmäßig würde dieser Controller mit dieser Action über die URL
+`http://hostname/index.php?r=post/edit` aufgerufen.
+
+>Note|Hinweis: Normalerweise spielt die Groß-/Kleinschreibung bei Routen eine
+>Rolle. Seit Version 1.0.1 ist es möglich, dies zu deaktivieren, indem man
+>[CUrlManager::caseSensitive] in der Anwendungskonfiguration auf false setzt.
 >Falls Groß-/Kleinschreibung aktiviert ist, stellen Sie bitte sicher, dass
->Verzeichnisnamen von Controllern sowie die Schlüssel in
->[controllerMap|CWebApplication::controllerMap] und
->[actionMap|CController::actions] klein geschrieben werden.
-
-Eine Anwendung kann [Module](/doc/guide/basics.module) enthalten. Die Route zu
-einer Controlleraction in einem Modul entspricht dem Format `modulID/controllerID/actionID`.
-Detaillierte Informationen hierzu finden Sie im [Abschnitt über Module](/doc/guide/basics.module).
-
+>Verzeichnisse, die Controller enthalten, kleingeschrieben werden und dass
+>sowohl [controllerMap|CWebApplication::controllerMap] als auch 
+>[actionMap|CController::actions] Schlüssel in Kleinbuchstaben verwenden.
 
 Instanziieren eines Controllers
 -------------------------------
 
-Beim Bearbeiten eines Requests erzeugt [CWebApplication] eine
-Controllerinstanz. Die Applikation geht folgendermaßen vor, um
-die Klassendatei zu einer gegebenen Controller-ID zu finden:
+Eine Controller-Instanz wird dann erzeugt, wenn [CWebApplication] einen
+einkommenden Request bearbeitet. Bei gegebener ID des Controllers geht die
+Applikation nach folgenden Regeln vor, um die Klasse und den Ort der
+Klassendatei zu bestimmen:
 
-   - Ist [CWebApplication::catchAllRequest] gesetzt, wird dieser
-Wert zum Suchen des Controllers verwendet und die Controller-ID im Request
-ignoriert. Dies wird hauptsächlich verwendet, um die
+   - Wenn [CWebApplication::catchAllRequest] konfiguriert wurde, wird der
+entsprechende Controller gemäß dieses Wertes erstellt und die vom Benutzer
+angegebene Controller-ID ignoriert. Dies wird hauptsächlich verwendet, um die
 Anwendung in den Wartungsmodus zu schalten und eine statische Hinweisseite
 anzuzeigen.
 
    - Wenn die ID in [CWebApplication::controllerMap] enthalten ist, wird die
-Controllerinstanz entsprechend dieser Konfiguration erstellt.
+entsprechende Controller-Konfiguration verwendet, um die Controller-Instanz zu
+erstellen.
 
-   - Liegt die ID im Format `'pfad/zu/xyz'` vor, wird von der
-Controllerklasse `XyzController` in der Datei
+   - Falls die ID im Format `'pfad/zu/xyz'` vorliegt, wird von der
+Controller-Klasse `XyzController` in der Datei
 `protected/controllers/pfad/zu/XyzController.php` ausgegangen. Die
-Controller-ID `admin/user` würde zum Beispiel in die Controllerklasse
-`UserController` in der Datei `protected/controllers/admin/UserController.php`
-aufgelöst werden. Existiert die Klassendatei nicht, wird eine
+Controller-ID `admin/user` würde zum Beispiel in die Controller-Klasse
+`UserController` und die Datei `protected/controllers/admin/UserController.php`
+aufgelöst werden. Falls die Klassendatei nicht existiert, wird eine 
 404-[CHttpException] ausgelöst.
 
-Falls [Module](/doc/guide/basics.module) verwendet werden, unterscheidet sich
-der obige Prozess etwas. Die Anwendung prüft in
+Falls [Module](/doc/guide/basics.module) verwendet werden (seit Version 1.0.3
+verfügbar), unterscheidet sich der obige Prozess etwas. Die Anwendung prüft in
 diesem Fall, ob sich die ID auf einen Controller eines Moduls bezieht. Falls
 ja, erzeugt sie zunächst die Modulinstanz und danach die Controllerinstanz.
 
 Action
 ------
 
-Wie erwähnt, kann eine Action eine Controllermethode sein, deren
-Name mit `action` beginnt. Stattdessen kann man auch die etwas
-fortgeschrittenere Methode einer Actionklasse verwenden und den Controller
-bitten, diese auf Anfrage zu instanziieren. Actions können so mehrfach
-eingesetzt werden, was der Wiederverwendbarkeit zugute kommt.
+Wie erwähnt, kann eine Action als eine Methode definiert werden, die mit 
+dem Wort `action` beginnt. Eine weitere, fortgeschrittenere Möglichkeit besteht
+darin, eine Action-Klasse zu definieren und den Controller zu bitten, diese 
+auf Anfrage zu instanziieren. Dadurch können Actions mehrfach eingesetzt werden,
+was die Wiederverwendbarkeit erhöht.
 
-Eine Actionklasse wird wie folgt definiert:
+Um eine neue Action-Klasse zu definieren, verfahren Sie wie folgt:
 
 ~~~
 [php]
@@ -115,8 +109,8 @@ class UpdateAction extends CAction
 }
 ~~~
 
-Damit der Controller die Action kennt, überschreibt man die
-[actions()|CController::actions]-Methode einer Controller-Klasse:
+Damit der Controller die Action kennt, überschreiben wir die
+[actions()|CController::actions]-Methode unserer Controller-Klasse:
 
 ~~~
 [php]
@@ -131,13 +125,14 @@ class PostController extends CController
 }
 ~~~
 
-Dieses Beispiel verwendet den Pfadalias
-`application.controllers.post.UpdateAction`. Damit wird angegeben, dass sich die
-Actionklasse in `protected/controllers/post/UpdateAction.php` befindet.
+Im Beispiel benutzen wir den Pfad-Alias
+`application.controllers.post.UpdateAction`, um anzugeben, dass sich die
+Klassendatei der Action in `protected/controllers/post/UpdateAction.php`
+befindet.
 
-Indem man klassenbasierte Actions verwendet, kann man eine Anwendung
-modular organisieren. So könnte man zur Ablage des Controllercodes z.B.
-diese Verzeichnisstruktur verwenden:
+Indem wir klassenbasierte Actions schreiben, können wir unsere Anwendung
+modular organisieren. So könnte zur Ablage des Codes für die Controller z.B. 
+die folgende Verzeichnisstruktur verwendet werden:
 
 ~~~
 protected/
@@ -155,144 +150,40 @@ protected/
             UpdateAction.php
 ~~~
 
-
-### Binden von Actionparametern
-
-Seit Version 1.1.4 unterstützt Yii das automatische Binden von
-Actionparametern. Das bedeutet, dass eine Controlleraction Parameter
-definieren kann, deren Werte automatisch entsprechend ihrem Namen aus
-`$_GET` befüllt werden.
-
-Nehmen wir zum besseren Verständnis an, ein `PostController` soll eine neue
-Action `create` bekommen, die folgende zwei Parameter benötigt:
-
-* `category`: Eine Integerzahl, die für die Kategorie-ID steht, unter der ein
-neuer Beitrag angelegt werden soll;
-* `language`: Eine Zeichenkette, die die Sprache des neuen Beitrags angibt.
-
-Eine mögliche, allerdings relativ langweilige Umsetzung könnte die benötigten
-`$_GET`-Parameter wie folgt auslesen:
-
-~~~
-[php]
-class PostController extends CController
-{
-	public function actionCreate()
-	{
-		if(isset($_GET['category']))
-			$category=(int)$_GET['category'];
-		else
-			throw new CHttpException(404,'invalid request');
-
-		if(isset($_GET['language']))
-			$language=$_GET['language'];
-		else
-			$language='en';
-
-		// ... fun code starts here ...
-	}
-}
-~~~
-
-Verwendet man stattdessen das Actionparameter-Feature, vereinfacht sich diese
-Aufgabe wie folgt:
-
-~~~
-[php]
-class PostController extends CController
-{
-	public function actionCreate($category, $language='en')
-	{
-		$category=(int)$category;
-
-		// ... fun code starts here ...
-	}
-}
-~~~
-
-Beachten Sie, dass die Actionmethode `actionCreate` jetzt zwei Aufrufparameter
-erhalten hat. Deren Name muss exakt mit den in `$_GET` erwarteten Parametern
-übereinstimmen. Für den `$language`-Parameter is außerdem der Vorgabewert `en`
-definiert. Er wird verwendet, wenn kein `language`-Wert in `$_GET` enthalten
-ist. Da für `$category` kein solcher Vorgabewert definiert wurde, wird
-automatisch eine [CHttpException] mit Fehlercode 400 geworfen, falls dieser
-Parameter nicht im Request übergeben wird.
-
-Seit Version 1.1.5 kann Yii auch automatisch Parameter vom Typ Array erkennen.
-Dazu verwendet man das Type Hinting Feature von PHP wie folgt:
-
-~~~
-[php]
-class PostController extends CController
-{
-	public function actionCreate(array $categories)
-	{
-		// Yii stellt sicher, dass $categories ein Array ist
-	}
-}
-~~~
-
-Man gibt also in der Funktionsdeklaration das Schlüsselwort `array` vor
-`$categories` an. Falls `$_GET['categories']` ein String ist, wird es
-automatisch in ein Array (mit diesem String als einzigem Element) umgewandelt.
-
-> Note|Hinweis: Falls ein Parameter ohne Angabe von `array` deklariert wurde,
-> *muss* ein Skalarwert (also kein Arrray!) übergeben werden. Ist der
-> Parameter in `$_GET` trotzdem ein Array, wird eine HTTP-Exception
-> geworfen.
-
-Seit Version 1.1.7 werden Parameter auch bei klassenbasierten Actions
-gebunden. Wurde die `run()`-Methode einer Actionklasse mit Parametern
-definiert, werden diese mit den Werten der entsprechenden GET-Parameter
-belegt. Zum Beispiel:
-
-~~~
-[php]
-class UpdateAction extends CAction
-{
-	public function run($id)
-	{
-		// $id ist mit $_GET['id'] vorbelegt
-	}
-}
-~~~
-
-
 Filter
 ------
 
-Bei einem Filter handelt es sich um Code, der je nach Konfiguration vor
-und/oder nach einer Action ausgeführt wird. Ein Filter könnte z.B. die
-Zugriffskontroller übernehmen und sicherstellen, dass ein Benutzer
-authentifiziert wurde, bevor eine Action ausgeführt wird. Mit einem
-Performancefilter könnte man die benötigte Zeit für eine Action messen, etc.
+Ein Filter ist ein Codeteil, der je nach Konfiguration vor und/oder nach
+einer Action ausgeführt wird. So könnte z.B. ein Filter für die Zugriffskontrolle 
+aufgerufen werden, um sicherzustellen, dass der Benutzer authentifiziert
+wurde, bevor dir angeforderte Action ausgeführt wird. Ein Leistungsfilter
+könnte die Zeit, die eine Action zur Ausführung braucht, messen.
 
-Für eine Action können mehrere Filter definiert sein. Sie werden in der
-Reihenfolge ausgeführt, in der sie in der Liste der Filter erscheinen. Ein
-Filter kann verhindern, dass die Action oder die restlichen Filter ausgeführt
-werden.
+Eine Action kann mehrere Filter haben. Die Filter werden in der Reihenfolge
+ausgeführt, in der sie in der Filterliste erscheinen. Ein Filter kann die
+Ausführung der Action sowie der restlichen verbleibenden Filter verhindern.
 
-Ähnlich wie eine ACtion kann ein Filter eine Controllermethode sein, deren
-Name mit `filter` beginnt. Die Methode `filterAccessControl` würde also z.B.
-den Filter `accessControl` definieren. Eine Filtermethode muss dabei dieser
-Signatur entsprechen:
+Ein Filter kann als Klassenmethode eines Controllers definiert werden. Der
+Name der Methode muss mit `filter` beginnen. Existiert z.B. eine Methode
+namens `filterAccessControl`, so ist darin ein Filter namens `accessControl`
+definiert. Die Filtermethode muss dieser Signatur entsprechen:
 
 ~~~
 [php]
 public function filterAccessControl($filterChain)
 {
-	// Rufen Sie $filterChain->run() auf, um mit der Filterung
+	// Rufen Sie $filterChain->run() auf, um mit der Filterung 
 	// fortzufahren bzw. die Action auszuführen.
 }
 ~~~
 
-`$filterChain` (Filterkette) ist eine Instanz vom Typ [CFilterChain].
-Sie stellt die Liste der Filter dar, die mit der Action verbunden sind. Innerhalb
-der Filtermethode kann `$filterChain->run()` aufgerufen werden, um mit der Filterung
-fortzufahren, bzw. die Action auszuführen.
+wobei `$filterChain` (Filterkette) eine Instanz vom Typ [CFilterChain] ist, 
+die die Liste der Filter darstellt, die mit der Action verbunden sind. Innerhalb 
+der Filtermethode können wir `$filterChain->run()` aufrufen, um mit der Filterung
+fortzufahren, bzw. am Ende die Action auszuführen.
 
-Ein Filter kann auch einen Instanz von [CFilter] oder einer davon abgeleiteten
-Klasse sein. Der folgende Code definiert eine neue Filterklasse:
+Ein Filter kann auch einen Instanz vom Typ [CFilter] oder dessen Kindklassen
+sein. Der folgende Code definiert eine neue Filterklasse:
 
 ~~~
 [php]
@@ -311,8 +202,8 @@ class PerformanceFilter extends CFilter
 }
 ~~~
 
-Um eine Action mit einem Filter zu versehen, muss die Methode
-`CController::filters()` überschrieben werden. Die Methode sollte ein Array von
+Um Filter auf Actions anzuwenden, müssen wir die Methode
+`CController::filters()` überschreiben. Die Methode sollte ein Array von
 Filterkonfigurationen zurückliefern. Zum Beispiel
 
 ~~~
@@ -333,20 +224,20 @@ class PostController extends CController
 }
 ~~~
 
-Hier werden zwei Filter definiert: `postOnly` und `PerformanceFilter`.
+Der obige Code bestimmt zwei Filter: `postOnly` und `PerformanceFilter`.
 Der `postOnly`-Filter ist methodenbasiert (die entsprechende Filtermethode ist
 bereits in [CController] definiert), während der `PerformanceFilter`
-als Objekt vorliegt. Mit dem Pfadalias `application.filters.PerformanceFilter`
-geben wir an, dass sich die Filterklasse in `protected/filters/PerformanceFilter.php`
-befindet. Da ein Array für die Konfiguration von `PerformanceFilter` verwendet
-wird, können damit auch gleich die Starteigenschaften des Filterobjekts
-definiert werden.  Im Beispiel setzen wir die Eigenschaft `unit` auf `'second'`.
+als Objekt vorliegt. Der Pfad-Alias `application.filters.PerformanceFilter` legt
+fest, dass sich die Datei der Filterklasse in `protected/filters/PerformanceFilter`
+befindet. Wir verwenden ein Array für die Konfiguration von `PerformanceFilter`,
+um auch gleich die Starteigenschaften des Filterobjekts zu definieren. 
+Im Beispiel setzen wir die Eigenschaft `unit` auf `'second'`.
 
-Durch Plus- und Minusoperatoren kann man bestimmen, auf welche Actions der
-Filter angewendet werden soll und auf welche nicht. Oben wird der Filter
-`postOnly` auf die Actions `edit` und `create` und `PerformanceFilter`
-auf alle Actions AUSSER `edit` und `create` angewendet. Falls
+Durch Plus- und Minusoperatoren können wir bestimmen, auf welche Actions der
+Filter angewendet werden soll und auf welche nicht. Oben soll der Filter
+`postOnly` auf die Actions `edit` und `create` angewendet werden, wohingegen
+`PerformanceFilter` für alle Actions AUSSER `edit` und `create` gilt. Falls
 weder Plus noch Minus in der Filterkonfiguration auftauchen, wird der Filter
 auf alle Actions angewendet.
 
-<div class="revision">$Id: basics.controller.txt 3251 2011-06-01 00:24:06Z qiang.xue $</div>
+<div class="revision">$Id: basics.controller.txt 1263 2009-07-21 19:22:00Z qiang.xue $</div>

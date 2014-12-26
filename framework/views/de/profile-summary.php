@@ -2,14 +2,14 @@
 <table class="yiiLog" width="100%" cellpadding="2" style="border-spacing:1px;font:11px Verdana, Arial, Helvetica, sans-serif;background:#EEEEEE;color:#666666;">
 	<tr>
 		<th style="background:black;color:white;" colspan="6">
-			Ergebnis der Perfomance-Analyse
+			Ergebnisse der Leistungsmessung
 			(Zeit: <?php echo sprintf('%0.5f',Yii::getLogger()->getExecutionTime()); ?>s,
 			Speicher: <?php echo number_format(Yii::getLogger()->getMemoryUsage()/1024); ?>KB)
 		</th>
 	</tr>
 	<tr style="background-color: #ccc;">
 	    <th>Prozedur</th>
-		<th>Anzahl</th>
+		<th>Nummer</th>
 		<th>Gesamt (s)</th>
 		<th>Durschn. (s)</th>
 		<th>Min. (s)</th>
@@ -18,7 +18,7 @@
 <?php
 foreach($data as $index=>$entry)
 {
-	$color=($index%2)?'#F5F5F5':'#FFFFFF';
+	$color=($index%2)?'#F5F5F5':'#EBF8FE';
 	$proc=CHtml::encode($entry[0]);
 	$min=sprintf('%0.5f',$entry[2]);
 	$max=sprintf('%0.5f',$entry[3]);

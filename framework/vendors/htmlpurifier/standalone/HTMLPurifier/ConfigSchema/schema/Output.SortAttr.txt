@@ -11,4 +11,3 @@ DEFAULT: false
   to text diffs. If you're not seeing this bug, chances are, you don't need
   this directive.
 </p>
---# vim: et sw=4 sts=4

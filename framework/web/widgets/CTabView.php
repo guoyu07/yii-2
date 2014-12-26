@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -29,30 +29,27 @@
  * When both 'content' and 'view' are specified, 'content' will take precedence.
  * </li>
  * <li>url: a URL that the user browser will be redirected to when clicking on this tab.</li>
- * <li>data: array (name=>value), this will be passed to the view when 'view' is specified.</li>
  * </ul>
  *
  * For example, the {@link tabs} property can be configured as follows,
  * <pre>
- * $this->widget('CTabView', array(
- *     'tabs'=>array(
- *         'tab1'=>array(
- *             'title'=>'tab 1 title',
- *             'view'=>'view1',
- *             'data'=>array('model'=>$model),
- *         ),
- *         'tab2'=>array(
- *             'title'=>'tab 2 title',
- *             'url'=>'http://www.yiiframework.com/',
- *         ),
+ * array(
+ *     'tab1'=>array(
+ *           'title'=>'tab 1 title',
+ *           'view'=>'view1',
  *     ),
- * ));
+ *     'tab2'=>array(
+ *           'title'=>'tab 2 title',
+ *           'url'=>'http://www.yiiframework.com/',
+ *     ),
+ * )
  * </pre>
  *
  * By default, the first tab will be activated. To activate a different tab
  * when the page is initially loaded, set {@link activeTab} to be the ID of the desired tab.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.web.widgets
  * @since 1.0
  */
@@ -96,10 +93,6 @@ class CTabView extends CWidget
 	 * When both 'content' and 'view' are specified, 'content' will take precedence.
 	 * </li>
 	 * <li>url: a URL that the user browser will be redirected to when clicking on this tab.</li>
-	 * <li>data: array (name=>value), this will be passed to the view when 'view' is specified.
-	 * This option is available since version 1.1.1.</li>
-	 * <li>visible: whether this tab is visible. Defaults to true.
-	 * this option is available since version 1.1.11.</li>
 	 * </ul>
 	 * <pre>
 	 * array(
@@ -121,10 +114,6 @@ class CTabView extends CWidget
 	 */
 	public function run()
 	{
-		foreach($this->tabs as $id=>$tab)
-			if(isset($tab['visible']) && $tab['visible']==false)
-				unset($this->tabs[$id]);
-
 		if(empty($this->tabs))
 			return;
 
@@ -135,10 +124,7 @@ class CTabView extends CWidget
 		}
 
 		$htmlOptions=$this->htmlOptions;
-		if(isset($this->htmlOptions['id']))
-			$this->id=$this->htmlOptions['id'];
-		else
-			$htmlOptions['id']=$this->id;
+		$htmlOptions['id']=$this->getId();
 		if(!isset($htmlOptions['class']))
 			$htmlOptions['class']=self::CSS_CLASS;
 
@@ -166,7 +152,8 @@ class CTabView extends CWidget
 
 	/**
 	 * Registers the needed CSS file.
-	 * @param string $url the CSS URL. If null, a default CSS URL will be used.
+	 * @param string the CSS URL. If null, a default CSS URL will be used.
+	 * @since 1.0.2
 	 */
 	public static function registerCssFile($url=null)
 	{
@@ -203,19 +190,8 @@ class CTabView extends CWidget
 			echo "<div class=\"view\" id=\"{$id}\"{$inactive}>\n";
 			if(isset($tab['content']))
 				echo $tab['content'];
-			elseif(isset($tab['view']))
-			{
-				if(isset($tab['data']))
-				{
-					if(is_array($this->viewData))
-						$data=array_merge($this->viewData, $tab['data']);
-					else
-						$data=$tab['data'];
-				}
-				else
-					$data=$this->viewData;
-				$this->getController()->renderPartial($tab['view'], $data);
-			}
+			else if(isset($tab['view']))
+				$this->getController()->renderPartial($tab['view'],$this->viewData);
 			echo "</div><!-- {$id} -->\n";
 		}
 	}

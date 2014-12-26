@@ -7,25 +7,15 @@
  * - $columns: a list of column schema objects
  */
 ?>
-<?php
-echo "<?php\n";
-$nameColumn=$this->guessNameColumn($columns);
-$label=$this->class2name($modelClass,true);
-echo "\$this->breadcrumbs=array(
-	'$label'=>array('index'),
-	\$model->{$nameColumn}=>array('view','id'=>\$model->{$ID}),
-	'Update',
-);\n";
-?>
+<h2>Update <?php echo $modelClass." <?php echo \$model->{$ID}; ?>"; ?></h2>
 
-$this->menu=array(
-	array('label'=>'List <?php echo $modelClass; ?>', 'url'=>array('index')),
-	array('label'=>'Create <?php echo $modelClass; ?>', 'url'=>array('create')),
-	array('label'=>'View <?php echo $modelClass; ?>', 'url'=>array('view', 'id'=>$model-><?php echo $ID; ?>)),
-	array('label'=>'Manage <?php echo $modelClass; ?>', 'url'=>array('admin')),
-);
-?>
+<div class="actionBar">
+[<?php echo "<?php echo CHtml::link('{$modelClass} List',array('list')); ?>"; ?>]
+[<?php echo "<?php echo CHtml::link('New {$modelClass}',array('create')); ?>"; ?>]
+[<?php echo "<?php echo CHtml::link('Manage {$modelClass}',array('admin')); ?>"; ?>]
+</div>
 
-<h1>Update <?php echo $modelClass." <?php echo \$model->{$ID}; ?>"; ?></h1>
-
-<?php echo "<?php echo \$this->renderPartial('_form', array('model'=>\$model)); ?>"; ?>
+<?php echo "<?php echo \$this->renderPartial('_form', array(
+	'model'=>\$model,
+	'update'=>true,
+)); ?>"; ?>

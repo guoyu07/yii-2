@@ -2,7 +2,7 @@ Menggunakan Sintaks Template Alternatif
 =======================================
 
 Yii mengijinkan pengembang untuk menggunakan sintaks template favorit sendiri (misalnya
-Prado, Smarty) untuk menulis controller atau tampilan widget. Ini dilakukan dengan
+Prado, Smarty) untuk menulis kontroler atau tampilan widget. Ini dilakukan dengan
 menulis dan menginstalasi komponen aplikasi [viewRenderer|CWebApplication::viewRenderer].
 Pembuat tampilan mengintersepsi penyertaan
 [CBaseController::renderFile], sesuai dengan file tampilan dengan sintaks
@@ -36,12 +36,12 @@ return array(
 );
 ~~~
 
-Secara default, [CPradoViewRenderer] akan mengkompilasi file sumber tampilan dan
+Distandarkan, [CPradoViewRenderer] akan mengkompilasi file sumber tampilan dan
 menyimpan file hasil PHP di bawah direktori
 [runtime](/doc/guide/basics.convention#directory). Hanya saat file
 sumber tampilan diubah, file PHP akan dibuat ulang.
 Oleh karenanya, menggunakan [CPradoViewRenderer] hanya menyebabkan sedikit degradasi
-kinerja.
+performansi.
 
 > Tip: Karena [CPradoViewRenderer] memperkenalkan beberapa tag template baru
 agar penulisan tampilan lebih mudah dan lebih cepat, Anda masih bisa menulis kode PHP seperti
@@ -50,7 +50,7 @@ biasa dalam sumber tampilan.
 Berikutnya kami perkenalkan tag template yang didukung oleh
 [CPradoViewRenderer].
 
-### Tag PHP Pendek (Short PHP Tag)
+### Tag PHP Pendek
 
 Tag PHP pendek adalah jalan pintas untuk menulis ekspresi dan pernyataan PHP dalam sebuah
 tampilan. Tag ekspresi `<%= expression %>` diterjemahkan ke dalam
@@ -107,7 +107,7 @@ akan diubah menjadi
 ~~~
 
 > Note|Catatan: Nilai `showRefreshButton` ditetapkan sebagai `{false}`
-alih-alih `"false"` karena "false" berarti string daripada
+daripada `"false"` karena "false" berarti string daripada
 boolean.
 
 ### Tag Cache
@@ -137,7 +137,7 @@ akan diubah menjadi
 
 ~~~
 [php]
-<?php if($this->beginCache('profile', array('duration'=>3600))): ?>
+<?php if($this->cache('profile', array('duration'=>3600))): ?>
 	// informasi profil pengguna di sini
 <?php $this->endCache(); endif; ?>
 ~~~
@@ -178,15 +178,4 @@ komentar tampilan yang akan dibuang
 --->
 ~~~
 
-Menggabungkan Format Template
------------------------
-
-Mulai dari versi 1.1.2, dimungkinkan untuk menggabungkan penggunaan beberapa
-sintaks alternatif template dengan sintaks PHP normal. Untuk melakukannya, properti
-[CViewRenderer::fileExtension] yang terinstalasi pada pe-render view harus dikonfigurasi
-dengan sebuah nilai selain `.php`. Misalnya, jika properti di-set sebagai `.tpl`, maka setiap
-view yang berakhiran `.tpl` akan di-render dengan menggunakan pe-render view yang terinstalasi,
-sedangkan file view lain yang berextension `.php` akan dianggap sebagai skrip view PHP biasa.
-
-
-<div class="revision">$Id: topics.prado.txt 3226 2011-05-18 10:37:47Z mdomba $</div>
+<div class="revision">$Id: topics.prado.txt 416 2008-12-28 05:28:11Z qiang.xue $</div>

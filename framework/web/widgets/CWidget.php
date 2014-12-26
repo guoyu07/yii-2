@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -17,14 +17,8 @@
  *
  * Compared with {@link CController controller}, a widget has neither actions nor filters.
  *
- * Usage is described at {@link CBaseController} and {@link CBaseController::widget}.
- *
- * @property CBaseController $owner Owner/creator of this widget. It could be either a widget or a controller.
- * @property string $id Id of the widget.
- * @property CController $controller The controller that this widget belongs to.
- * @property string $viewPath The directory containing the view files for this widget.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.web.widgets
  * @since 1.0
  */
@@ -36,15 +30,9 @@ class CWidget extends CBaseController
 	 * a prefix can be specified to differentiate its action IDs from others.
 	 * The same prefix should then also be used to configure this property
 	 * when the widget is used in a view of the controller.
+	 * @since 1.0.1
 	 */
 	public $actionPrefix;
-	/**
-	 * @var mixed the name of the skin to be used by this widget. Defaults to 'default'.
-	 * If this is set as false, no skin will be applied to this widget.
-	 * @see CWidgetFactory
-	 * @since 1.1
-	 */
-	public $skin='default';
 
 	/**
 	 * @var array view paths for different types of widgets
@@ -75,10 +63,9 @@ class CWidget extends CBaseController
 	 * Note, when creating URLs referring to the actions listed in this method,
 	 * make sure the action IDs are prefixed with {@link actionPrefix}.
 	 *
-	 * @return array
-	 *
 	 * @see actionPrefix
 	 * @see CController::actions
+	 * @since 1.0.1
 	 */
 	public static function actions()
 	{
@@ -87,7 +74,7 @@ class CWidget extends CBaseController
 
 	/**
 	 * Constructor.
-	 * @param CBaseController $owner owner/creator of this widget. It could be either a widget or a controller.
+	 * @param CBaseController owner/creator of this widget. It could be either a widget or a controller.
 	 */
 	public function __construct($owner=null)
 	{
@@ -95,7 +82,6 @@ class CWidget extends CBaseController
 	}
 
 	/**
-	 * Returns the owner/creator of this widget.
 	 * @return CBaseController owner/creator of this widget. It could be either a widget or a controller.
 	 */
 	public function getOwner()
@@ -104,21 +90,19 @@ class CWidget extends CBaseController
 	}
 
 	/**
-	 * Returns the ID of the widget or generates a new one if requested.
-	 * @param boolean $autoGenerate whether to generate an ID if it is not set previously
+	 * @param boolean whether to generate an ID if it is not set previously
 	 * @return string id of the widget.
 	 */
 	public function getId($autoGenerate=true)
 	{
 		if($this->_id!==null)
 			return $this->_id;
-		elseif($autoGenerate)
+		else if($autoGenerate)
 			return $this->_id='yw'.self::$_counter++;
 	}
 
 	/**
-	 * Sets the ID of the widget.
-	 * @param string $value id of the widget.
+	 * @param string id of the widget.
 	 */
 	public function setId($value)
 	{
@@ -126,7 +110,6 @@ class CWidget extends CBaseController
 	}
 
 	/**
-	 * Returns the controller that this widget belongs to.
 	 * @return CController the controller that this widget belongs to.
 	 */
 	public function getController()
@@ -158,31 +141,17 @@ class CWidget extends CBaseController
 	/**
 	 * Returns the directory containing the view files for this widget.
 	 * The default implementation returns the 'views' subdirectory of the directory containing the widget class file.
-	 * If $checkTheme is set true, the directory "ThemeID/views/ClassName" will be returned when it exists.
-	 * @param boolean $checkTheme whether to check if the theme contains a view path for the widget.
 	 * @return string the directory containing the view files for this widget.
 	 */
-	public function getViewPath($checkTheme=false)
+	public function getViewPath()
 	{
 		$className=get_class($this);
-		$scope=$checkTheme?'theme':'local';
-		if(isset(self::$_viewPaths[$className][$scope]))
-			return self::$_viewPaths[$className][$scope];
+		if(isset(self::$_viewPaths[$className]))
+			return self::$_viewPaths[$className];
 		else
 		{
-			if($checkTheme && ($theme=Yii::app()->getTheme())!==null)
-			{
-				$path=$theme->getViewPath().DIRECTORY_SEPARATOR;
-				if(strpos($className,'\\')!==false) // namespaced class
-					$path.=str_replace('\\','_',ltrim($className,'\\'));
-				else
-					$path.=$className;
-				if(is_dir($path))
-					return self::$_viewPaths[$className]['theme']=$path;
-			}
-
-			$class=new ReflectionClass($className);
-			return self::$_viewPaths[$className]['local']=dirname($class->getFileName()).DIRECTORY_SEPARATOR.'views';
+			$class=new ReflectionClass(get_class($this));
+			return self::$_viewPaths[$className]=dirname($class->getFileName()).DIRECTORY_SEPARATOR.'views';
 		}
 	}
 
@@ -192,8 +161,9 @@ class CWidget extends CBaseController
 	 * The view script file is named as "ViewName.php". A localized view file
 	 * may be returned if internationalization is needed. See {@link CApplication::findLocalizedFile}
 	 * for more details.
-	 * The view name can also refer to a path alias if it contains dot characters.
-	 * @param string $viewName name of the view (without file extension)
+	 * Since version 1.0.2, the view name can also refer to a path alias
+	 * if it contains dot characters.
+	 * @param string name of the view (without file extension)
 	 * @return string the view file path. False if the view file does not exist
 	 * @see CApplication::findLocalizedFile
 	 */
@@ -204,23 +174,10 @@ class CWidget extends CBaseController
 		else
 			$extension='.php';
 		if(strpos($viewName,'.')) // a path alias
-			$viewFile=Yii::getPathOfAlias($viewName);
+			$viewFile=Yii::getPathOfAlias($viewName).$extension;
 		else
-		{
-			$viewFile=$this->getViewPath(true).DIRECTORY_SEPARATOR.$viewName;
-			if(is_file($viewFile.$extension))
-				return Yii::app()->findLocalizedFile($viewFile.$extension);
-			elseif($extension!=='.php' && is_file($viewFile.'.php'))
-				return Yii::app()->findLocalizedFile($viewFile.'.php');
-			$viewFile=$this->getViewPath(false).DIRECTORY_SEPARATOR.$viewName;
-		}
-
-		if(is_file($viewFile.$extension))
-			return Yii::app()->findLocalizedFile($viewFile.$extension);
-		elseif($extension!=='.php' && is_file($viewFile.'.php'))
-			return Yii::app()->findLocalizedFile($viewFile.'.php');
-		else
-			return false;
+			$viewFile=$this->getViewPath().DIRECTORY_SEPARATOR.$viewName.$extension;
+		return is_file($viewFile) ? Yii::app()->findLocalizedFile($viewFile) : false;
 	}
 
 	/**
@@ -230,10 +187,10 @@ class CWidget extends CBaseController
 	 * that is included by this method. If $data is an associative array,
 	 * it will be extracted as PHP variables and made available to the script.
 	 *
-	 * @param string $view name of the view to be rendered. See {@link getViewFile} for details
+	 * @param string name of the view to be rendered. See {@link getViewFile} for details
 	 * about how the view script is resolved.
-	 * @param array $data data to be extracted into PHP variables and made available to the view script
-	 * @param boolean $return whether the rendering result should be returned instead of being displayed to end users
+	 * @param array data to be extracted into PHP variables and made available to the view script
+	 * @param boolean whether the rendering result should be returned instead of being displayed to end users
 	 * @return string the rendering result. Null if the rendering result is not required.
 	 * @throws CException if the view does not exist
 	 * @see getViewFile

@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -29,10 +29,9 @@
  * instance and display it.</li>
  * </ol>
  *
- * The property {@link id} and {@link name} are both identifiers
+ * The property {@link id} and {@link name} are both unique identifiers
  * for the user. The former is mainly used internally (e.g. primary key), while
- * the latter is for display purpose (e.g. username). The {@link id} property
- * is a unique identifier for a user that is persistent
+ * the latter is for display purpose (e.g. username).  is a unique identifier for a user that is persistent
  * during the whole user session. It can be a username, or something else,
  * depending on the implementation of the {@link IUserIdentity identity class}.
  *
@@ -44,24 +43,16 @@
  * store password or other sensitive data in the persistent storage. Instead,
  * you should store them directly in session on the server side if needed.
  *
- * @property boolean $isGuest Whether the current application user is a guest.
- * @property mixed $id The unique identifier for the user. If null, it means the user is a guest.
- * @property string $name The user name. If the user is not logged in, this will be {@link guestName}.
- * @property string $returnUrl The URL that the user should be redirected to after login.
- * @property string $stateKeyPrefix A prefix for the name of the session variables storing user session data.
- * @property array $flashes Flash messages (key => message).
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.web.auth
  * @since 1.0
  */
 class CWebUser extends CApplicationComponent implements IWebUser
 {
 	const FLASH_KEY_PREFIX='Yii.CWebUser.flash.';
-	const FLASH_COUNTERS='Yii.CWebUser.flashcounters';
+	const FLASH_COUNTERS='Yii.CWebUser.flash.counters';
 	const STATES_VAR='__states';
-	const AUTH_TIMEOUT_VAR='__timeout';
-	const AUTH_ABSOLUTE_TIMEOUT_VAR='__absolute_timeout';
 
 	/**
 	 * @var boolean whether to enable cookie-based login. Defaults to false.
@@ -84,50 +75,9 @@ class CWebUser extends CApplicationComponent implements IWebUser
 	 * @var array the property values (in name-value pairs) used to initialize the identity cookie.
 	 * Any property of {@link CHttpCookie} may be initialized.
 	 * This property is effective only when {@link allowAutoLogin} is true.
+	 * @since 1.0.5
 	 */
 	public $identityCookie;
-	/**
-	 * @var integer timeout in seconds after which user is logged out if inactive.
-	 * If this property is not set, the user will be logged out after the current session expires
-	 * (c.f. {@link CHttpSession::timeout}).
-	 * @since 1.1.7
-	 */
-	public $authTimeout;
-	/**
-	 * @var integer timeout in seconds after which user is logged out regardless of activity.
-	 * @since 1.1.14
-	 */
-	public $absoluteAuthTimeout;
-	/**
-	 * @var boolean whether to automatically renew the identity cookie each time a page is requested.
-	 * Defaults to false. This property is effective only when {@link allowAutoLogin} is true.
-	 * When this is false, the identity cookie will expire after the specified duration since the user
-	 * is initially logged in. When this is true, the identity cookie will expire after the specified duration
-	 * since the user visits the site the last time.
-	 * @see allowAutoLogin
-	 * @since 1.1.0
-	 */
-	public $autoRenewCookie=false;
-	/**
-	 * @var boolean whether to automatically update the validity of flash messages.
-	 * Defaults to true, meaning flash messages will be valid only in the current and the next requests.
-	 * If this is set false, you will be responsible for ensuring a flash message is deleted after usage.
-	 * (This can be achieved by calling {@link getFlash} with the 3rd parameter being true).
-	 * @since 1.1.7
-	 */
-	public $autoUpdateFlash=true;
-	/**
-	 * @var string value that will be echoed in case that user session has expired during an ajax call.
-	 * When a request is made and user session has expired, {@link loginRequired} redirects to {@link loginUrl} for login.
-	 * If that happens during an ajax call, the complete HTML login page is returned as the result of that ajax call. That could be
-	 * a problem if the ajax call expects the result to be a json array or a predefined string, as the login page is ignored in that case.
-	 * To solve this, set this property to the desired return value.
-	 *
-	 * If this property is set, this value will be returned as the result of the ajax call in case that the user session has expired.
-	 * @since 1.1.9
-	 * @see loginRequired
-	 */
-	public $loginRequiredAjaxResponse;
 
 	private $_keyPrefix;
 	private $_access=array();
@@ -135,8 +85,9 @@ class CWebUser extends CApplicationComponent implements IWebUser
 	/**
 	 * PHP magic method.
 	 * This method is overriden so that persistent states can be accessed like properties.
-	 * @param string $name property name
+	 * @param string property name
 	 * @return mixed property value
+	 * @since 1.0.3
 	 */
 	public function __get($name)
 	{
@@ -149,8 +100,9 @@ class CWebUser extends CApplicationComponent implements IWebUser
 	/**
 	 * PHP magic method.
 	 * This method is overriden so that persistent states can be set like properties.
-	 * @param string $name property name
-	 * @param mixed $value property value
+	 * @param string property name
+	 * @param mixed property value
+	 * @since 1.0.3
 	 */
 	public function __set($name,$value)
 	{
@@ -163,8 +115,8 @@ class CWebUser extends CApplicationComponent implements IWebUser
 	/**
 	 * PHP magic method.
 	 * This method is overriden so that persistent states can also be checked for null value.
-	 * @param string $name property name
-	 * @return boolean
+	 * @param string property name
+	 * @since 1.0.3
 	 */
 	public function __isset($name)
 	{
@@ -177,8 +129,9 @@ class CWebUser extends CApplicationComponent implements IWebUser
 	/**
 	 * PHP magic method.
 	 * This method is overriden so that persistent states can also be unset.
-	 * @param string $name property name
+	 * @param string property name
 	 * @throws CException if the property is read only.
+	 * @since 1.0.3
 	 */
 	public function __unset($name)
 	{
@@ -199,12 +152,7 @@ class CWebUser extends CApplicationComponent implements IWebUser
 		Yii::app()->getSession()->open();
 		if($this->getIsGuest() && $this->allowAutoLogin)
 			$this->restoreFromCookie();
-		elseif($this->autoRenewCookie && $this->allowAutoLogin)
-			$this->renewCookie();
-		if($this->autoUpdateFlash)
-			$this->updateFlash();
-
-		$this->updateAuthStatus();
+		$this->updateFlash();
 	}
 
 	/**
@@ -218,69 +166,45 @@ class CWebUser extends CApplicationComponent implements IWebUser
 	 * Note, you have to set {@link allowAutoLogin} to true
 	 * if you want to allow user to be authenticated based on the cookie information.
 	 *
-	 * @param IUserIdentity $identity the user identity (which should already be authenticated)
-	 * @param integer $duration number of seconds that the user can remain in logged-in status. Defaults to 0, meaning login till the user closes the browser.
+	 * @param IUserIdentity the user identity (which should already be authenticated)
+	 * @param integer number of seconds that the user can remain in logged-in status. Defaults to 0, meaning login till the user closes the browser.
 	 * If greater than 0, cookie-based login will be used. In this case, {@link allowAutoLogin}
 	 * must be set true, otherwise an exception will be thrown.
-	 * @return boolean whether the user is logged in
 	 */
 	public function login($identity,$duration=0)
 	{
-		$id=$identity->getId();
-		$states=$identity->getPersistentStates();
-		if($this->beforeLogin($id,$states,false))
+		$this->changeIdentity($identity->getId(),$identity->getName(),$identity->getPersistentStates());
+
+		if($duration>0)
 		{
-			$this->changeIdentity($id,$identity->getName(),$states);
-
-			if($duration>0)
-			{
-				if($this->allowAutoLogin)
-					$this->saveToCookie($duration);
-				else
-					throw new CException(Yii::t('yii','{class}.allowAutoLogin must be set true in order to use cookie-based authentication.',
-						array('{class}'=>get_class($this))));
-			}
-
-			if ($this->absoluteAuthTimeout)
-				$this->setState(self::AUTH_ABSOLUTE_TIMEOUT_VAR, time()+$this->absoluteAuthTimeout);
-			$this->afterLogin(false);
+			if($this->allowAutoLogin)
+				$this->saveToCookie($duration);
+			else
+				throw new CException(Yii::t('yii','{class}.allowAutoLogin must be set true in order to use cookie-based authentication.',
+					array('{class}'=>get_class($this))));
 		}
-		return !$this->getIsGuest();
 	}
 
 	/**
 	 * Logs out the current user.
 	 * This will remove authentication-related session data.
 	 * If the parameter is true, the whole session will be destroyed as well.
-	 * @param boolean $destroySession whether to destroy the whole session. Defaults to true. If false,
+	 * @param boolean whether to destroy the whole session. Defaults to true. If false,
 	 * then {@link clearStates} will be called, which removes only the data stored via {@link setState}.
+	 * This parameter has been available since version 1.0.7. Before 1.0.7, the behavior
+	 * is to destroy the whole session.
 	 */
 	public function logout($destroySession=true)
 	{
-		if($this->beforeLogout())
-		{
-			if($this->allowAutoLogin)
-			{
-				Yii::app()->getRequest()->getCookies()->remove($this->getStateKeyPrefix());
-				if($this->identityCookie!==null)
-				{
-					$cookie=$this->createIdentityCookie($this->getStateKeyPrefix());
-					$cookie->value=null;
-					$cookie->expire=0;
-					Yii::app()->getRequest()->getCookies()->add($cookie->name,$cookie);
-				}
-			}
-			if($destroySession)
-				Yii::app()->getSession()->destroy();
-			else
-				$this->clearStates();
-			$this->_access=array();
-			$this->afterLogout();
-		}
+		if($this->allowAutoLogin)
+			Yii::app()->getRequest()->getCookies()->remove($this->getStateKeyPrefix());
+		if($destroySession)
+			Yii::app()->getSession()->destroy();
+		else
+			$this->clearStates();
 	}
 
 	/**
-	 * Returns a value indicating whether the user is a guest (not authenticated).
 	 * @return boolean whether the current application user is a guest.
 	 */
 	public function getIsGuest()
@@ -289,7 +213,6 @@ class CWebUser extends CApplicationComponent implements IWebUser
 	}
 
 	/**
-	 * Returns a value that uniquely represents the user.
 	 * @return mixed the unique identifier for the user. If null, it means the user is a guest.
 	 */
 	public function getId()
@@ -298,7 +221,7 @@ class CWebUser extends CApplicationComponent implements IWebUser
 	}
 
 	/**
-	 * @param mixed $value the unique identifier for the user. If null, it means the user is a guest.
+	 * @param mixed the unique identifier for the user. If null, it means the user is a guest.
 	 */
 	public function setId($value)
 	{
@@ -320,7 +243,7 @@ class CWebUser extends CApplicationComponent implements IWebUser
 
 	/**
 	 * Sets the unique identifier for the user (e.g. username).
-	 * @param string $value the user name.
+	 * @param string the user name.
 	 * @see getName
 	 */
 	public function setName($value)
@@ -332,26 +255,16 @@ class CWebUser extends CApplicationComponent implements IWebUser
 	 * Returns the URL that the user should be redirected to after successful login.
 	 * This property is usually used by the login action. If the login is successful,
 	 * the action should read this property and use it to redirect the user browser.
-	 * @param string $defaultUrl the default return URL in case it was not set previously. If this is null,
-	 * the application entry URL will be considered as the default return URL.
-	 * @return string the URL that the user should be redirected to after login.
+	 * @return string the URL that the user should be redirected to after login. Defaults to the application entry URL.
 	 * @see loginRequired
 	 */
-	public function getReturnUrl($defaultUrl=null)
+	public function getReturnUrl()
 	{
-		if($defaultUrl===null)
-		{
-			$defaultReturnUrl=Yii::app()->getUrlManager()->showScriptName ? Yii::app()->getRequest()->getScriptUrl() : Yii::app()->getRequest()->getBaseUrl().'/';
-		}
-		else
-		{
-			$defaultReturnUrl=CHtml::normalizeUrl($defaultUrl);
-		}
-		return $this->getState('__returnUrl',$defaultReturnUrl);
+		return $this->getState('__returnUrl',Yii::app()->getRequest()->getScriptUrl());
 	}
 
 	/**
-	 * @param string $value the URL that the user should be redirected to after login.
+	 * @param string the URL that the user should be redirected to after login.
 	 */
 	public function setReturnUrl($value)
 	{
@@ -360,89 +273,28 @@ class CWebUser extends CApplicationComponent implements IWebUser
 
 	/**
 	 * Redirects the user browser to the login page.
-	 * Before the redirection, the current URL (if it's not an AJAX url) will be
-	 * kept in {@link returnUrl} so that the user browser may be redirected back
-	 * to the current page after successful login. Make sure you set {@link loginUrl}
-	 * so that the user browser can be redirected to the specified login URL after
-	 * calling this method.
+	 * Before the redirection, the current URL will be kept in {@link returnUrl}
+	 * so that the user browser may be redirected back to the current page after successful login.
+	 * Make sure you set {@link loginUrl} so that the user browser
+	 * can be redirected to the specified login URL after calling this method.
 	 * After calling this method, the current request processing will be terminated.
 	 */
 	public function loginRequired()
 	{
 		$app=Yii::app();
 		$request=$app->getRequest();
-
-		if(!$request->getIsAjaxRequest())
+		$this->setReturnUrl($request->getUrl());
+		if(($url=$this->loginUrl)!==null)
 		{
-			$this->setReturnUrl($request->getUrl());
-			if(($url=$this->loginUrl)!==null)
+			if(is_array($url))
 			{
-				if(is_array($url))
-				{
-					$route=isset($url[0]) ? $url[0] : $app->defaultController;
-					$url=$app->createUrl($route,array_splice($url,1));
-				}
-				$request->redirect($url);
+				$route=isset($url[0]) ? $url[0] : $app->defaultController;
+				$url=$app->createUrl($route,array_splice($url,1));
 			}
+			$request->redirect($url);
 		}
-		elseif(isset($this->loginRequiredAjaxResponse))
-		{
-			echo $this->loginRequiredAjaxResponse;
-			Yii::app()->end();
-		}
-
-		throw new CHttpException(403,Yii::t('yii','Login Required'));
-	}
-
-	/**
-	 * This method is called before logging in a user.
-	 * You may override this method to provide additional security check.
-	 * For example, when the login is cookie-based, you may want to verify
-	 * that the user ID together with a random token in the states can be found
-	 * in the database. This will prevent hackers from faking arbitrary
-	 * identity cookies even if they crack down the server private key.
-	 * @param mixed $id the user ID. This is the same as returned by {@link getId()}.
-	 * @param array $states a set of name-value pairs that are provided by the user identity.
-	 * @param boolean $fromCookie whether the login is based on cookie
-	 * @return boolean whether the user should be logged in
-	 * @since 1.1.3
-	 */
-	protected function beforeLogin($id,$states,$fromCookie)
-	{
-		return true;
-	}
-
-	/**
-	 * This method is called after the user is successfully logged in.
-	 * You may override this method to do some postprocessing (e.g. log the user
-	 * login IP and time; load the user permission information).
-	 * @param boolean $fromCookie whether the login is based on cookie.
-	 * @since 1.1.3
-	 */
-	protected function afterLogin($fromCookie)
-	{
-	}
-
-	/**
-	 * This method is invoked when calling {@link logout} to log out a user.
-	 * If this method return false, the logout action will be cancelled.
-	 * You may override this method to provide additional check before
-	 * logging out a user.
-	 * @return boolean whether to log out the user
-	 * @since 1.1.3
-	 */
-	protected function beforeLogout()
-	{
-		return true;
-	}
-
-	/**
-	 * This method is invoked right after a user is logged out.
-	 * You may override this method to do some extra cleanup work for the user.
-	 * @since 1.1.3
-	 */
-	protected function afterLogout()
-	{
+		else
+			throw new CHttpException(403,Yii::t('yii','Login Required'));
 	}
 
 	/**
@@ -455,44 +307,14 @@ class CWebUser extends CApplicationComponent implements IWebUser
 	protected function restoreFromCookie()
 	{
 		$app=Yii::app();
-		$request=$app->getRequest();
-		$cookie=$request->getCookies()->itemAt($this->getStateKeyPrefix());
-		if($cookie && !empty($cookie->value) && is_string($cookie->value) && ($data=$app->getSecurityManager()->validateData($cookie->value))!==false)
+		$cookie=$app->getRequest()->getCookies()->itemAt($this->getStateKeyPrefix());
+		if($cookie && !empty($cookie->value) && ($data=$app->getSecurityManager()->validateData($cookie->value))!==false)
 		{
 			$data=@unserialize($data);
-			if(is_array($data) && isset($data[0],$data[1],$data[2],$data[3]))
+			if(is_array($data) && isset($data[0],$data[1],$data[2]))
 			{
-				list($id,$name,$duration,$states)=$data;
-				if($this->beforeLogin($id,$states,true))
-				{
-					$this->changeIdentity($id,$name,$states);
-					if($this->autoRenewCookie)
-					{
-						$this->saveToCookie($duration);
-					}
-					$this->afterLogin(true);
-				}
-			}
-		}
-	}
-
-	/**
-	 * Renews the identity cookie.
-	 * This method will set the expiration time of the identity cookie to be the current time
-	 * plus the originally specified cookie duration.
-	 * @since 1.1.3
-	 */
-	protected function renewCookie()
-	{
-		$request=Yii::app()->getRequest();
-		$cookies=$request->getCookies();
-		$cookie=$cookies->itemAt($this->getStateKeyPrefix());
-		if($cookie && !empty($cookie->value) && ($data=Yii::app()->getSecurityManager()->validateData($cookie->value))!==false)
-		{
-			$data=@unserialize($data);
-			if(is_array($data) && isset($data[0],$data[1],$data[2],$data[3]))
-			{
-				$this->saveToCookie($data[2]);
+				list($id,$name,$states)=$data;
+				$this->changeIdentity($id,$name,$states);
 			}
 		}
 	}
@@ -502,7 +324,7 @@ class CWebUser extends CApplicationComponent implements IWebUser
 	 * This method is used when automatic login ({@link allowAutoLogin}) is enabled.
 	 * This method saves user ID, username, other identity states and a validation key to cookie.
 	 * These information are used to do authentication next time when user visits the application.
-	 * @param integer $duration number of seconds that the user can remain in logged-in status. Defaults to 0, meaning login till the user closes the browser.
+	 * @param integer number of seconds that the user can remain in logged-in status. Defaults to 0, meaning login till the user closes the browser.
 	 * @see restoreFromCookie
 	 */
 	protected function saveToCookie($duration)
@@ -513,7 +335,6 @@ class CWebUser extends CApplicationComponent implements IWebUser
 		$data=array(
 			$this->getId(),
 			$this->getName(),
-			$duration,
 			$this->saveIdentityStates(),
 		);
 		$cookie->value=$app->getSecurityManager()->hashData(serialize($data));
@@ -522,8 +343,9 @@ class CWebUser extends CApplicationComponent implements IWebUser
 
 	/**
 	 * Creates a cookie to store identity information.
-	 * @param string $name the cookie name
+	 * @param string the cookie name
 	 * @return CHttpCookie the cookie used to store identity information
+	 * @since 1.0.5
 	 */
 	protected function createIdentityCookie($name)
 	{
@@ -548,7 +370,8 @@ class CWebUser extends CApplicationComponent implements IWebUser
 	}
 
 	/**
-	 * @param string $value a prefix for the name of the session variables storing user session data.
+	 * @param string a prefix for the name of the session variables storing user session data.
+	 * @since 1.0.9
 	 */
 	public function setStateKeyPrefix($value)
 	{
@@ -563,8 +386,8 @@ class CWebUser extends CApplicationComponent implements IWebUser
 	 * A variable, if stored in user session using {@link setState} can be
 	 * retrieved back using this function.
 	 *
-	 * @param string $key variable name
-	 * @param mixed $defaultValue default value
+	 * @param string variable name
+	 * @param mixed default value
 	 * @return mixed the value of the variable. If it doesn't exist in the session,
 	 * the provided default value will be returned
 	 * @see setState
@@ -584,9 +407,9 @@ class CWebUser extends CApplicationComponent implements IWebUser
 	 * back later using {@link getState}. The variable will be persistent
 	 * across page requests during a user session.
 	 *
-	 * @param string $key variable name
-	 * @param mixed $value variable value
-	 * @param mixed $defaultValue default value. If $value===$defaultValue, the variable will be
+	 * @param string variable name
+	 * @param mixed variable value
+	 * @param mixed default value. If $value===$defaultValue, the variable will be
 	 * removed from the session
 	 * @see getState
 	 */
@@ -601,8 +424,9 @@ class CWebUser extends CApplicationComponent implements IWebUser
 
 	/**
 	 * Returns a value indicating whether there is a state of the specified name.
-	 * @param string $key state name
+	 * @param string state name
 	 * @return boolean whether there is a state of the specified name.
+	 * @since 1.0.3
 	 */
 	public function hasState($key)
 	{
@@ -627,40 +451,12 @@ class CWebUser extends CApplicationComponent implements IWebUser
 	}
 
 	/**
-	 * Returns all flash messages.
-	 * This method is similar to {@link getFlash} except that it returns all
-	 * currently available flash messages.
-	 * @param boolean $delete whether to delete the flash messages after calling this method.
-	 * @return array flash messages (key => message).
-	 * @since 1.1.3
-	 */
-	public function getFlashes($delete=true)
-	{
-		$flashes=array();
-		$prefix=$this->getStateKeyPrefix().self::FLASH_KEY_PREFIX;
-		$keys=array_keys($_SESSION);
-		$n=strlen($prefix);
-		foreach($keys as $key)
-		{
-			if(!strncmp($key,$prefix,$n))
-			{
-				$flashes[substr($key,$n)]=$_SESSION[$key];
-				if($delete)
-					unset($_SESSION[$key]);
-			}
-		}
-		if($delete)
-			$this->setState(self::FLASH_COUNTERS,array());
-		return $flashes;
-	}
-
-	/**
 	 * Returns a flash message.
 	 * A flash message is available only in the current and the next requests.
-	 * @param string $key key identifying the flash message
-	 * @param mixed $defaultValue value to be returned if the flash message is not available.
-	 * @param boolean $delete whether to delete this flash message after accessing it.
-	 * Defaults to true.
+	 * @param string key identifying the flash message
+	 * @param mixed value to be returned if the flash message is not available.
+	 * @param boolean whether to delete this flash message after accessing it.
+	 * Defaults to true. This parameter has been available since version 1.0.2.
 	 * @return mixed the message message
 	 */
 	public function getFlash($key,$defaultValue=null,$delete=true)
@@ -674,9 +470,9 @@ class CWebUser extends CApplicationComponent implements IWebUser
 	/**
 	 * Stores a flash message.
 	 * A flash message is available only in the current and the next requests.
-	 * @param string $key key identifying the flash message
-	 * @param mixed $value flash message
-	 * @param mixed $defaultValue if this value is the same as the flash message, the flash message
+	 * @param string key identifying the flash message
+	 * @param mixed flash message
+	 * @param mixed if this value is the same as the flash message, the flash message
 	 * will be removed. (Therefore, you can use setFlash('key',null) to remove a flash message.)
 	 */
 	public function setFlash($key,$value,$defaultValue=null)
@@ -691,7 +487,7 @@ class CWebUser extends CApplicationComponent implements IWebUser
 	}
 
 	/**
-	 * @param string $key key identifying the flash message
+	 * @param string key identifying the flash message
 	 * @return boolean whether the specified flash message exists
 	 */
 	public function hasFlash($key)
@@ -706,13 +502,12 @@ class CWebUser extends CApplicationComponent implements IWebUser
 	 * identity information. Derived classes may override this method
 	 * by retrieving additional user-related information. Make sure the
 	 * parent implementation is called first.
-	 * @param mixed $id a unique identifier for the user
-	 * @param string $name the display name for the user
-	 * @param array $states identity states
+	 * @param mixed a unique identifier for the user
+	 * @param string the display name for the user
+	 * @param array identity states
 	 */
 	protected function changeIdentity($id,$name,$states)
 	{
-		Yii::app()->getSession()->regenerateID(true);
 		$this->setId($id);
 		$this->setName($name);
 		$this->loadIdentityStates($states);
@@ -732,7 +527,7 @@ class CWebUser extends CApplicationComponent implements IWebUser
 
 	/**
 	 * Loads identity states from an array and saves them to persistent storage.
-	 * @param array $states the identity states
+	 * @param array the identity states
 	 */
 	protected function loadIdentityStates($states)
 	{
@@ -772,50 +567,24 @@ class CWebUser extends CApplicationComponent implements IWebUser
 	}
 
 	/**
-	 * Updates the authentication status according to {@link authTimeout}.
-	 * If the user has been inactive for {@link authTimeout} seconds, or {link absoluteAuthTimeout} has passed,
-	 * he will be automatically logged out.
-	 * @since 1.1.7
-	 */
-	protected function updateAuthStatus()
-	{
-		if(($this->authTimeout!==null || $this->absoluteAuthTimeout!==null) && !$this->getIsGuest())
-		{
-			$expires=$this->getState(self::AUTH_TIMEOUT_VAR);
-			$expiresAbsolute=$this->getState(self::AUTH_ABSOLUTE_TIMEOUT_VAR);
-
-			if ($expires!==null && $expires < time() || $expiresAbsolute!==null && $expiresAbsolute < time())
-				$this->logout(false);
-			else
-				$this->setState(self::AUTH_TIMEOUT_VAR,time()+$this->authTimeout);
-		}
-	}
-
-	/**
 	 * Performs access check for this user.
-	 * @param string $operation the name of the operation that need access check.
-	 * @param array $params name-value pairs that would be passed to business rules associated
+	 * @param string the name of the operation that need access check.
+	 * @param array name-value pairs that would be passed to business rules associated
 	 * with the tasks and roles assigned to the user.
-	 * Since version 1.1.11 a param with name 'userId' is added to this array, which holds the value of
-	 * {@link getId()} when {@link CDbAuthManager} or {@link CPhpAuthManager} is used.
-	 * @param boolean $allowCaching whether to allow caching the result of access check.
-	 * When this parameter
+	 * @param boolean whether to allow caching the result of access checki.
+	 * This parameter has been available since version 1.0.5. When this parameter
 	 * is true (default), if the access check of an operation was performed before,
 	 * its result will be directly returned when calling this method to check the same operation.
 	 * If this parameter is false, this method will always call {@link CAuthManager::checkAccess}
 	 * to obtain the up-to-date access result. Note that this caching is effective
-	 * only within the same request and only works when <code>$params=array()</code>.
+	 * only within the same request.
 	 * @return boolean whether the operations can be performed by this user.
 	 */
 	public function checkAccess($operation,$params=array(),$allowCaching=true)
 	{
-		if($allowCaching && $params===array() && isset($this->_access[$operation]))
+		if($allowCaching && isset($this->_access[$operation]))
 			return $this->_access[$operation];
-
-		$access=Yii::app()->getAuthManager()->checkAccess($operation,$this->getId(),$params);
-		if($allowCaching && $params===array())
-			$this->_access[$operation]=$access;
-
-		return $access;
+		else
+			return $this->_access[$operation]=Yii::app()->getAuthManager()->checkAccess($operation,$this->getId(),$params);
 	}
 }

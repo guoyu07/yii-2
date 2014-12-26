@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -23,9 +23,8 @@
  * <li>{@link sequenceName}</li>
  * </ul>
  *
- * @property array $columnNames List of column names.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.db.schema
  * @since 1.0
  */
@@ -59,7 +58,7 @@ class CDbTableSchema extends CComponent
 	/**
 	 * Gets the named column metadata.
 	 * This is a convenient method for retrieving a named column even if it does not exist.
-	 * @param string $name column name
+	 * @param string column name
 	 * @return CDbColumnSchema metadata of the named column. Null if the named column does not exist.
 	 */
 	public function getColumn($name)

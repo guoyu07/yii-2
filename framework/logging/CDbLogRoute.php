@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -18,6 +18,7 @@
  * and used under the application runtime directory.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.logging
  * @since 1.0
  */
@@ -59,6 +60,16 @@ class CDbLogRoute extends CLogRoute
 	private $_db;
 
 	/**
+	 * Destructor.
+	 * Disconnect the db connection.
+	 */
+	public function __destruct()
+	{
+		if($this->_db!==null)
+			$this->_db->setActive(false);
+	}
+
+	/**
 	 * Initializes the route.
 	 * This method is invoked after the route is created by the route manager.
 	 */
@@ -66,12 +77,15 @@ class CDbLogRoute extends CLogRoute
 	{
 		parent::init();
 
+		$db=$this->getDbConnection();
+		$db->setActive(true);
+
 		if($this->autoCreateLogTable)
 		{
-			$db=$this->getDbConnection();
+			$sql="DELETE FROM {$this->logTableName} WHERE 0=1";
 			try
 			{
-				$db->createCommand()->delete($this->logTableName,'0=1');
+				$db->createCommand($sql)->execute();
 			}
 			catch(Exception $e)
 			{
@@ -82,18 +96,29 @@ class CDbLogRoute extends CLogRoute
 
 	/**
 	 * Creates the DB table for storing log messages.
-	 * @param CDbConnection $db the database connection
-	 * @param string $tableName the name of the table to be created
+	 * @param CDbConnection the database connection
+	 * @param string the name of the table to be created
 	 */
 	protected function createLogTable($db,$tableName)
 	{
-		$db->createCommand()->createTable($tableName, array(
-			'id'=>'pk',
-			'level'=>'varchar(128)',
-			'category'=>'varchar(128)',
-			'logtime'=>'integer',
-			'message'=>'text',
-		));
+		$driver=$db->getDriverName();
+		if($driver==='mysql')
+			$logID='id INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY';
+		else if($driver==='pgsql')
+			$logID='id SERIAL PRIMARY KEY';
+		else
+			$logID='id INTEGER NOT NULL PRIMARY KEY';
+
+		$sql="
+CREATE TABLE $tableName
+(
+	$logID,
+	level VARCHAR(128),
+	category VARCHAR(128),
+	logtime INTEGER,
+	message TEXT
+)";
+		$db->createCommand($sql)->execute();
 	}
 
 	/**
@@ -104,7 +129,7 @@ class CDbLogRoute extends CLogRoute
 	{
 		if($this->_db!==null)
 			return $this->_db;
-		elseif(($id=$this->connectionID)!==null)
+		else if(($id=$this->connectionID)!==null)
 		{
 			if(($this->_db=Yii::app()->getComponent($id)) instanceof CDbConnection)
 				return $this->_db;
@@ -121,19 +146,23 @@ class CDbLogRoute extends CLogRoute
 
 	/**
 	 * Stores log messages into database.
-	 * @param array $logs list of log messages
+	 * @param array list of log messages
 	 */
 	protected function processLogs($logs)
 	{
-		$command=$this->getDbConnection()->createCommand();
+		$sql="
+INSERT INTO {$this->logTableName}
+(level, category, logtime, message) VALUES
+(:level, :category, :logtime, :message)
+";
+		$command=$this->getDbConnection()->createCommand($sql);
 		foreach($logs as $log)
 		{
-			$command->insert($this->logTableName,array(
-				'level'=>$log[1],
-				'category'=>$log[2],
-				'logtime'=>(int)$log[3],
-				'message'=>$log[0],
-			));
+			$command->bindValue(':level',$log[1]);
+			$command->bindValue(':category',$log[2]);
+			$command->bindValue(':logtime',(int)$log[3]);
+			$command->bindValue(':message',$log[0]);
+			$command->execute();
 		}
 	}
 }

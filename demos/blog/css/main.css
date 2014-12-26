@@ -1,204 +1,233 @@
 body
 {
-	margin: 0;
-	padding: 0;
-	color: #555;
 	font: normal 10pt Arial,Helvetica,sans-serif;
-	background: #EFEFEF;
-}
-
-#page
-{
-	margin-top: 5px;
-	margin-bottom: 5px;
-	background: white;
-	border: 1px solid #C9E0ED;
-}
-
-#header
-{
+	background: #666;
 	margin: 0;
 	padding: 0;
-	border-top: 3px solid #C9E0ED;
-}
-
-#content
-{
-	padding: 20px;
-}
-
-#sidebar
-{
-	padding: 20px;
-}
-
-#footer
-{
-	padding: 10px;
-	margin: 10px 20px;
-	font-size: 0.8em;
 	text-align: center;
-	border-top: 1px solid #C9E0ED;
+	color: #555;
 }
 
-#logo
+a, a:visited
 {
-	padding: 10px 20px;
-	font-size: 200%;
+	color: #306495;
+	background: inherit;
+	text-decoration: none;
 }
 
-#mainmenu
+a:hover
 {
-	background:white url(bg.gif) repeat-x left top;
+	color: #73471B;
+	background: inherit;
+	text-decoration: underline;
 }
 
-#mainmenu ul
+pre
 {
-	padding:6px 20px 5px 20px;
-	margin:0px;
+	border-left: 5px solid #F5F5F5;
+	font-family:"Courier New",Courier,mono;
+	margin:0.3em;
+	padding:0.5em;
 }
 
-#mainmenu ul li
+.page #container
 {
-	display: inline;
+	width: 780px;
+	background: #FFFFFF;
+	margin: 0 auto;
+	border: 1px solid #000;
+	text-align: left;
 }
 
-#mainmenu ul li a
+.page #header
 {
-	color:#ffffff;
-	background-color:transparent;
-	font-size:12px;
-	font-weight:bold;
-	text-decoration:none;
-	padding:5px 8px;
+	background: #DDDDDD;
+	padding: 0 10px 0 20px;
 }
 
-#mainmenu ul li a:hover, #mainmenu ul li.active a
+.page #header h1
 {
-	color: #6399cd;
-	background-color:#EFF4FA;
-	text-decoration:none;
+	margin: 0;
+	padding: 10px 0;
 }
 
-div.flash-error, div.flash-notice, div.flash-success
+.page #header a
 {
-	padding:.8em;
-	margin-bottom:1em;
-	border:2px solid #ddd;
+	color: #555;
+	text-decoration: none;
 }
 
-div.flash-error
+.page #sidebar
 {
-	background:#FBE3E4;
-	color:#8a1f11;
-	border-color:#FBC2C4;
+	float: right;
+	width: 200px;
+	padding: 15px 10px;
 }
 
-div.flash-notice
+.page #content
 {
-	background:#FFF6BF;
-	color:#514721;
-	border-color:#FFD324;
+	margin: 0 210px 0 0;
+	padding: 0 20px;
 }
 
-div.flash-success
+.page #footer
 {
-	background:#E6EFC2;
-	color:#264409;
-	border-color:#C6D880;
+	margin: 20px 0 0 0;
+	padding: 0 10px 0 20px;
+	background:#DDDDDD;
+	font-size: 0.8em;
 }
 
-div.flash-error a
+.page #footer p
 {
-	color:#8a1f11;
+	margin: 0;
+	padding: 10px 0;
 }
 
-div.flash-notice a
+.clearfloat
 {
-	color:#514721;
-}
-
-div.flash-success a
-{
-	color:#264409;
-}
-
-div.form .rememberMe label
-{
-	display: inline;
-}
-
-div.view
-{
-	padding: 10px;
-	margin: 10px 0;
-	border: 1px solid #C9E0ED;
-}
-
-div.breadcrumbs
-{
-	font-size: 0.9em;
-	padding: 5px 20px;
-}
-
-div.breadcrumbs span
-{
-	font-weight: bold;
+	clear:both;
+    height:0;
+    font-size: 1px;
+    line-height: 0px;
 }
 
 .portlet
 {
-
-}
-
-.portlet-decoration
-{
-	padding: 3px 8px;
-	background: #B7D6E7;
-	border-left: 5px solid #6FACCF;
-}
-
-.portlet-title
-{
-	font-size: 12px;
-	font-weight: bold;
-	padding: 0;
-	margin: 0;
-	color: #298dcd;
-}
-
-.portlet-content
-{
+	-moz-border-radius:7px;
 	font-size:0.9em;
 	margin: 0;
-	padding: 5px 8px;
+	padding: 3px;
 	margin-bottom:15px;
-	background:#EFFDFF;
+	background-color:#EEE;
 }
 
-.portlet-content ul
+.portlet .header
+{
+	color:#555;
+	font-size:1.2em;
+	font-weight:bold;
+	line-height:1;
+	padding:5px 10px 6px;
+	margin: 0;
+	text-align:center;
+}
+
+.portlet .content
+{
+	-moz-border-radius-bottomleft:5px;
+	-moz-border-radius-bottomright:5px;
+	background:#F5F5F5;
+	padding:5px 5px 10px 5px;
+}
+
+.portlet ul, .portlet ol
 {
 	list-style-image:none;
 	list-style-position:outside;
 	list-style-type:none;
-	margin: 0;
+	margin: 0 0 0 5px;
 	padding: 0;
 }
 
-.portlet-content li
+.portlet li
 {
 	padding: 2px 0 4px 0px;
 }
 
+.portlet .row
+{
+	margin: 0 0 5px 0;
+}
+
+.portlet .row .hint
+{
+	margin: 0;
+	padding: 0;
+	color: #999;
+}
+
+.errorMessage
+{
+	color: red;
+}
+
+.form
+{
+	-moz-border-radius:7px;
+	border: 3px solid #EEE;
+	background:#F5F5F5;
+	padding:10px;
+	margin: 0;
+}
+
+.form .row
+{
+	margin: 5px 0;
+}
+
+.form .row label
+{
+	display: block;
+	font-weight: bold;
+}
+
+.form .hint
+{
+	margin: 0;
+	padding: 0;
+	color: #999;
+}
+
+.form label.error,
+.form span.error
+{
+	color: #C00;
+}
+
+.form input.error,
+.form textarea.error,
+.form select.error
+{
+	background: #FEE;
+	border-color: #C00;
+}
+
+.form .errorSummary
+{
+	border: 2px solid #C00;
+	padding: 7px 7px 12px 7px;
+	margin: 0 0 20px 0;
+	background: #FEE;
+	font-size: 0.9em;
+}
+
+.form .errorSummary p
+{
+	margin: 0;
+	padding: 5px;
+}
+
+.form .errorSummary ul
+{
+	margin: 0;
+	padding: 0 0 0 20px;
+}
+
+.form .errorSummary ul li
+{
+	list-style: square;
+}
+
 .post
 {
-	margin: 0 0 20px;
+	margin: 20px 0;
 }
 
 .post .title
 {
-	font-size: 1.5em;
-	border-bottom: 1px solid #C9E0ED;
+	font-size: 1.8em;
+	border-bottom: 1px solid silver;
 }
 
 .post .title a
@@ -210,34 +239,49 @@ div.breadcrumbs span
 .post .author
 {
 	color: #888;
-	margin: 0 0 5px;
 }
 
 .post .nav
 {
 	-moz-border-radius:7px;
 	padding: 5px;
-	background: #EFFDFF;
+	background: #F5F5F5;
+}
+
+.post .draft
+{
+	color: red;
+}
+
+.post .published
+{
+	color: green;
+}
+
+.post .archived
+{
+	color: yellow;
 }
 
 .comment
 {
 	-moz-border-radius:7px;
-	padding: 10px;
+	padding: 5px;
 	background: #F5F5F5;
 	margin: 5px 0;
 }
 
-.comment .content
+.comment .author a
 {
-	margin: 10px 0;
+	color: #555;
+	font-weight: bold;
+	text-decoration: none;
 }
 
-.comment .author
+.comment .author a:hover
 {
-	margin: 5px 0;
-	padding: 0 0 3px;
-	border-bottom: 1px solid #DDD;
+	color: #333;
+	border-bottom: 1px solid gray;
 }
 
 .comment .time
@@ -265,3 +309,46 @@ div.breadcrumbs span
 {
 	color:red;
 }
+
+span.tag
+{
+	padding: 0 4px 0 0;
+}
+
+table.dataGrid
+{
+	background: white;
+	border-collapse: collapse;
+	width: 100%;
+}
+
+table.dataGrid th, table.dataGrid td
+{
+	font-size: 0.9em;
+	border: 1px #AAA solid;
+	padding: 0.3em;
+}
+
+table.dataGrid th
+{
+	background: #DDD;
+	text-align: center;
+}
+
+table.dataGrid th a
+{
+	color: #555;
+	text-decoration: none;
+}
+
+table.dataGrid th a:hover
+{
+	color: #333;
+	border-bottom: 1px solid gray;
+}
+
+table.dataGrid tr.odd
+{
+	background: #F5F5F5;
+}
+

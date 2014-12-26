@@ -7,14 +7,16 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
+ * @version $Id$
  */
 
 // fix for fcgi
 defined('STDIN') or define('STDIN', fopen('php://stdin', 'r'));
 
 defined('YII_DEBUG') or define('YII_DEBUG',true);
+error_reporting(E_ALL ^ E_NOTICE);
 
 require_once(dirname(__FILE__).'/yii.php');
 
@@ -25,9 +27,5 @@ if(isset($config))
 }
 else
 	$app=Yii::createConsoleApplication(array('basePath'=>dirname(__FILE__).'/cli'));
-
-$env=@getenv('YII_CONSOLE_COMMANDS');
-if(!empty($env))
-	$app->commandRunner->addCommands($env);
 
 $app->run();

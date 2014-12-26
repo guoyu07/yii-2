@@ -1,8 +1,4 @@
-<table class="summaryTable docClass">
-<colgroup>
-	<col class="col-name" />
-	<col class="col-value" />
-</colgroup>
+<table class="summaryTable">
 <tr>
   <th>Package</th>
   <td><?php echo '{{index::'.$class->package.'|'.$class->package.'}}'; ?></td>
@@ -35,10 +31,6 @@
   <td><?php echo $class->version; ?></td>
 </tr>
 <?php endif; ?>
-<tr>
-  <th>Source Code</th>
-  <td><?php echo $this->renderSourceLink($class->sourcePath); ?></td>
-</tr>
 </table>
 
 <div id="classDescription">

@@ -1,12 +1,12 @@
 Uwierzytelnienie i autoryzacja
-==============================
+================================
 
 Uwierzytelnienie oraz autoryzacja są wymagane dla stron WWW, które powinny mieć 
-ograniczony dostęp dla pewnych osób. "Uwierzytelnienie" dotyczy weryfikacji czy ktoś 
+ograniczony dostęp dla pewnych osób. Uwierzytelnienie dotyczy weryfikacji czy ktoś 
 jest tym za kogo się podaje. Zazwyczaj używa do tego nazwę użytkownika oraz hasło, 
 aczkolwiek może zawierać również inne metody reprezentujące tożsamość, takie jak 
-karta inteligentna (mikroprocesorowa), odciski palców itp. "Autoryzacja" jest znajdywaniem 
-czy osoba raz zidentyfikowana (np. uwierzytelniona), posiada uprawnienia do posługiwania się 
+karta inteligentna (mikroprocesorowa), odciski palców itp. Autoryzacja jest znajdywaniem 
+czy osoba raz zidentyfikowana (uwierzytelniona), posiada uprawnienia do posługiwania się 
 określonym zasobem. Zazwyczaj determinowane jest to poprzez stwierdzanie, czy ta osoba 
 posiada konkretną rolę, która gwarantuje dostęp do zasobu.
 
@@ -27,21 +27,24 @@ również otrzymać [unikalny identyfikator|CWebUser::name] oraz inne trwałe in
 dotyczące tożsamości użytkownika.
 
 Definiowanie klasy tożsamości
------------------------------
+-----------------------
 
-Jak wspomniano wcześniej, uwierzytelnienie dotyczy sprawdzania tożsamości użytkownika. Typowa implementacja uwierzytelnienia w aplikacji sieciowej zazwyczaj używa kominacji nazwy użytkownika oraz hasła w celu sprawdzenia tożsamości użytkownika. Jednakże, może ona zawierać różne metody a także różne implementacje mogą być wymagane. Aby dostosować się do różnych metod uwierzytelniania, framework auth Yii wprowadza klasę tożsamości.
+W celu uwierzytelnienia użytkownika definiujemy klasę tożsamości, która zawiera aktualną 
+logikę uwierzytelniania. Klasa tożsamości powinna implementować interfejs [IUserIdentity]. 
+Różne klasy mogą zostać zaimplementowane dla różnych metod uwierzyterlniania (np. OpenID, LDAP).
+Dobrym pomysłem jest rozszerzenie [CUserIdentity], które jest klasą bazową dla uwierzytelniania 
+opartego na nazwie użytkownika oraz haśle.
 
-Główną pracą w definiowaniu klasy tożsamości jest implementacja metody [IUserIdentity::authenticate]. 
-Metoda ta jest używana do hermetyzacji szczegółów podejścia do uwierzytelnienia. Klasa tożsamości może również 
-deklarować dodatkowe informacje o tożsamości, które muszą trwać podczas sesji użytkownika.
+Główną pracą w definiowaniu klasy tożsamości jest implementacja metody [IUserIdentity::authenticate].
+Klasa tożsamości może również deklarować dodatkowe informacje o tożsamości, które 
+muszą trwać podczas sesji użytkownika.
 
-#### Przykład
-
-W przykładzie tym, używamy klasy tożsamości do zademonstrowania podejścia bazodanowego do tematu uwierzytelnienia. Jest to bardzo typowe dla aplikacji sieciowych. Użytkownik wprowadza jego nazwę oraz hasło do formularza logowania, my następnie spradzimy poprawność tych danych używając [rekordu aktywnego](/doc/guide/database.ar), porównując z danymi z tabeli użytkowników. W tym jednym przykładzie, demonstrujemy kilka rzeczy: 
-
-1. Implementację metody `authenticate()` w celu spradzenia poprawności wprowadzonych danych logowania.
-2. Nadpisanie metody `CUserIdentity::getId()` w celu zwrócenia właściwości `_id`, gdyż domyślnie implementacja ta zwraca jako ID nazwę użytkownika.
-3. Uzyciu metody `setState()` ([CBaseUserIdentity::setState]) w celu zademonstrowania przechowywania pozostałych informacji, które mogą zostać łatwo zwrócone przy kolejnych żądaniach.
+W następnym przykładzie sprawdzimy poprawność użytkownika i hasła porównując je 
+z tabelą użytkowników w bazie danych przy użyciu [Rekordu Aktywnego](/doc/guide/database.ar). 
+Możemy również nadpisać metodę `getId` aby zwracała zmienną `_id`, która jest ustawiana
+podczas uwierzytelniania (domyślna implementacja zwróci nazwę użytkownika jako ID). 
+Podczas uwierzytelniania zapisujemy otrzymaną informację o tytule `title` w stanie 
+o tej samej nazwie poprzez wywołanie metody [CBaseUserIdentity::setState].
 
 ~~~
 [php]
@@ -71,27 +74,24 @@ class UserIdentity extends CUserIdentity
 }
 ~~~
 
-Kiedy opiszemy logowanie i wylogowywanie w następnych rozdziałach, zobaczymy, że przekazujemy tą klasę tożsamości do metody logowania użytkownika. Pozostałe informacje, które zapisujemy w stanach (poprzez wywołanie [CBaseUserIdentity::setState]) będą przekazane do kalsy [CWebUser], która z kolei zapisze je w nośniku trwałych danych, np. takim jak sesja.
-Informacje te mogą być później dostępne jak właściwości [CWebUser]. W naszym przykładzie,  przechowujemy informację o tytule użytkownika poprzez `$this->setState('title', $record->title);`. Gdy już zakończymy proces logowania, możemy uzyskać informację o tytule `title` użytkownika poprzez proste użycie `Yii::app()->user->title`.
-
-W następnym przykładzie sprawdzimy poprawność użytkownika i hasła porównując je 
-z tabelą użytkowników w bazie danych przy użyciu [Rekordu Aktywnego](/doc/guide/database.ar). 
-Możemy również nadpisać metodę `getId` aby zwracała zmienną `_id`, która jest ustawiana
-podczas uwierzytelniania (domyślna implementacja zwróci nazwę użytkownika jako ID). 
-Podczas uwierzytelniania zapisujemy otrzymaną informację o tytule `title` w stanie 
-o tej samej nazwie poprzez wywołanie metody [CBaseUserIdentity::setState].
+Informacja zapisana w stanie (poprzez wywołanie [CBaseUserIdentity::setState]) 
+będzie przekazana do instancji klasy [CWebUser], które zachowuje ją w stałym miejscu składowania, np. takim jak sesja.
+Informacja ta może być dostępna jako zmienna typu [CWebUser]. Na przykład, otrzymujemy informację 
+o tytule `title` dla aktualnego użytkownika poprzez `Yii::app()->user->title`
+(zostało to udostępnione wraz z wersją 1.0.3. W poprzedzających wersjach, powinniśmy używać
+`Yii::app()->user->getState('title')`.)
 
 > Info|Info: Domyślnie [CWebUser] używa sesji jako trwałego miejsca składowania informacji
 o tożsamości użytkownika. Jeśli logowanie z użyciem ciasteczek jest udostępnione 
 (poprzez ustawienie wartości [CWebUser::allowAutoLogin] jako true), informacje
 o tożsamości użytkownika mogą także zostać zapisane w ciasteczku. Upewnij się, że nie 
-zadeklarowałeś ważnych danych (np. hasła) jako wartości trwałej.
+zadeklarowałeś ważnych danych (np. hasła) jako wartości trwałe.
 
 Logowanie i wylogowanie
------------------------
+----------------
 
-Teraz gdy widzieliśmy przykład tworzenia klasy tożsamości, użyjemy tego aby ułatwić implementację
-akcji naszych akcji logowania i wylogowania. Następujący kod demonstruje jak można to uczynić:
+Używają klasy tożsamości oraz komponentu użytkownika możemy zaimplementować w łatwy 
+sposób akcje logowania oraz wylogowania.
 
 ~~~
 [php]
@@ -105,13 +105,6 @@ else
 // wylogowanie aktualnego użytkownika
 Yii::app()->user->logout();
 ~~~
-
-Tutaj utworzyliśmy nowy obiekt UserIdentity i przekazaliśmy mu dane uwierzytelniające (np. nazwę `$username` i hasło `$password` podane przez użytkownika) do jego konstruktora.  Następnie wołamy po prostu metodę `authenticate()`. Jeśli zakończy się ona sukcesem, przekazujemy informację o tożsamości do metody [CWebUser::login], która przechowa informację o tożsamości w trwałym nośniku danych (domyślnie sesja PHP) w celu zwrócenia ich w następnych żądaniach. Jeśli uwierzytelnianie nie powiedzie się, możemy uzupełnić właściwość `errorMessage` bardziej szczegółowym opisem przyczyny niepowodzenia.
-
-Czy użytkownik został uwierzytelniony czy też nie, można sprawdzić w całej aplikacji poprzez użycie `Yii::app()->user->isGuest`. Jeśli używamy nośników trwałych danych takich jak sesja (domyślnie) i/lub ciasteczek (omówionych później) w celu zapisania informacji o tożsamości, użytkownik może pozostać zalogowany podczas kolejnych żądań. W tym przypadku, gdy nie potrzebujemy klasy UserIdentity oraz całego procesu logowania podczas każdege żądania. Raczej to CWebUser automatycznie zadba o ładowanie informacji o tożsamości użytkownika z nośnika trwałych danych i będzie używał ich do zdeterminowania czy `Yii::app()->user->isGuest` zwraca prawdę lub fałsz.
-
-Logowanie przy użyciu ciasteczek
---------------------------------
 
 Domyślnie, użytkownik będzie wylogowany po pewnym czasie braku aktywności, w zależności
 od [konfiguracji sesji](http://www.php.net/manual/en/session.configuration.php).
@@ -128,39 +121,6 @@ Pamiętaj, że funkcjonalność ta wymaga aby przeglądarka użytkownika akcepto
 Yii::app()->user->login($identity,3600*24*7);
 ~~~
 
-Jak wspomnieliśmy powyżej, kiedy logowanie za pomocą ciasteczej jest udostępnione, stany 
-zachowane przez [CBaseUserIdentity::setState] będą również zapisane w ciasteczkach. 
-Następnym razem, gdy użytkownik zaloguje się, stany te będą odczytane z ciasteczek i staną
-się dostępne poprzez `Yii::app()->user`.
-
-Chociaż Yii posiada środki do zabezpieczenia stanów w ciasteczkacj przez zmodyfikowaniem
-po stronie kienta, mocno rekomendujemy, by wrażliwe dane nie były przechowywane w stanach.
-Zamiast tego, informacje te powinny być odtworzone po stronie serwera poprzez odczytanie ich
-z jakiegoś nośnika danych trwałech po stronie serwera (np. z bazy danych).
-
-Ponadto, w wielu poważnych aplikacjach sieciowych, zalecamy używanie następujacej strategii,
-w celu rozszerzenia bezpieczeństwa logowania przy użyciu cisteczek.
-
-* Jeśli użytkownik zaloguje się poprzez wypełnienie formualrza logowania, generujemy i zapisujemy 
-losowy klucz zarówno w ciasteczku jak i w nośniku po stronie serwera (np. w bazie danych).
-
-* W kolejnych żądaniach, jeśli uwierzytelnianie poprzez ciasteczka zakończy się, porównujemy dwie kopie 
-tych losowych kluczy i upewniamy się czy pasują one do siebie przed zalogowaniem użytkownika.
-
-* Jeśli użytkownik zaloguje się ponownie poprzez formularz logowania, klucz powinien zostać przegenerowany.
-
-Używając powyższej strategii, wyeliminujemy możliwość ponownego użycia starego stanu z ciasteczek,
-które może posiadać przestarzałe informacje.
-
-W celu zaimplementowanie powyższej strategii, musimy nadpisać następujące 2 metody:
-
-* [CUserIdentity::authenticate()]: to miejsce gdzie rzeczywiste uwierzytelnienie ma miejsce.
-Jeśli użytkownik jest uwierzytelniony, powinnniśmy przegenerować losowy klucz i zapisać go
-w bazie danych tak jak i w stanie poprzez [CBaseUserIdentity::setState].
-
-* [CWebUser::beforeLogin()]: metoda ta jest wołana gdy użytkownik loguje się.
-Powinniśmy sprawdzić czy klucz uzyskany ze stanu zapisanego w ciasteczku jest taki sam jak ten z bazy.
-
 Filtr kontroli dostępu (ang. Access Control Filter)
 ---------------------
 
@@ -171,7 +131,7 @@ bazuje na nazwie użytkownika, adresie IP klienta oraz type żądania. Jest ona 
 jako filtr nazwany ["accessControl"|CController::filterAccessControl].
 
 > Tip| Porada: Filtr kontroli dostępu jest wystarczający dla prostych scenariuszy. 
-Dla bardziej skomplikowanej kontroli dostępu możesz użyć bazującej na rolach kontroli dostępu 
+Dla skomplikowanej kontroli dostępu możesz użyć bazującej na rolach kontroli dostępu 
 (RBAC - role-based access control), która zostanie przedstawiona w dalszej części.
 
 Aby kontrolować dostęp do akcji w kontrolerze instalujemy filtr kontroli akcji 
@@ -236,6 +196,8 @@ rola, IP klienta, adres) determinują rezultat autoryzacji. Jeśli regułą tą 
 akcja może zostać wykonana; jeśli jest to reguła `deny` (zabroń), akcja nie może zostać 
 wykonana; jeśli żadna z reguł nie pasuje do zawartości, akcja wciąż może być wykonana.
 
+a matching-all deny rule at the end of rule set, like the following:
+
 > Tip|Wskazówka: Aby upewnić się, że akcja nie zostanie wykonana dla określonego kontekstu,
 > najlepiej jest zawsze określić na końcu zbioru reguł, regułę, która będzie dotyczyła
 > wszystkich i która zabroni dostępu do tej akcji, jak następuje:
@@ -245,12 +207,12 @@ wykonana; jeśli żadna z reguł nie pasuje do zawartości, akcja wciąż może 
 >     // ... pozostałe reguły ...
 >     // następująca reguła zabrania akcji 'delete' dla wszystkich kontekstów
 >     array('deny',
->         'actions'=>'delete',
+>         'action'=>'delete',
 >     ),
 > );
 > ~~~
 > Powodem istnienia tej reguły jest fakt, że jeśli żadna z reguł nie będzie 
-> pasowała do kontekstu, akcja będzie kontynuować przetwarzanie.
+> pasowała do kontekstu, akcja zostanie wykonana.
 
 
 Reguła dostępu może pasować do następujących parametrów kontekstowych:
@@ -267,7 +229,7 @@ Reguła dostępu może pasować do następujących parametrów kontekstowych:
 	   - `@`: użytkownicy uwierzytelnieni.
 
    - [roles|CAccessRule::roles]: określa, które role pasują do tych reguł.
-   Używane w [bazującej na rolach kontroli dostępu](/doc/guide/topics.auth#role-based-access-control), 
+   Używane w [bazującej na rolach kontroli dostępu](#role-based-access-control), 
    która zostanie opisana w następnej podsekcji. W szczególności, reguła ma zastosowanie
    jeśli metoda [CWebUser::checkAccess] zwróci true dla jednej z ról. Zauważ, że powinieneś,
    głównie używać ról dla reguły `allow` (zezwól), ponieważ z definicji, rola reprezentuje 
@@ -281,11 +243,10 @@ Reguła dostępu może pasować do następujących parametrów kontekstowych:
 
    - [expression|CAccessRule::expression]: określenia wyrażenie PHP, którego wartość
    określa czy reguła jest pasującą. W wyrażeniach możesz używać zmiennej użytkownika `$user`,
-   która referuje do `Yii::app()->user`. 
+   która referuje do `Yii::app()->user`. Opcja ta została udostępniona od wersji 1.0.3.
 
 
-Zarządzanie wynikami autoryzacji
---------------------------------
+### Zarządzanie wynikami autoryzacji
 
 Kiedy autoryzacja nie powiedzie się, np. użytkownik nie może wykonać określonej
 akcji, jeden z dwóch poniższych scenariuszy może mieć miejsce:
@@ -297,7 +258,7 @@ wskazuje na stronę `site/login`.
 
    - w przeciwnym przypadku wyjątek HTTP zostanie wyświetlony wraz z kodem błędu 403.
 
-Podczas konfigurowania właściwości [loginUrl|CWebUser::loginUrl] można podać relatywny jak i absolutny URL. Można również przekazać tablicę, która będzie 
+relatywny jak i absolutny URL. Można również przekazać tablicę, która będzie 
 używana do wygenerowania URL poprzez wywołanie [CWebApplication::createUrl]. 
 Pierwszy element tablicy powinien określać [trasę](/doc/guide/basics.controller#route) 
 do akcji logowania kontrolera a pozostałe pary parametrów nazwa-wartość 
@@ -328,7 +289,7 @@ Yii::app()->request->redirect(Yii::app()->user->returnUrl);
 ~~~
 
 Bazująca na rolach kontrola dostępu (ang. Role-Based Access Control)
---------------------------------------------------------------------
+-------------------------
 
 Bazująca na rolach kontrola dostępu (RBAC) dostarcza prostej a zarazem potężnej, 
 scentralizowanej kontroli dostępu. Zobacz [artykuł wiki](http://en.wikipedia.org/wiki/Role-based_access_control) 
@@ -396,8 +357,7 @@ if(Yii::app()->user->checkAccess('deletePost'))
 }
 ~~~
 
-Konfigurowanie menadżera autoryzacji (ang. Configuring Authorization Manager)
------------------------------------------------------------------------------
+### Konfigurowanie menadżera autoryzacji (ang. Configuring Authorization Manager)
 
 Zanim zaczniemy definiować hierarchię autoryzacji oraz sprawdzać dostęp, musimy 
 skonfigurować komponent aplikacji [authManager|CWebApplication::authManager].
@@ -427,8 +387,7 @@ return array(
 Następnie możemy otrzymać dostęp do komponentu aplikacji 
 [authManager|CWebApplication::authManager] używając `Yii::app()->authManager`.
 
-Definiowanie hierarchii autoryzacji (ang. Defining Authorization Hierarchy)
----------------------------------------------------------------------------
+### Definiowanie hierarchii autoryzacji (ang. Defining Authorization Hierarchy)
 
 Definiowanie hierarchii auoryzacji składa się z 3 kroków: definiowania jednostek
 autoryzacji, ustalania relacji pomiędzy jednostkami autoryzacji oraz przypisywania 
@@ -498,25 +457,19 @@ $auth->assign('editor','editorC');
 $auth->assign('admin','adminD');
 ~~~
 
-Gdy już raz ustaliliśmy hierarchi, komponent [authManager|CWebApplication::authManager] (np.
-[CPhpAuthManager], [CDbAuthManager]) załaduje automatycznie pozycje. Dlatego też potrzebujemy
-wywołać powyższy kod jedynie raz, a NIE dla każdego żądania. 
-
-
 > Info|Info: Chociaż powyższy przykad wygląda przydługo oraz nużąco, należy pamiętać, 
 że został on stworzony głównie w celach demonstracyjnych. Deweloperzy zazwyczaj 
-będą potrzebowali wykonać pewne interfejsy użytkownika, tak, że użytkownicy końcowi, mogą
-ich używać do tworzenia hierarchii autoryzacji w sposób bardziej intuicyjny.
+potrzebują wykonać pewne interfejsy użytkownika, tak, że użytkownicy końcowi, mogą
+ich uzywać do tworzenia hierarchii autoryzacji w sposób bardziej intuicyjny.
 
 
-Używanie reguł biznesowych
---------------------------
+### Używanie reguł biznesowych
 
-Podczas definiowania hierarchii autoryzacji, możemy powiązać rolę, zadanie lub operację z tak zwaną *regułą biznesową* (ang. business rule). 
+Podczas definiowania hierarchii autoryzacji, możemy powiązać rolę, zadanie lub operację z tak zwaną *reguły biznesowej* (ang. business rule). 
 Możemy również powiązać regułę biznesową podczas przypisywania roli do użytkownika. Reguła biznesowa jest fragmentem kodu PHP,
 który jest wykonywany podczas sprawdzania dostępności. Zwracana przez kod wartość jest używana do określenia, czy rola lub przypisanie ma zastosowanie dla aktualnego 
 użytkownika. W powyższym przykładzie, powiązaliśmy regułe bizesową z zadaniem `updateOwnPost` task. W regule biznesowej po prostu sprawdzamy czy ID aktualnego użytkownika 
-jest identyczne jak to określone przez ID autora postu. Informacja o poście jest dostarczana przez programistę w tablicy `$params` podczas sprawdzania dostępności.
+jest identyczne jak to określone przez ID autora postu. Informacja o poście w ablicy `$params` jest dostarczana przez programistę podczas sprawdzania dostępności.
 
 
 
@@ -538,7 +491,7 @@ if(Yii::app()->user->checkAccess('createPost'))
 
 Jeśli jednostka autoryzacji jest powiązana z reguła biznesową, która potrzebuje 
 dodatkowwch parametrów, możemy je również przekazać. Na przykład, aby sprawdzić 
-czy użytkownik może zaktualizwać post, przekażemy dane wiadomości poprzez zmienną `$params`:
+czy użytkownik może zaktualizwać post, powinniśmy zrobić co następuje:
 
 ~~~
 [php]
@@ -550,7 +503,9 @@ if(Yii::app()->user->checkAccess('updateOwnPost',$params))
 ~~~
 
 
-### Używanie domyślnych ról
+### Uzywanie domyślnych ról
+
+> Przypis: Domyślne rolę są dostępne od wersji 1.0.3
 
 Wiele aplikacji webowych potrzebuje pewnych bardzo specjalnych ról, które będą 
 przypisane do każdego lub prawie każdego użytkownika systemu. Na przykład, 
@@ -581,7 +536,7 @@ return array(
 ~~~
 
 Ponieważ domyślan rola jest przypisywana do każdego użytkownika, zazwyczaj wymagane 
-jest powiązanie z regułą biznesową, która determinuje czu rola naprawdę ma zastosowanie 
+jest powiązanie z regułą biznesową, która determinuje czu rola naprawdę na zastosowanie 
 dla użytkownika. Na przykład, następujący kod definiuje dwie role `authenticated` 
 oraz `guest`, które efektywnie mają zastosowanie dla uwierzytelnionych 
 użytkowników oraz gości, odpowiednio: 
@@ -595,4 +550,4 @@ $bizRule='return Yii::app()->user->isGuest;';
 $auth->createRole('guest','gość', $bizRule);
 ~~~
 
-<div class="revision">$Id: topics.auth.txt 2890 2011-01-18 15:58:34Z qiang.xue $</div>
+<div class="revision">$Id: topics.auth.txt 1282 2009-08-01 01:07:54Z qiang.xue $</div>

@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -21,16 +21,14 @@
  * CCaptcha may also render a button next to the CAPTCHA image. Clicking on the button
  * will change the CAPTCHA image to be a new one in an AJAX way.
  *
- * If {@link clickableImage} is set true, clicking on the CAPTCHA image
+ * Since version 1.0.8, if {@link clickableImage} is set true, clicking on the CAPTCHA image
  * will refresh the CAPTCHA.
  *
  * A {@link CCaptchaValidator} may be used to validate that the user enters
  * a verification code matching the code displayed in the CAPTCHA image.
  *
- * When combining CCaptcha with CActiveForm or CForm, make sure ajaxValidation is disabled. Performing ajax validation causes
- * your Captcha to be refreshed, rendering the code invalid on the next validation attempt.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.web.widgets.captcha
  * @since 1.0
  */
@@ -55,6 +53,7 @@ class CCaptcha extends CWidget
 	 * this property to be true because they serve for the same purpose.
 	 * To enhance accessibility, you may set {@link imageOptions} to provide hints to end-users that
 	 * the image is clickable.
+	 * @since 1.0.8
 	 */
 	public $clickableImage=false;
 	/**
@@ -82,13 +81,8 @@ class CCaptcha extends CWidget
 	 */
 	public function run()
 	{
-		if(self::checkRequirements('imagick') || self::checkRequirements('gd'))
-		{
-			$this->renderImage();
-			$this->registerClientScript();
-		}
-		else
-			throw new CException(Yii::t('yii','GD with FreeType or ImageMagick PHP extensions are required.'));
+		$this->renderImage();
+		$this->registerClientScript();
 	}
 
 	/**
@@ -96,16 +90,18 @@ class CCaptcha extends CWidget
 	 */
 	protected function renderImage()
 	{
-		if(!isset($this->imageOptions['id']))
-			$this->imageOptions['id']=$this->getId();
-
-		$url=$this->getController()->createUrl($this->captchaAction,array('v'=>uniqid()));
+		if(isset($this->imageOptions['id']))
+			$id=$this->imageOptions['id'];
+		else
+			$id=$this->imageOptions['id']=$this->getId();
+		$url=$this->getController()->createUrl($this->captchaAction);
 		$alt=isset($this->imageOptions['alt'])?$this->imageOptions['alt']:'';
 		echo CHtml::image($url,$alt,$this->imageOptions);
 	}
 
 	/**
 	 * Registers the needed client scripts.
+	 * @since 1.0.2
 	 */
 	public function registerClientScript()
 	{
@@ -113,79 +109,24 @@ class CCaptcha extends CWidget
 		$id=$this->imageOptions['id'];
 		$url=$this->getController()->createUrl($this->captchaAction,array(CCaptchaAction::REFRESH_GET_VAR=>true));
 
-		$js="";
 		if($this->showRefreshButton)
 		{
-			// reserve a place in the registered script so that any enclosing button js code appears after the captcha js
-			$cs->registerScript('Yii.CCaptcha#'.$id,'// dummy');
+			$cs->registerScript('Yii.CCaptcha#'.$id,'dummy');
 			$label=$this->buttonLabel===null?Yii::t('yii','Get a new code'):$this->buttonLabel;
-			$options=$this->buttonOptions;
-			if(isset($options['id']))
-				$buttonID=$options['id'];
-			else
-				$buttonID=$options['id']=$id.'_button';
-			if($this->buttonType==='button')
-				$html=CHtml::button($label, $options);
-			else
-				$html=CHtml::link($label, $url, $options);
-			$js="jQuery('#$id').after(".CJSON::encode($html).");";
-			$selector="#$buttonID";
+			$button=$this->buttonType==='button'?'ajaxButton':'ajaxLink';
+			$html=CHtml::$button($label,$url,array('success'=>'js:function(html){jQuery("#'.$id.'").attr("src",html)}'),$this->buttonOptions);
+			$js="jQuery('img#$id').after(\"".CJavaScript::quote($html).'");';
+			$cs->registerScript('Yii.CCaptcha#'.$id,$js);
 		}
 
 		if($this->clickableImage)
-			$selector=isset($selector) ? "$selector, #$id" : "#$id";
-
-		if(!isset($selector))
-			return;
-
-		$js.="
-jQuery(document).on('click', '$selector', function(){
-	jQuery.ajax({
-		url: ".CJSON::encode($url).",
-		dataType: 'json',
-		cache: false,
-		success: function(data) {
-			jQuery('#$id').attr('src', data['url']);
-			jQuery('body').data('{$this->captchaAction}.hash', [data['hash1'], data['hash2']]);
-		}
-	});
-	return false;
-});
-";
-		$cs->registerScript('Yii.CCaptcha#'.$id,$js);
-	}
-
-	/**
-	 * Checks if specified graphic extension support is loaded.
-	 * @param string $extension name to be checked. Possible values are 'gd', 'imagick' and null.
-	 * Default value is null meaning that both extensions will be checked. This parameter
-	 * is available since 1.1.13.
-	 * @return boolean true if ImageMagick extension with PNG support or GD with FreeType support is loaded,
-	 * otherwise false
-	 * @since 1.1.5
-	 */
-	public static function checkRequirements($extension=null)
-	{
-		if(extension_loaded('imagick'))
 		{
-			$imagick=new Imagick();
-			$imagickFormats=$imagick->queryFormats('PNG');
+			$js="jQuery('#$id').click(function(){"
+				.CHtml::ajax(array(
+					'url'=>$url,
+					'success'=>"js:function(html){jQuery('#$id').attr('src',html)}",
+				)).'});';
+			$cs->registerScript('Yii.CCaptcha#2'.$id,$js);
 		}
-		if(extension_loaded('gd'))
-		{
-			$gdInfo=gd_info();
-		}
-		if($extension===null)
-		{
-			if(isset($imagickFormats) && in_array('PNG',$imagickFormats))
-				return true;
-			if(isset($gdInfo) && $gdInfo['FreeType Support'])
-				return true;
-		}
-		elseif($extension=='imagick' && isset($imagickFormats) && in_array('PNG',$imagickFormats))
-			return true;
-		elseif($extension=='gd' && isset($gdInfo) && $gdInfo['FreeType Support'])
-			return true;
-		return false;
 	}
 }

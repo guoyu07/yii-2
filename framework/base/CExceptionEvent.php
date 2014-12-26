@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -12,6 +12,7 @@
  * CExceptionEvent represents the parameter for the {@link CApplication::onException onException} event.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.base
  * @since 1.0
  */
@@ -24,8 +25,8 @@ class CExceptionEvent extends CEvent
 
 	/**
 	 * Constructor.
-	 * @param mixed $sender sender of the event
-	 * @param CException $exception the exception
+	 * @param mixed sender of the event
+	 * @param CException the exception
 	 */
 	public function __construct($sender,$exception)
 	{

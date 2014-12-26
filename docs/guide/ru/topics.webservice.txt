@@ -17,7 +17,7 @@
 вызывает метод API и отвечает на запрос.
 
 > Note|Примечание: Для работы [CWebService] требуется
-> [расширение PHP SOAP](http://php.net/manual/en/ref.soap.php). Убедитесь, что
+> [расширение PHP SOAP](http://www.php.net/manual/en/ref.soap.php). Убедитесь, что
 > оно включено, прежде, чем пробовать примеры, описанные далее.
 
 Создание провайдера
@@ -27,12 +27,12 @@
 быть вызваны удалённо. Для того, чтобы определить, какие методы могут быть
 вызваны удалённо и какое значение возвращать, Yii использует
 [специальные комментарии](http://java.sun.com/j2se/javadoc/writingdoccomments/) и
-[reflection](http://php.net/manual/en/book.reflection.php).
+[reflection](http://www.php.net/manual/en/language.oop5.reflection.php).
 
 Попробуем реализовать простой сервис, отдающий информацию о котировках акций
 определённой компании. Для этого нам потребуется реализовать провайдер, как показано
 ниже. Стоит отметить, что наследуем класс провайдера `StockController`
-от [CController]. Наследование не является обязательным.
+от [CController]. Наследование не является обязательным. Мы опишем, зачем оно нужно, ниже.
 
 ~~~
 [php]
@@ -47,7 +47,7 @@ class StockController extends CController
 	{
 		$prices=array('IBM'=>100, 'GOOGLE'=>350);
 		return isset($prices[$symbol])?$prices[$symbol]:0;
-	    //…возвращаем цену для компании с индексом $symbol
+	    //...возвращаем цену для компании с индексом $symbol
 	}
 }
 ~~~
@@ -83,7 +83,7 @@ class StockController extends CController
 	 */
 	public function getPrice($symbol)
 	{
-	    //…возвращаем цену для компании с индексом $symbol
+	    //...возвращаем цену для компании с индексом $symbol
 	}
 }
 ~~~
@@ -197,7 +197,7 @@ class PostController extends CController
 			),
 		);
 	}
-	…
+	......
 }
 ~~~
 
@@ -209,3 +209,5 @@ class PostController extends CController
 текущий экземпляр [CWebService]. Через [CWebService::methodName] — название
 вызываемого метода. Если метод по каким либо причинам (например, отсутствие прав
 на его выполнение) не должен быть вызван, необходимо вернуть false.
+
+<div class="revision">$Id: topics.webservice.txt 1300 2009-08-07 00:39:21Z qiang.xue $</div>

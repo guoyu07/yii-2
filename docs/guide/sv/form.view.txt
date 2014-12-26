@@ -24,36 +24,34 @@ vyer. Till exempel, för att skapa ett textinmatningsfält kan
 > Detta skulle annars kräva att man skriver skrymmande Javascriptkod överallt.
 
 I det följande används [CHtml] till att skapa login-formuläret. Antag att 
-variabeln `$model` representerar `LoginForm`-instansen.
+variabeln `$user` representerar `LoginForm`-instansen.
 
 ~~~
 [php]
-<div class="form">
+<div class="yiiForm">
 <?php echo CHtml::beginForm(); ?>
 
-	<?php echo CHtml::errorSummary($model); ?>
+<?php echo CHtml::errorSummary($user); ?>
 
-	<div class="row">
-		<?php echo CHtml::activeLabel($model,'username'); ?>
-		<?php echo CHtml::activeTextField($model,'username') ?>
-	</div>
+<div class="simple">
+<?php echo CHtml::activeLabel($user,'username'); ?>
+<?php echo CHtml::activeTextField($user,'username'); ?>
+</div>
 
-	<div class="row">
-		<?php echo CHtml::activeLabel($model,'password'); ?>
-		<?php echo CHtml::activePasswordField($model,'password') ?>
-	</div>
+<div class="simple">
+<?php echo CHtml::activeLabel($user,'password'); ?>
+<?php echo CHtml::activePasswordField($user,'password');
+?>
+</div>
 
-	<div class="row rememberMe">
-		<?php echo CHtml::activeCheckBox($model,'rememberMe'); ?>
-		<?php echo CHtml::activeLabel($model,'rememberMe'); ?>
-	</div>
-
-	<div class="row submit">
-		<?php echo CHtml::submitButton('Login'); ?>
-	</div>
+<div class="action">
+<?php echo CHtml::activeCheckBox($user,'rememberMe'); ?>
+Remember me next time<br/>
+<?php echo CHtml::submitButton('Login'); ?>
+</div>
 
 <?php echo CHtml::endForm(); ?>
-</div><!-- form -->
+</div><!-- yiiForm -->
 ~~~
 
 Ovanstående kod genererar ett mer dynamiskt formulär. Till exempel, 
@@ -71,39 +69,4 @@ av `yiic`-skriptet, kommer det genererade formuläret att se ut i stil med följ
 
 ![Loginsidan med felmeddelanden](login2.png)
 
-Med start från version 1.1.1, erbjuds en ny widget kallad [CActiveForm]
-för formulärgenerering. Widgeten är kapabel att transparent och konsekvent 
-stödja validering både på klient- och serversidan. Med hjälp av [CActiveForm],
-kan ovanstående vy skrivas om som nedan:
-
-~~~
-[php]
-<div class="form">
-<?php $form=$this->beginWidget('CActiveForm'); ?>
-
-	<?php echo $form->errorSummary($model); ?>
-
-	<div class="row">
-		<?php echo $form->label($model,'username'); ?>
-		<?php echo $form->textField($model,'username') ?>
-	</div>
-
-	<div class="row">
-		<?php echo $form->label($model,'password'); ?>
-		<?php echo $form->passwordField($model,'password') ?>
-	</div>
-
-	<div class="row rememberMe">
-		<?php echo $form->checkBox($model,'rememberMe'); ?>
-		<?php echo $form->label($model,'rememberMe'); ?>
-	</div>
-
-	<div class="row submit">
-		<?php echo CHtml::submitButton('Login'); ?>
-	</div>
-
-<?php $this->endWidget(); ?>
-</div><!-- form -->
-~~~
-
-<div class="revision">$Id: form.view.txt 1751 2010-01-25 17:21:31Z qiang.xue $</div>
+<div class="revision">$Id: form.view.txt 857 2009-03-20 17:31:09Z qiang.xue $</div>

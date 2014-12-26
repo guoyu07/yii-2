@@ -9,13 +9,14 @@
 ?>
 <?php echo "<?php\n"; ?>
 
-class <?php echo $controllerClass; ?> extends Controller
+class <?php echo $controllerClass; ?> extends CController
 {
+	const PAGE_SIZE=10;
+
 	/**
-	 * @var string the default layout for the views. Defaults to '//layouts/column2', meaning
-	 * using two-column layout. See 'protected/views/layouts/column2.php'.
+	 * @var string specifies the default action to be 'list'.
 	 */
-	public $layout='//layouts/column2';
+	public $defaultAction='list';
 
 	/**
 	 * @var CActiveRecord the currently loaded data model instance.
@@ -40,8 +41,8 @@ class <?php echo $controllerClass; ?> extends Controller
 	public function accessRules()
 	{
 		return array(
-			array('allow',  // allow all users to perform 'index' and 'view' actions
-				'actions'=>array('index','view'),
+			array('allow',  // allow all users to perform 'list' and 'show' actions
+				'actions'=>array('list','show'),
 				'users'=>array('*'),
 			),
 			array('allow', // allow authenticated user to perform 'create' and 'update' actions
@@ -59,75 +60,56 @@ class <?php echo $controllerClass; ?> extends Controller
 	}
 
 	/**
-	 * Displays a particular model.
+	 * Shows a particular model.
 	 */
-	public function actionView()
+	public function actionShow()
 	{
-		$this->render('view',array(
-			'model'=>$this->loadModel(),
-		));
+		$this->render('show',array('model'=>$this->load<?php echo $modelClass; ?>()));
 	}
 
 	/**
 	 * Creates a new model.
-	 * If creation is successful, the browser will be redirected to the 'view' page.
+	 * If creation is successful, the browser will be redirected to the 'show' page.
 	 */
 	public function actionCreate()
 	{
 		$model=new <?php echo $modelClass; ?>;
-
-		// Uncomment the following line if AJAX validation is needed
-		// $this->performAjaxValidation($model);
-
 		if(isset($_POST['<?php echo $modelClass; ?>']))
 		{
 			$model->attributes=$_POST['<?php echo $modelClass; ?>'];
 			if($model->save())
-				$this->redirect(array('view','id'=>$model-><?php echo $ID; ?>));
+				$this->redirect(array('show','id'=>$model-><?php echo $ID; ?>));
 		}
-
-		$this->render('create',array(
-			'model'=>$model,
-		));
+		$this->render('create',array('model'=>$model));
 	}
 
 	/**
 	 * Updates a particular model.
-	 * If update is successful, the browser will be redirected to the 'view' page.
+	 * If update is successful, the browser will be redirected to the 'show' page.
 	 */
 	public function actionUpdate()
 	{
-		$model=$this->loadModel();
-
-		// Uncomment the following line if AJAX validation is needed
-		// $this->performAjaxValidation($model);
-
+		$model=$this->load<?php echo $modelClass; ?>();
 		if(isset($_POST['<?php echo $modelClass; ?>']))
 		{
 			$model->attributes=$_POST['<?php echo $modelClass; ?>'];
 			if($model->save())
-				$this->redirect(array('view','id'=>$model-><?php echo $ID; ?>));
+				$this->redirect(array('show','id'=>$model-><?php echo $ID; ?>));
 		}
-
-		$this->render('update',array(
-			'model'=>$model,
-		));
+		$this->render('update',array('model'=>$model));
 	}
 
 	/**
 	 * Deletes a particular model.
-	 * If deletion is successful, the browser will be redirected to the 'index' page.
+	 * If deletion is successful, the browser will be redirected to the 'list' page.
 	 */
 	public function actionDelete()
 	{
 		if(Yii::app()->request->isPostRequest)
 		{
 			// we only allow deletion via POST request
-			$this->loadModel()->delete();
-
-			// if AJAX request (triggered by deletion via admin grid view), we should not redirect the browser
-			if(!isset($_GET['ajax']))
-				$this->redirect(array('index'));
+			$this->load<?php echo $modelClass; ?>()->delete();
+			$this->redirect(array('list'));
 		}
 		else
 			throw new CHttpException(400,'Invalid request. Please do not repeat this request again.');
@@ -136,11 +118,19 @@ class <?php echo $controllerClass; ?> extends Controller
 	/**
 	 * Lists all models.
 	 */
-	public function actionIndex()
+	public function actionList()
 	{
-		$dataProvider=new CActiveDataProvider('<?php echo $modelClass; ?>');
-		$this->render('index',array(
-			'dataProvider'=>$dataProvider,
+		$criteria=new CDbCriteria;
+
+		$pages=new CPagination(<?php echo $modelClass; ?>::model()->count($criteria));
+		$pages->pageSize=self::PAGE_SIZE;
+		$pages->applyLimit($criteria);
+
+		$models=<?php echo $modelClass; ?>::model()->findAll($criteria);
+
+		$this->render('list',array(
+			'models'=>$models,
+			'pages'=>$pages,
 		));
 	}
 
@@ -149,26 +139,37 @@ class <?php echo $controllerClass; ?> extends Controller
 	 */
 	public function actionAdmin()
 	{
-		$model=new <?php echo $modelClass; ?>('search');
-		$model->unsetAttributes();  // clear any default values
-		if(isset($_GET['<?php echo $modelClass; ?>']))
-			$model->attributes=$_GET['<?php echo $modelClass; ?>'];
+		$this->processAdminCommand();
+
+		$criteria=new CDbCriteria;
+
+		$pages=new CPagination(<?php echo $modelClass; ?>::model()->count($criteria));
+		$pages->pageSize=self::PAGE_SIZE;
+		$pages->applyLimit($criteria);
+
+		$sort=new CSort('<?php echo $modelClass; ?>');
+		$sort->applyOrder($criteria);
+
+		$models=<?php echo $modelClass; ?>::model()->findAll($criteria);
 
 		$this->render('admin',array(
-			'model'=>$model,
+			'models'=>$models,
+			'pages'=>$pages,
+			'sort'=>$sort,
 		));
 	}
 
 	/**
 	 * Returns the data model based on the primary key given in the GET variable.
 	 * If the data model is not found, an HTTP exception will be raised.
+	 * @param integer the primary key value. Defaults to null, meaning using the 'id' GET variable
 	 */
-	public function loadModel()
+	public function load<?php echo $modelClass; ?>($id=null)
 	{
 		if($this->_model===null)
 		{
-			if(isset($_GET['id']))
-				$this->_model=<?php echo $modelClass; ?>::model()->findbyPk($_GET['id']);
+			if($id!==null || isset($_GET['id']))
+				$this->_model=<?php echo $modelClass; ?>::model()->findbyPk($id!==null ? $id : $_GET['id']);
 			if($this->_model===null)
 				throw new CHttpException(404,'The requested page does not exist.');
 		}
@@ -176,15 +177,15 @@ class <?php echo $controllerClass; ?> extends Controller
 	}
 
 	/**
-	 * Performs the AJAX validation.
-	 * @param CModel the model to be validated
+	 * Executes any command triggered on the admin page.
 	 */
-	protected function performAjaxValidation($model)
+	protected function processAdminCommand()
 	{
-		if(isset($_POST['ajax']) && $_POST['ajax']==='<?php echo $this->class2id($modelClass); ?>-form')
+		if(isset($_POST['command'], $_POST['id']) && $_POST['command']==='delete')
 		{
-			echo CActiveForm::validate($model);
-			Yii::app()->end();
+			$this->load<?php echo $modelClass; ?>($_POST['id'])->delete();
+			// reload the current page to avoid duplicated delete actions
+			$this->refresh();
 		}
 	}
 }

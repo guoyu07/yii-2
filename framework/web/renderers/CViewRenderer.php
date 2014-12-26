@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -24,6 +24,7 @@
  *
  * @author Steve Heyns http://customgothic.com/
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.web.renderers
  * @since 1.0
  */
@@ -43,23 +44,24 @@ abstract class CViewRenderer extends CApplicationComponent implements IViewRende
 	public $filePermission=0755;
 	/**
 	 * @var string the extension name of the view file. Defaults to '.php'.
+	 * @since 1.0.9
 	 */
 	public $fileExtension='.php';
 
 	/**
 	 * Parses the source view file and saves the results as another file.
-	 * @param string $sourceFile the source view file path
-	 * @param string $viewFile the resulting view file path
+	 * @param string the source view file path
+	 * @param string the resulting view file path
 	 */
 	abstract protected function generateViewFile($sourceFile,$viewFile);
 
 	/**
 	 * Renders a view file.
 	 * This method is required by {@link IViewRenderer}.
-	 * @param CBaseController $context the controller or widget who is rendering the view file.
-	 * @param string $sourceFile the view file path
-	 * @param mixed $data the data to be passed to the view
-	 * @param boolean $return whether the rendering result should be returned
+	 * @param CBaseController the controller or widget who is rendering the view file.
+	 * @param string the view file path
+	 * @param mixed the data to be passed to the view
+	 * @param boolean whether the rendering result should be returned
 	 * @return mixed the rendering result, or null if the rendering result is not needed.
 	 */
 	public function renderFile($context,$sourceFile,$data,$return)
@@ -77,7 +79,7 @@ abstract class CViewRenderer extends CApplicationComponent implements IViewRende
 
 	/**
 	 * Generates the resulting view file path.
-	 * @param string $file source view file path
+	 * @param string source view file path
 	 * @return string resulting view file path
 	 */
 	protected function getViewFile($file)

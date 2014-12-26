@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -38,6 +38,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.i18n.gettext
  * @since 1.0
  */
@@ -50,7 +51,7 @@ class CGettextMoFile extends CGettextFile
 
 	/**
 	 * Constructor.
-	 * @param boolean $useBigEndian whether to use Big Endian when reading and writing an integer.
+	 * @param boolean whether to use Big Endian when reading and writing an integer.
 	 */
 	public function __construct($useBigEndian=false)
 	{
@@ -59,8 +60,8 @@ class CGettextMoFile extends CGettextFile
 
 	/**
 	 * Loads messages from an MO file.
-	 * @param string $file file path
-	 * @param string $context message context
+	 * @param string file path
+	 * @param string message context
 	 * @return array message translations (source message => translated message)
 	 */
 	public function load($file,$context)
@@ -76,7 +77,7 @@ class CGettextMoFile extends CGettextFile
 		$magic=current($array=unpack('c',$this->readByte($fr,4)));
 		if($magic==-34)
 			$this->useBigEndian=false;
-		elseif($magic==-107)
+		else if($magic==-107)
 			$this->useBigEndian=true;
 		else
 			throw new CException(Yii::t('yii','Invalid MO file: {file} (magic: {magic}).',
@@ -112,13 +113,9 @@ class CGettextMoFile extends CGettextFile
 		for($i=0;$i<$count;++$i)
 		{
 			$id=$this->readString($fr,$sourceLengths[$i],$sourceOffsets[$i]);
-			$pos = strpos($id,chr(4));
-
-			if(($context && $pos!==false && substr($id,0,$pos)===$context) || (!$context && $pos===false))
+			if(($pos=strpos($id,chr(4)))!==false && substr($id,0,$pos)===$context)
 			{
-				if($pos !== false)
-					$id=substr($id,$pos+1);
-
+				$id=substr($id,$pos+1);
 				$message=$this->readString($fr,$targetLengths[$i],$targetOffsets[$i]);
 				$messages[$id]=$message;
 			}
@@ -132,8 +129,8 @@ class CGettextMoFile extends CGettextFile
 
 	/**
 	 * Saves messages to an MO file.
-	 * @param string $file file path
-	 * @param array $messages message translations (message id => translated message).
+	 * @param string file path
+	 * @param array message translations (message id => translated message).
 	 * Note if the message has a context, the message id must be prefixed with
 	 * the context with chr(4) as the separator.
 	 */
@@ -202,8 +199,8 @@ class CGettextMoFile extends CGettextFile
 
 	/**
 	 * Reads one or several bytes.
-	 * @param resource $fr file handle
-	 * @param integer $n number of bytes to read
+	 * @param resource file handle
+	 * @param integer number of bytes to read
 	 * @return string bytes
 	 */
 	protected function readByte($fr,$n=1)
@@ -214,8 +211,8 @@ class CGettextMoFile extends CGettextFile
 
 	/**
 	 * Writes bytes.
-	 * @param resource $fw file handle
-	 * @param string $data the data
+	 * @param resource file handle
+	 * @param string the data
 	 * @return integer how many bytes are written
 	 */
 	protected function writeByte($fw,$data)
@@ -225,7 +222,7 @@ class CGettextMoFile extends CGettextFile
 
 	/**
 	 * Reads a 4-byte integer.
-	 * @param resource $fr file handle
+	 * @param resource file handle
 	 * @return integer the result
 	 * @see useBigEndian
 	 */
@@ -236,8 +233,8 @@ class CGettextMoFile extends CGettextFile
 
 	/**
 	 * Writes a 4-byte integer.
-	 * @param resource $fw file handle
-	 * @param integer $data the data
+	 * @param resource file handle
+	 * @param integer the data
 	 * @return integer how many bytes are written
 	 */
 	protected function writeInteger($fw,$data)
@@ -247,9 +244,9 @@ class CGettextMoFile extends CGettextFile
 
 	/**
 	 * Reads a string.
-	 * @param resource $fr file handle
-	 * @param integer $length string length
-	 * @param integer $offset offset of the string in the file. If null, it reads from the current position.
+	 * @param resource file handle
+	 * @param integer string length
+	 * @param integer offset of the string in the file. If null, it reads from the current position.
 	 * @return string the result
 	 */
 	protected function readString($fr,$length,$offset=null)
@@ -261,8 +258,8 @@ class CGettextMoFile extends CGettextFile
 
 	/**
 	 * Writes a string.
-	 * @param resource $fw file handle
-	 * @param string $data the string
+	 * @param resource file handle
+	 * @param string the string
 	 * @return integer how many bytes are written
 	 */
 	protected function writeString($fw,$data)

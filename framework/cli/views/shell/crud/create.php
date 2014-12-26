@@ -7,21 +7,14 @@
  * - $columns: a list of column schema objects
  */
 ?>
-<?php
-echo "<?php\n";
-$label=$this->class2name($modelClass,true);
-echo "\$this->breadcrumbs=array(
-	'$label'=>array('index'),
-	'Create',
-);\n";
-?>
+<h2>New <?php echo $modelClass; ?></h2>
 
-$this->menu=array(
-	array('label'=>'List <?php echo $modelClass; ?>', 'url'=>array('index')),
-	array('label'=>'Manage <?php echo $modelClass; ?>', 'url'=>array('admin')),
-);
-?>
+<div class="actionBar">
+[<?php echo "<?php echo CHtml::link('{$modelClass} List',array('list')); ?>"; ?>]
+[<?php echo "<?php echo CHtml::link('Manage {$modelClass}',array('admin')); ?>"; ?>]
+</div>
 
-<h1>Create <?php echo $modelClass; ?></h1>
-
-<?php echo "<?php echo \$this->renderPartial('_form', array('model'=>\$model)); ?>"; ?>
+<?php echo "<?php echo \$this->renderPartial('_form', array(
+	'model'=>\$model,
+	'update'=>false,
+)); ?>"; ?>

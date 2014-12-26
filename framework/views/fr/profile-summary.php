@@ -2,23 +2,23 @@
 <table class="yiiLog" width="100%" cellpadding="2" style="border-spacing:1px;font:11px Verdana, Arial, Helvetica, sans-serif;background:#EEEEEE;color:#666666;">
 	<tr>
 		<th style="background:black;color:white;" colspan="6">
-			Sommaire du rapport de profilage
-			(Durée: <?php echo sprintf('%0.5f',Yii::getLogger()->getExecutionTime()); ?>s,
-			Memoire: <?php echo number_format(Yii::getLogger()->getMemoryUsage()/1024); ?>KB)
+			Profiling Summary Report
+			(Time: <?php echo sprintf('%0.5f',Yii::getLogger()->getExecutionTime()); ?>s,
+			Memory: <?php echo number_format(Yii::getLogger()->getMemoryUsage()/1024); ?>KB)
 		</th>
 	</tr>
 	<tr style="background-color: #ccc;">
-	    <th>Fonction</th>
-		<th>Nb</th>
+	    <th>Procedure</th>
+		<th>Count</th>
 		<th>Total (s)</th>
-		<th>Moy. (s)</th>
+		<th>Avg. (s)</th>
 		<th>Min. (s)</th>
 		<th>Max. (s)</th>
 	</tr>
 <?php
 foreach($data as $index=>$entry)
 {
-	$color=($index%2)?'#F5F5F5':'#FFFFFF';
+	$color=($index%2)?'#F5F5F5':'#EBF8FE';
 	$proc=CHtml::encode($entry[0]);
 	$min=sprintf('%0.5f',$entry[2]);
 	$max=sprintf('%0.5f',$entry[3]);

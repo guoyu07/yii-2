@@ -39,7 +39,7 @@ wyrażenia śledzenia (trace) są usuwane z tego połączonego pliku. Dlatego te
 spowoduje redukcję ilości plików dołączanych oraz uniknięcie wywołań wyrażeń śledzenia (trace).
 
 Zauważ, że używanie `yiilite.php` bez APC, może zmniejszyć wydajność ponieważ `yiilite.php`
-zawiera część klas, które niekoniecznie używane są w każdym żądaniu, przez co 
+zawiera on część klas, które niekoniecznie używane są w każdym żądaniu, przez co 
 zwiększają one czas parsowania. Zauważono również, że używanie `yiilite.php`
 jest wolniejsze dla pewnych konfiguracji serwera, nawet jeśli włączone jest APC.
 Najlepszym sposobem rozstrzygnięcia czy używać `yiilite.php` czy też nie 
@@ -68,7 +68,7 @@ Poza wymienionymi technikami buforowania na poziomie aplikacji, możemy równie�
 z rozwiązań na poziomie serwera w celu poprawienia wydajności aplikacji. 
 [Buforowanie APC](/doc/guide/topics.performance#enabling-apc-extension), które wcześniej opisaliśmy
 bezsprzecznie należy do tej kategorii. Wyróżnia się tutaj inne techniki, między innymi takie jak 
-[Zend Optimizer](http://www.zend.com/en/products/guard/zend-optimizer), [eAccelerator](http://eaccelerator.net/),
+[Zend Optimizer](http://Zend.com/ZendOptimizer), [eAccelerator](http://eaccelerator.net/),
 [Squid](http://www.squid-cache.org/).
 
 Optymalizacja bazy danych
@@ -76,7 +76,7 @@ Optymalizacja bazy danych
 
 Pobieranie danych z bazy danych jest często główną przyczyną wąskich gardeł wydajnościowych 
 w aplikacjach internetowych. Chociaż używanie buforowanie może złagodzić zakłócenie wydajności
-nie rozwiązuje one w pełni problemu. Jeśli baza danych zawiera ogromne ilości danych 
+nie rozwiązuje one w pełni problemu. Jeśli baza danych zawiera ogromne ilości danych  
 a dane zbuforowane są niepoprawne, pobieranie dużej ilości danych może być nadmiernie
 kosztowne bez właściwego zaprojektowania bazy danych oraz zapytań. 
 
@@ -87,14 +87,14 @@ W przypadku złożonych zapytań rekomenduje się utworzenie w bazie danej widok
 zamiast wywoływania zapytań z poziomu kodu PHP i proszenia DBMS o każdorazowe (powtarzające się) ich parsowanie.
 
 Nie nadużywaj [rekordu aktywnego](/doc/guide/database.ar). Chociaż [rekord aktywny](/doc/guide/database.ar) 
-jest dobry w modelowaniu danych w stylu obiektowym (OOP), faktycznie obniża on 
+jest dobry w modelowaniu danych w stylu obiektowym (OOP), faktycznie obniża on  
 wydajność ze względu na to, iż potrzebuje utworzyć jeden lub więcej obiektów
 do reprezentowania każdego wiersza wyniku zapytania. Dla aplikacji intensywnie używających
 danych używanie [DAO](/doc/guide/database.dao) lub też API bazy danych na niższym poziomie
 może być lepszym wyborem.
 
-Nie mniej ważnym jest używanie `LIMIT` w zapytaniach `SELECT`. Pozwala to unikania 
-pobierania przytłaczającej ilości danych z bazy danych oraz wyczerpywania pamięci 
+Nie mniej ważnym jest używanie `LIMIT` w zapytaniach `SELECT`. Pozwala to unikania  
+pobierania przytłaczającej ilości danych z bazy danych oraz wyczerpywania pamięci  
 przydzielonej dla PHP.
 
 Minimalizacja rozmiaru plików skryptów
@@ -110,6 +110,8 @@ Dla stron generowanych przez Yii istnieje możliwość, że znajdują się tam p
 skryptów generowane przez komponenty, których nie chcemy modyfikować 
 (np. rdzenne komponenty Yii, komponenty stron trzecich). W celu minimalizacji tych plików 
 skryptów, potrzebujemy wykonać dwa kroki.
+
+> Note|Uwaga: Funkcjonalność `scriptMap`, która zostanie opisana poniżej została udostępniona wraz z wersją 1.0.3.
 
 Najpierw deklarujemy, które pliki chcemy zminimalizować poprzez skonfigurowanie właściwości  
 [scriptMap|CClientScript::scriptMap] komponentu aplikacji [clientScript|CWebApplication::clientScript].
@@ -134,7 +136,7 @@ z komponentów, Yii załączy (raz) URL zamiast kolejnego załączania poszczeg�
 Po drugie, potrzebujemy użyć pewnych narzędzi do połączenia (i prawdopodobnie skompresowania) 
 plików JavaScript w jeden oraz zapisanie go jako `js/all.js`.
 
-Ten sam trik ma zastosowanie dla plików CSS.
+Ten sam plik ma zastosowanie dla plików CSS.
 
 Możemy również poprawić prędkość ładowania strony przy pomocy [Google AJAX Libraries API](http://code.google.com/apis/ajaxlibs/). 
 Na przykład, możemy załączyć plik `jquery.js` z serwera Google zamiast z naszego własnego. 
@@ -169,4 +171,4 @@ aby bezpośrednio dołączyć pliki skryptów ze strony Google:
 </head>
 ~~~
 
-<div class="revision">$Id: topics.performance.txt 2890 2011-01-18 15:58:34Z qiang.xue $</div>
+<div class="revision">$Id: topics.performance.txt 1110 2009-06-10 12:43:21Z qiang.xue $</div>

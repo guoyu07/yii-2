@@ -4,13 +4,15 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
+ * @version $Id$
  */
 
 /**
  * ApiModel represents the documentation for the Yii framework.
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.build
  * @since 1.0
  */
@@ -76,7 +78,6 @@ class ApiModel
 	{
 		$doc=new ClassDoc;
 		$doc->name=$class->getName();
-		$doc->loadSource($class);
 		$this->_currentClass=$doc->name;
 		for($parent=$class;$parent=$parent->getParentClass();)
 			$doc->parentClasses[]=$parent->getName();
@@ -160,8 +161,7 @@ class ApiModel
 
 	protected function processCode($matches)
 	{
-		$match=preg_replace('/<br\/><br\/>/','',$matches[1]);
-		return "<pre>".htmlspecialchars($match)."</pre>";
+		return preg_replace('/<br\/><br\/>/','',$matches[0]);
 	}
 
 	protected function resolveInternalUrl($url)
@@ -202,7 +202,7 @@ class ApiModel
 		if(($text=trim($matches[2]))==='')
 			$text=$url;
 
-		if(preg_match('/^(http|https|ftp):\/\//i',$url))  // an external URL
+		if(preg_match('/^(http|ftp):\/\//i',$url))  // an external URL
 			return "<a href=\"$url\">$text</a>";
 		$url=$this->resolveInternalUrl($url);
 		return $url===''?$text:'{{'.$url.'|'.$text.'}}';
@@ -253,7 +253,6 @@ class ApiModel
 	{
 		$doc=new MethodDoc;
 		$doc->name=$method->getName();
-		$doc->loadSource($method);
 		$doc->definedBy=$method->getDeclaringClass()->getName();
 		$doc->isAbstract=$method->isAbstract();
 		$doc->isFinal=$method->isFinal();
@@ -269,7 +268,6 @@ class ApiModel
 			$p->isOptional=$param->isOptional();
 			if($param->isDefaultValueAvailable())
 				$p->defaultValue=$param->getDefaultValue();
-			$p->isPassedByReference=$param->isPassedByReference();
 			$doc->input[]=$p;
 		}
 		reset($doc->input);
@@ -281,9 +279,9 @@ class ApiModel
 		{
 			$type=empty($param->type)?'':$this->getTypeUrl($param->type).' ';
 			if($param->isOptional)
-				$params[]=$type.($param->isPassedByReference?'&':'').'$'.$param->name.'='.str_replace("\r",'',var_export($param->defaultValue,true));
+				$params[]=$type.'$'.$param->name.'='.str_replace("\r",'',var_export($param->defaultValue,true));
 			else
-				$params[]=$type.($param->isPassedByReference?'&':'').'$'.$param->name;
+				$params[]=$type.'$'.$param->name;
 		}
 		$doc->signature='{{'.$class->name.'::'.$doc->name.'|<b>'.$doc->name.'</b>}}('.implode(', ',$params).')';
 		if($doc->output!==null)
@@ -411,18 +409,7 @@ class ApiModel
 				if(preg_match('/\[\s*\]/',$param->type))
 					$param->type='array';
 				if(isset($segs[1]))
-				{
-					/*
-					 * remove $variablename from description
-					 */
-					$segs[1]=trim(preg_replace('/^\$\w+/','',$segs[1]));
 					$param->description=$this->processDescription($segs[1]);
-					if(empty($object->introduction))
-					{
-						if(substr($object->name,0,3)=='set')
-							$object->introduction='Sets '.$param->description;
-					}
-				}
 				next($object->input);
 			}
 		}
@@ -436,29 +423,17 @@ class ApiModel
 			$object->output=new ParamDoc;
 			$object->output->type=$segs[0];
 			if(isset($segs[1]))
-			{
 				$object->output->description=$this->processDescription($segs[1]);
-				if(empty($object->introduction))
-				{
-					/*
-					 * If no custom introduction, add automatically
-					 * with this getters introduction displayed in public methods table is resolved
-					 */
-					if(substr($object->name,0,5)=='getIs')
-						$object->introduction='Checks '.$object->output->description;
-					elseif(substr($object->name,0,3)=='get')
-						$object->introduction='Returns '.$object->output->description;
-					elseif(substr($object->name,0,3)=='has')
-						$object->introduction='Determines '.$object->output->description;
-				}
-			}
 		}
 		else if($object instanceof PropertyDoc)
 		{
 			$object->type=$segs[0];
 			if(isset($segs[1]) && empty($object->description))
 			{
-				$object->introduction=$this->processDescription($this->extractFirstSentence($segs[1]));
+				if(($pos=strpos($segs[1],'.'))!==false)
+					$object->introduction=$this->processDescription(substr($segs[1],0,$pos+1));
+				else
+					$object->introduction=$this->processDescription($segs[1]);
 				$object->description=$this->processDescription($segs[1]);
 			}
 		}
@@ -472,25 +447,12 @@ class ApiModel
 			$object->type=$segs[0];
 			if(isset($segs[1]) && empty($object->description))
 			{
-				$object->introduction=$this->processDescription($this->extractFirstSentence($segs[1]));
+				if(($pos=strpos($segs[1],'.'))!==false)
+					$object->introduction=$this->processDescription(substr($segs[1],0,$pos+1));
+				else
+					$object->introduction=$this->processDescription($segs[1]);
 				$object->description=$this->processDescription($segs[1]);
 			}
-		}
-	}
-
-	public static function extractFirstSentence($text)
-	{
-		if (mb_strlen($text) > 4 && ($pos = mb_strpos($text, '.', 4, 'utf-8')) !== false) {
-			$sentence = mb_substr($text, 0, $pos + 1, 'utf-8');
-			if (mb_strlen($text) >= $pos + 3) {
-				$abbrev = mb_substr($text, $pos - 1, 4);
-				if ($abbrev === 'e.g.' || $abbrev === 'i.e.') { // do not break sentence after abbreviation
-					$sentence .= static::extractFirstSentence(mb_substr($text, $pos + 1));
-				}
-			}
-			return $sentence;
-		} else {
-			return $text;
 		}
 	}
 
@@ -592,126 +554,6 @@ class ApiModel
 
 		return array($classes,$functions,$constants);
 	}
-
-	/*
-	 * Calls checkSource for every file in $sourceFiles
-	 * @param array $sourceFiles array of source file path that we need to check
-	 */
-	public function check($sourceFiles)
-	{
-		echo "Checking PHPDoc @param in source files ...\n";
-		foreach($sourceFiles as $no=>$sourceFile)
-		{
-			$this->checkSource($sourceFile);
-		}
-		echo "Done.\n\n";
-	}
-
-	/*
-	 * Checks @param directives in a source file
-	 * Detects:
-	 *    missing @param directive (there is no @param directive for a function parameter)
-	 *    missing function parameter (@param directive exists but that parameter is not in a function declaration)
-	 *    missmatch parameters (if @param directive has different parameter name than a function - possible spelling error or wrong order of @param directives)
-	 */
-	protected function checkSource($sourceFile)
-	{
-		$fileContent=file($sourceFile);
-
-		$docParam=array();
-		foreach($fileContent as $no=>$line)
-		{
-			/*
-			 * Get lines with @param, and parameter name
-			 */
-			if(preg_match('/^\s*\*\s*@param\s[A-Za-z0-9_\|\[\]]+\s(\$\w+)\s./',$line,$matches,PREG_OFFSET_CAPTURE))
-			{
-				$docParam[]=array(
-					'docLine'=>$no+1,
-					'docName'=>$matches[1][0],
-				);
-				continue;
-			}
-			/*
-			 * If function without parameters, there should be no parameters in $docParam
-			 */
-			if(preg_match('/^\s*\w+[\s\w]*\sfunction\s\w+\(\s*\)/',$line,$matches,PREG_OFFSET_CAPTURE))
-			{
-				if(isset($docParam[0])) {
-					$value=$docParam[0];
-					echo "ERROR.............: Parameter name not found!\n";
-					echo "Source file.......: ".$sourceFile."\n";
-					echo "PHPDoc line.......: ".$value['docLine']."\n";
-					echo "PHPDoc parameter..: ".$value['docName']."\n\n";
-					$docParam=array();
-				}
-				continue;
-			}
-			/*
-			 * Get function variables in $matches[1][0]
-			 */
-			if(preg_match('/^\s*\w+[\s\w]*\sfunction\s\w+\((.+)\)/',$line,$matches,PREG_OFFSET_CAPTURE))
-			{
-				$params=explode(",",$matches[1][0]);
-				foreach($params as $br=>$param)
-				{
-					/*
-					 * Strip anything that does not begin with $ (class types) eg. CHttpRequest $request
-					 */
-					$param=preg_replace('/^\w+/','',trim($param));
-					/*
-					 * Strip default value if exists ex. data=array() (with spaces)
-					 */
-					$param=preg_replace('/\s*=.+/','',trim($param));
-					/*
-					 * Strip & if pass by reference
-					 */
-					if($param[0]=='&')
-						$param=substr($param,1);
-					/*
-					 * add parameter info to the docParam array
-					 */
-					$docParam[$br]['parameterName']=$param;
-					$docParam[$br]['parameterLine']=$no+1;
-				}
-
-				/*
-				 * All info gathered, let's make some checking
-				 */
-				foreach($docParam as $value)
-				{
-					if(!isset($value['docLine']) || !isset($value['docName']) && isset($value['parameterName']))
-					{
-						echo "ERROR.............: Documentation not found!\n";
-						echo "Source file.......: ".$sourceFile."\n";
-						echo "Parameter line....: ".$value['parameterLine']."\n";
-						echo "Parameter name....: ".$value['parameterName']."\n\n";
-					}
-					if(!isset($value['parameterName']) || !isset($value['parameterLine']))
-					{
-						echo "ERROR.............: Parameter name not found!\n";
-						echo "Source file.......: ".$sourceFile."\n";
-						echo "PHPDoc line.......: ".$value['docLine']."\n";
-						echo "PHPDoc parameter..: ".$value['docName']."\n\n";
-					}
-					if( isset($value['docName']) && isset($value['parameterName']) && $value['docName']!==$value['parameterName'])
-					{
-						echo "ERROR.............: Wrong parameter order!\n";
-						echo "Source file.......: ".$sourceFile."\n";
-						echo "PHPDoc line.......: ".$value['docLine']."\n";
-						echo "PHPDoc parameter..: ".$value['docName']."\n";
-						echo "Parameter line....: ".$value['parameterLine']."\n";
-						echo "Parameter name....: ".$value['parameterName']."\n\n";
-					}
-				}
-				/*
-				 * reset $docParam
-				 */
-				$docParam=array();
-			}
-		}
-	}
-
 }
 
 class BaseDoc
@@ -721,31 +563,6 @@ class BaseDoc
 	public $see;
 	public $introduction;
 	public $description;
-
-	public $sourcePath;
-	public $startLine;
-	public $endLine;
-
-	public function loadSource($reflection)
-	{
-		$this->sourcePath=str_replace('\\','/',str_replace(YII_PATH,'',$reflection->getFileName()));
-		$this->startLine=$reflection->getStartLine();
-		$this->endLine=$reflection->getEndLine();
-	}
-
-	public function getSourceUrl($baseUrl,$line=null)
-	{
-		if($line===null)
-			return $baseUrl.$this->sourcePath;
-		else
-			return $baseUrl.$this->sourcePath.'#'.$line;
-	}
-
-	public function getSourceCode()
-	{
-		$lines=file(YII_PATH.$this->sourcePath);
-		return implode("",array_slice($lines,$this->startLine-1,$this->endLine-$this->startLine+1));
-	}
 }
 
 class ClassDoc extends BaseDoc
@@ -823,5 +640,4 @@ class ParamDoc
 	public $type;
 	public $isOptional;
 	public $defaultValue;
-	public $isPassedByReference;
 }

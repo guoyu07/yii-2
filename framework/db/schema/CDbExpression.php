@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -17,12 +17,10 @@
  * expression so that saving the record would fill the corresponding column
  * with the current DB server timestamp.
  *
- * Starting from version 1.1.1, one can also specify parameters to be bound
- * for the expression. For example, if the expression is 'LOWER(:value)', then
- * one can set {@link params} to be <code>array(':value'=>$value)</code>.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.db.schema
+ * @since 1.0.2
  */
 class CDbExpression extends CComponent
 {
@@ -30,23 +28,14 @@ class CDbExpression extends CComponent
 	 * @var string the DB expression
 	 */
 	public $expression;
-	/**
-	 * @var array list of parameters that should be bound for this expression.
-	 * The keys are placeholders appearing in {@link expression}, while the values
-	 * are the corresponding parameter values.
-	 * @since 1.1.1
-	 */
-	public $params=array();
 
 	/**
 	 * Constructor.
-	 * @param string $expression the DB expression
-	 * @param array $params parameters
+	 * @param string the DB expression
 	 */
-	public function __construct($expression,$params=array())
+	public function __construct($expression)
 	{
 		$this->expression=$expression;
-		$this->params=$params;
 	}
 
 	/**

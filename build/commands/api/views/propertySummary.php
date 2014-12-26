@@ -1,17 +1,11 @@
 <?php if($protected && !$class->protectedPropertyCount || !$protected && !$class->publicPropertyCount) return; ?>
 
-<div class="summary docProperty">
+<div class="summary">
 <h2><?php echo $protected ? 'Protected Properties' : 'Public Properties'; ?></h2>
-
-<p><a href="#" class="toggle">Hide inherited properties</a></p>
-
+<p>
+<a href="#" class="toggle">Hide inherited properties</a>
+</p>
 <table class="summaryTable">
-<colgroup>
-	<col class="col-property" />
-	<col class="col-type" />
-	<col class="col-description" />
-	<col class="col-defined" />
-</colgroup>
 <tr>
   <th>Property</th><th>Type</th><th>Description</th><th>Defined By</th>
 </tr>

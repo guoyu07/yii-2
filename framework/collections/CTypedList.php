@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -15,6 +15,7 @@
  * added to the list is of certain class type.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.collections
  * @since 1.0
  */
@@ -24,7 +25,7 @@ class CTypedList extends CList
 
 	/**
 	 * Constructor.
-	 * @param string $type class type
+	 * @param string class type
 	 */
 	public function __construct($type)
 	{
@@ -35,8 +36,8 @@ class CTypedList extends CList
 	 * Inserts an item at the specified position.
 	 * This method overrides the parent implementation by
 	 * checking the item to be inserted is of certain type.
-	 * @param integer $index the specified position.
-	 * @param mixed $item new item
+	 * @param integer the specified position.
+	 * @param mixed new item
 	 * @throws CException If the index specified exceeds the bound,
 	 * the list is read-only or the element is not of the expected type.
 	 */

@@ -40,7 +40,7 @@ class PostController extends CController
 	 */
 	public function actionList()
 	{
-		$pages=new CPagination(Post::model()->count());
+		$pages=$this->paginate(Post::model()->count());
 		$postList=Post::model()->findAll($this->getListCriteria($pages));
 
 		$this->render('list',array(

@@ -6,22 +6,30 @@
  * - $tableName: the table name
  * - $columns: a list of table column schema objects
  * - $rules: a list of validation rules (string)
- * - $labels: a list of labels (column name => label)
+ * - $labels: a list of labels (string)
  * - $relations: a  list of relations (string)
  */
 ?>
 <?php echo "<?php\n"; ?>
 
-/**
- * This is the model class for table "<?php echo $tableName; ?>".
- *
- * The followings are the available columns in table '<?php echo $tableName; ?>':
-<?php foreach($columns as $column): ?>
- * @property <?php echo $column->type.' $'.$column->name."\n"; ?>
-<?php endforeach; ?>
- */
 class <?php echo $className; ?> extends CActiveRecord
 {
+	/**
+	 * The followings are the available columns in table '<?php echo $tableName; ?>':
+<?php foreach($columns as $column): ?>
+	 * @var <?php echo $column->type.' $'.$column->name."\n"; ?>
+<?php endforeach; ?>
+	 */
+
+	/**
+	 * Returns the static model of the specified AR class.
+	 * @return CActiveRecord the static model class
+	 */
+	public static function model($className=__CLASS__)
+	{
+		return parent::model($className);
+	}
+
 	/**
 	 * @return string the associated database table name
 	 */
@@ -35,15 +43,10 @@ class <?php echo $className; ?> extends CActiveRecord
 	 */
 	public function rules()
 	{
-		// NOTE: you should only define rules for those attributes that
-		// will receive user inputs.
 		return array(
 <?php foreach($rules as $rule): ?>
 			<?php echo $rule.",\n"; ?>
 <?php endforeach; ?>
-			// The following rule is used by search().
-			// Please remove those attributes that should not be searched.
-			array('<?php echo implode(', ', array_keys($columns)); ?>', 'safe', 'on'=>'search'),
 		);
 	}
 
@@ -71,50 +74,5 @@ class <?php echo $className; ?> extends CActiveRecord
 			<?php echo "'$column' => '$label',\n"; ?>
 <?php endforeach; ?>
 		);
-	}
-
-	/**
-	 * Retrieves a list of models based on the current search/filter conditions.
-	 *
-	 * Typical usecase:
-	 * - Initialize the model fields with values from filter form.
-	 * - Execute this method to get CActiveDataProvider instance which will filter
-	 * models according to data in model fields.
-	 * - Pass data provider to CGridView, CListView or any similar widget.
-	 *
-	 * @return CActiveDataProvider the data provider that can return the models based on the search/filter conditions.
-	 */
-	public function search()
-	{
-		// Warning: Please modify the following code to remove attributes that
-		// should not be searched.
-
-		$criteria=new CDbCriteria;
-
-<?php
-foreach($columns as $name=>$column)
-{
-	if($column->type==='string')
-	{
-		echo "\t\t\$criteria->compare('$name',\$this->$name,true);\n\n";
-	}
-	else
-	{
-		echo "\t\t\$criteria->compare('$name',\$this->$name);\n\n";
-	}
-}
-?>
-		return new CActiveDataProvider('<?php echo $className; ?>', array(
-			'criteria'=>$criteria,
-		));
-	}
-
-	/**
-	 * Returns the static model of the specified AR class.
-	 * @return <?php echo $className; ?> the static model class
-	 */
-	public static function model($className=__CLASS__)
-	{
-		return parent::model($className);
 	}
 }

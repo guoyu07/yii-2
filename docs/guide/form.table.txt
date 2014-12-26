@@ -27,7 +27,7 @@ public function actionBatchUpdate()
 		{
 			if(isset($_POST['Item'][$i]))
 				$item->attributes=$_POST['Item'][$i];
-			$valid=$item->validate() && $valid;
+			$valid=$valid && $item->validate();
 		}
 		if($valid)  // all items are valid
 			// ...do something here
@@ -42,29 +42,29 @@ display the input fields in an HTML table.
 
 ~~~
 [php]
-<div class="form">
+<div class="yiiForm">
 <?php echo CHtml::beginForm(); ?>
 <table>
 <tr><th>Name</th><th>Price</th><th>Count</th><th>Description</th></tr>
 <?php foreach($items as $i=>$item): ?>
 <tr>
-<td><?php echo CHtml::activeTextField($item,"[$i]name"); ?></td>
-<td><?php echo CHtml::activeTextField($item,"[$i]price"); ?></td>
-<td><?php echo CHtml::activeTextField($item,"[$i]count"); ?></td>
-<td><?php echo CHtml::activeTextArea($item,"[$i]description"); ?></td>
+<td><?php echo CHtml::activeTextField($item,"name[$i]"); ?></td>
+<td><?php echo CHtml::activeTextField($item,"price[$i]"); ?></td>
+<td><?php echo CHtml::activeTextField($item,"count[$i]"); ?></td>
+<td><?php echo CHtml::activeTextArea($item,"description[$i]"); ?></td>
 </tr>
 <?php endforeach; ?>
 </table>
 
 <?php echo CHtml::submitButton('Save'); ?>
 <?php echo CHtml::endForm(); ?>
-</div><!-- form -->
+</div><!-- yiiForm -->
 ~~~
 
-Note in the above that we use `"[$i]name"` instead of `"name"` as the
+Note in the above that we use `"name[$i]"` instead of `"name"` as the
 second parameter when calling [CHtml::activeTextField].
 
-If there are any validation errors, the corresponding input fields will
+If there is anything validation error, the corresponding input fields will
 be highlighted automatically, just like the single model input we described
 earlier on.
 

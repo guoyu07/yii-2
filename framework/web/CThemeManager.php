@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -26,11 +26,8 @@
  * Since a self-contained theme often contains resource files that are made
  * Web accessible, please make sure the view/layout files are protected from Web access.
  *
- * @property array $themeNames List of available theme names.
- * @property string $basePath The base path for all themes. Defaults to "WebRootPath/themes".
- * @property string $baseUrl The base URL for all themes. Defaults to "/WebRoot/themes".
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.web
  * @since 1.0
  */
@@ -52,7 +49,7 @@ class CThemeManager extends CApplicationComponent
 
 
 	/**
-	 * @param string $name name of the theme to be retrieved
+	 * @param string name of the theme to be retrieved
 	 * @return CTheme the theme retrieved. Null if the theme does not exist.
 	 */
 	public function getTheme($name)
@@ -60,7 +57,7 @@ class CThemeManager extends CApplicationComponent
 		$themePath=$this->getBasePath().DIRECTORY_SEPARATOR.$name;
 		if(is_dir($themePath))
 		{
-			$class=Yii::import($this->themeClass, true);
+			$class=Yii::import($this->themeClass);
 			return new $class($name,$themePath,$this->getBaseUrl().'/'.$name);
 		}
 		else
@@ -80,7 +77,7 @@ class CThemeManager extends CApplicationComponent
 			$folder=@opendir($basePath);
 			while(($file=@readdir($folder))!==false)
 			{
-				if($file!=='.' && $file!=='..' && $file!=='.svn' && $file!=='.gitignore' && is_dir($basePath.DIRECTORY_SEPARATOR.$file))
+				if($file!=='.' && $file!=='..' && $file!=='.svn' && is_dir($basePath.DIRECTORY_SEPARATOR.$file))
 					$themes[]=$file;
 			}
 			closedir($folder);
@@ -100,7 +97,7 @@ class CThemeManager extends CApplicationComponent
 	}
 
 	/**
-	 * @param string $value the base path for all themes.
+	 * @param string the base path for all themes.
 	 * @throws CException if the base path does not exist
 	 */
 	public function setBasePath($value)
@@ -121,7 +118,7 @@ class CThemeManager extends CApplicationComponent
 	}
 
 	/**
-	 * @param string $value the base URL for all themes.
+	 * @param string the base URL for all themes.
 	 */
 	public function setBaseUrl($value)
 	{

@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
@@ -15,9 +15,9 @@
         </style>
     </head>
     <body>
-        <h1>Ongeldige aanvraag</h1>
+        <h1>Slechte vraag</h1>
         <h2><?php echo nl2br(CHtml::encode($data['message'])); ?></h2>
-        <p>Uw browser (of proxy) stuurde een aanvraag die deze server niet kon begrijpen door een slechte syntax. Herhaal deze aanvraag niet zonder correcties aub.</p>
+        <p>Uw browser (of proxy) stuurde een vraag die deze server niet kon begrijpen door een slechte syntax. Herhaal a.u.b. deze vraag niet zonder correcties.</p>
         <p>Als u van mening bent dat dit een server fout is, neem dan a.u.b. contact op met de <?php echo $data['admin']; ?> </p>
         <div class="version"><?php echo date('Y-m-d H:i:s',$data['time']) .' '. $data['version']; ?></div>
     </body>

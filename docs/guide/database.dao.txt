@@ -48,7 +48,7 @@ documentation](http://www.php.net/manual/en/pdo.construct.php) for complete
 information. Below is a list of commonly used DSN formats:
 
    - SQLite: `sqlite:/path/to/dbfile`
-   - MySQL/MariaDB: `mysql:host=localhost;dbname=testdb`
+   - MySQL: `mysql:host=localhost;dbname=testdb`
    - PostgreSQL: `pgsql:host=localhost;port=5432;dbname=testdb`
    - SQL Server: `mssql:host=localhost;dbname=testdb`
    - Oracle: `oci:dbname=//localhost:1521/testdb`
@@ -81,38 +81,6 @@ activated automatically, unless we explictly configure
 [CDbConnection::autoConnect] to be false. Using this approach, the single
 DB connection can be shared in multiple places in our code.
 
-Using ODBC Connection
----------------------
-
-There is a peculiarity when you want to work with the database through the ODBC layer.
-When using ODBC, its connection string (DSN) doesn't indicate uniquely what database
-type is being used (MySQL, MS SQL Server, etc.). Thus it's not able to automatically
-detect needed DBMS specific classes (`CMysqlSchema`, `CMssqlSchema` and so forth).
-
-That's why you have to use `$driverName` property of the `CDbConnection` class
-to disambiguate that:
-
-~~~
-[php]
-array(
-	......
-	'components'=>array(
-		......
-		'db'=>array(
-			'class'=>'CDbConnection'
-			'driverName'=>'mysql',
-			'connectionString'=>'odbc:Driver={MySQL};Server=127.0.0.1;Database=test',
-			'username'=>'',
-			'password'=>'',
-		),
-	),
-)
-~~~
-
-> Note: The configuration above is only relevant since the 1.1.15 version of the framework.
-If you're using the older versions of the framework you have to extend the database connection
-class and handle that case yourself.
-
 Executing SQL Statements
 ------------------------
 
@@ -122,9 +90,6 @@ using [CDbCommand]. One creates a [CDbCommand] instance by calling
 
 ~~~
 [php]
-$connection=Yii::app()->db;   // assuming you have configured a "db" connection
-// If not, you may explicitly create a connection:
-// $connection=new CDbConnection($dsn,$username,$password);
 $command=$connection->createCommand($sql);
 // if needed, the SQL statement may be updated as follows:
 // $command->text=$newSQL;
@@ -207,7 +172,7 @@ try
 }
 catch(Exception $e) // an exception is raised if a query fails
 {
-	$transaction->rollback();
+	$transaction->rollBack();
 }
 ~~~
 
@@ -230,7 +195,7 @@ must be done before the SQL statement is executed.
 ~~~
 [php]
 // an SQL with two placeholders ":username" and ":email"
-$sql="INSERT INTO tbl_user (username, email) VALUES(:username,:email)";
+$sql="INSERT INTO users(username, email) VALUES(:username,:email)";
 $command=$connection->createCommand($sql);
 // replace the placeholder ":username" with the actual username value
 $command->bindParam(":username",$username,PDO::PARAM_STR);
@@ -246,7 +211,7 @@ $command->execute();
 The methods [bindParam()|CDbCommand::bindParam] and
 [bindValue()|CDbCommand::bindValue] are very similar. The only difference
 is that the former binds a parameter with a PHP variable reference while
-the latter with a value. For parameters that represent large blocks of data
+the latter with a value. For parameters that represent large block of data
 memory, the former is preferred for performance consideration.
 
 For more details about binding parameters, see the [relevant PHP
@@ -261,7 +226,7 @@ row is fetched.
 
 ~~~
 [php]
-$sql="SELECT username, email FROM tbl_user";
+$sql="SELECT username, email FROM users";
 $dataReader=$connection->createCommand($sql)->query();
 // bind the 1st column (username) with the $username variable
 $dataReader->bindColumn(1,$username);
@@ -271,28 +236,6 @@ while($dataReader->read()!==false)
 {
     // $username and $email contain the username and email in the current row
 }
-~~~
-
-Using Table Prefix
-------------------
-
-Yii provides integrated support for using
-table prefix. Table prefix means a string that is prepended to the names of
-the tables in the currently connected database. It is mostly used in a shared
-hosting environment where multiple applications share a single database and use
-different table prefixes to differentiate from each other. For example, one
-application could use `tbl_` as prefix while the other `yii_`.
-
-To use table prefix, configure the [CDbConnection::tablePrefix] property to be
-the desired table prefix. Then, in SQL statements use `{{TableName}}` to refer
-to table names, where `TableName` means the table name without prefix. For example,
-if the database contains a table named `tbl_user` where `tbl_` is configured as the
-table prefix, then we can use the following code to query about users:
-
-~~~
-[php]
-$sql='SELECT * FROM {{user}}';
-$users=$connection->createCommand($sql)->queryAll();
 ~~~
 
 <div class="revision">$Id$</div>

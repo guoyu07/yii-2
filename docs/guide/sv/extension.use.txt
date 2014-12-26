@@ -17,30 +17,16 @@ utvidgningar. Givet en utvidgning med namnet `xyz`, kan alltid aliassökvägen
 `ext.xyz` användas för att lokalisera dess rotkatalog, vilken innehåller 
 alla filer som tillhör `xyz`.
 
+> Note|Märk: Rotsökvägsalias `ext` har varit tillgängligt sedan version 1.0.8.
+Tidigare behövde man använda `application.extensions` för att referera till
+katalogen med alla utvidgningar. Exemplen i nedanstående stycken förutsätter att 
+`ext` är definierad. För version 1.0.7 eller lägre måste 
+`application.extensions` användas istället.
+
 Olika utvidgningar har varierande krav kring import av konfiguration samt 
 användning. I det följande sammanfattas vanliga användningsfall för 
 utvidgningar, enligt respektive kategorier, beskrivna i 
 [översikt](/doc/guide/extension.overview).
-
-Zii-utvidgningar
-----------------
-
-Innan vi börjar beskriva användning av tredjepartstillägg vill vi introducera 
-utvidgningsbiblioteket Zii, vilket består av en uppsättning tillägg framtagna av Yii:s 
-team av utvecklare och kommer att följa med i varje release.
-
-För att använda Zii-tillägg måste man referera till motsvarande klass med hjälp av ett 
-sökvägsalias på formen `zii.path.to.ClassName`. Rotalias `zii` är fördefinierat av Yii. 
-Det refererar till Zii-biblioteks rotkatalog. Till exempel, i fråga om [CGridView] 
-skulle vi använda följande kod i ett vyskript för att referera till tillägget:
-
-~~~
-[php]
-$this->widget('zii.widgets.grid.CGridView', array(
-	'dataProvider'=>$dataProvider,
-));
-~~~
-
 
 Applikationskomponent
 ---------------------
@@ -120,11 +106,9 @@ Detta låter sig göras eftersom [CApplicationComponent] definierar propertyn
 behaviorkonfigurationer kommer komponenten, när den initialiseras, 
 att koppla alla motsvarande behavior.
 
-För klasserna [CController], [CFormModel] och [CActiveRecord], vilka vanligtvis 
+För klasserna [CController], [CFormModel] och [CActiveModel], vilka vanligtvis 
 behöver utökas, sker koppling av behavior genom att deras respektive metod 
-`behaviors()` åsidosätts och omdefinieras.  I samband med initialiseringen 
-kommer klasserna att automatiskt bindas till varje behavior som deklarerats i 
-nämnda metod. Till exempel,
+`behaviors()` åsidosätts och omdefinieras. Till exempel,
 
 ~~~
 [php]
@@ -327,4 +311,4 @@ Sedan kan en instans av klassen skapas, dess propertyn konfigureras och dess
 metoder anropas. Man kan även ärva och utvidga komponentens klass.
 
 
-<div class="revision">$Id: extension.use.txt 2890 2011-01-18 15:58:34Z qiang.xue $</div>
+<div class="revision">$Id: extension.use.txt 1392 2009-09-04 20:39:11Z qiang.xue $</div>

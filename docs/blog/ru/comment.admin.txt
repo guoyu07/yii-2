@@ -8,13 +8,38 @@
 Обновление и удаление комментариев
 ----------------------------------
 
-Код, сгенерированный утилитой `Gii` для обновления и удаления комментариев,
-остается, в основном, неизменным.
+Код, сгенерированный утилитой `yiic` для обновления и удаления комментариев,
+остается, в основном, неизменным. Поскольку мы поддерживаем предварительный
+просмотр комментария при его обновлении, мы должны только изменить метод
+`actionUpdate()` контроллера `CommentController` следующим образом,
+
+~~~
+[php]
+public function actionUpdate()
+{
+	$comment=$this->loadComment();
+
+	if(isset($_POST['Comment']))
+	{
+		$comment->attributes=$_POST['Comment'];
+		if(isset($_POST['previewComment']))
+			$comment->validate('update');
+		else if(isset($_POST['submitComment']) && $comment->save())
+			$this->redirect(array('post/show',
+				'id'=>$comment->postId,
+				'#'=>'c'.$comment->id));
+	}
+
+	$this->render('update',array('comment'=>$comment));
+}
+~~~
+
+Похожее есть в контроллере `PostController`.
 
 Одобрение комментариев
 ----------------------
 
-Недавно созданные комментарии находятся в статусе ожидающих одобрения и должны быть одобрены, чтобы стать видимыми для гостевого пользователя. Одобрение комментария — это, главным образом, изменение столбца состояния комментария.
+Недавно созданные комментарии находятся в статусе ожидающих одобрения и должны быть одобрены, чтобы стать видимыми для гостевого пользователя. Одобрение комментария - это, главным образом, изменение столбца состояния комментария.
 
 Мы создаем метод `actionApprove()` в классе `CommentController` следующим образом,
 
@@ -24,12 +49,14 @@ public function actionApprove()
 {
 	if(Yii::app()->request->isPostRequest)
 	{
-		$comment=$this->loadModel();
+		$comment=$this->loadComment();
 		$comment->approve();
-		$this->redirect(array('index'));
+		$this->redirect(array('post/show',
+			'id'=>$comment->postId,
+			'#'=>'c'.$comment->id));
 	}
 	else
-		throw new CHttpException(400,'Invalid request...');
+		throw new CHttpException(400, 'Invalid request...');
 }
 ~~~
 
@@ -38,66 +65,46 @@ public function actionApprove()
 переадресовываем браузер пользователя к странице, отображающей запись, к которой
 относится этот комментарий.
 
-Естественно, потребуется создать и сам метод `approve` в модели `Comment`:
+Мы также изменяем метод `actionList()` контроллера `Comment`, чтобы показать
+список комментариев, ожидающих одобрения.
 
 ~~~
 [php]
-public function approve()
+public function actionList()
 {
-	$this->status=Comment::STATUS_APPROVED;
-	$this->update(array('status'));
-}
-~~~
+	$criteria=new CDbCriteria;
+	$criteria->condition='Comment.status='.Comment::STATUS_PENDING;
 
-Здесь мы просто выставляем свойство `status` комментария в `approved` согласно значению соответствующей константы класса `Comment`:
+	$pages=new CPagination(Comment::model()->count($criteria));
+	$pages->pageSize=self::PAGE_SIZE;
+	$pages->applyLimit($criteria);
 
-~~~
-[php]
-class Comment extends CActiveRecord
-{
-	...
+	$comments=Comment::model()->with('post')->findAll($criteria);
 
-	const STATUS_PENDING=1;
-	const STATUS_APPROVED=2;
-
-	..
-}
-~~~
-
-Затем мы вызываем метод `update()` для того, чтобы сохранить выставленное свойство в БД.
-
-Мы также изменяем метод `actionIndex()` контроллера `CommentController`, чтобы показать
-все комментарии и вывести ожидающие одобрения первыми.
-
-~~~
-[php]
-public function actionIndex()
-{
-	$dataProvider=new CActiveDataProvider('Comment', array(
-		'criteria'=>array(
-			'with'=>'post',
-			'order'=>'t.status, t.create_time DESC',
-		),
-	));
-
-	$this->render('index',array(
-		'dataProvider'=>$dataProvider,
+	$this->render('list',array(
+		'comments'=>$comments,
+		'pages'=>$pages,
 	));
 }
 ~~~
 
-Стоит отметить, что в коде выше необходимо разрешить конфликт имён столбцов указав, что нам необходимы значения из
-основной таблицы `tbl_comment`. Сам конфликт возникает так как и в `tbl_post` и в `tbl_comment` есть столбцы
-`status` и `create_time`.
+В представлении `list` мы отображаем детально каждый комментарий, ожидающий
+одобрение. В частности, мы показываем кнопку `Одобрить` следующим образом,
 
-Сделать это можно путём использования псевдонимов таблиц.
-Как описано [в руководстве](/doc/guide/ru/database.arr#disambiguating-column-names),
-псевдоним главной таблицы реляционного запроса всегда равен `t`. Поэтому, мы
-добавляем `t` к полям `status` и `create_time`.
+~~~
+[php]
+<?php if($comment->status==Comment::STATUS_PENDING): ?>
+	<span class="pending">Ожидают одобрения</span> |
+	<?php echo CHtml::linkButton('Одобрить', array(
+	    'submit'=>array('comment/approve','id'=>$comment->id),
+	)); ?> |
+<?php endif; ?>
+~~~
 
-Как и отображение записей, отображение `index` контроллера `CommentController`
-использует [CListView] для вывода списка комментариев, который, в свою очередь,
-использует `/wwwroot/blog/protected/views/comment/_view.php` для вывода каждого
-отдельного комментария. Мы не будем детально рассматривать данный механизм.
-Заинтересованные читатели могут изучить соответствующий файл демонстрационного
-приложения: `/wwwroot/yii/demos/blog/protected/views/comment/_view.php`.
+Мы используем метод [CHtml::linkButton()] вместо [CHtml::link()], потому что
+первый вызвал бы запрос POST, в то время как второй вызывает запрос GET.
+Рекомендуется, чтобы запрос GET не изменял данные на сервере. Иначе мы
+оказываемся перед опасностью, что пользователь может неосторожно изменить
+данные на сервере несколько раз, если он обновит страницу.
+
+<div class="revision">$Id: comment.admin.txt 1335 2009-08-15 20:34:36Z qiang.xue $</div>

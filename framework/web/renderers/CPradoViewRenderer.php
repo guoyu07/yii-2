@@ -5,7 +5,7 @@
  * @author Steve Heyns http://customgothic.com/
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -27,41 +27,42 @@
  * CPradoViewRenderer allows you to write view files with the following syntax:
  * <pre>
  * // PHP tags:
- * <%= expression %>
- * // <?php echo expression ?>
- * <% statement %>
- * // <?php statement ?></li>
+ * &lt;%= expression %&gt;
+ * // &lt;?php echo expression ?&gt;
+ * &lt;% statement %&gt;
+ * // &lt;?php statement ?&gt;</li>
  *
  * // component tags:
- * <com:WigetClass name1="value1" name2='value2' name3={value3} >
- * // <?php $this->beginWidget('WigetClass',
- * // array('name1'=>"value1", 'name2'=>'value2', 'name3'=>value3)); ?>
- * </com:WigetClass >
- * // <?php $this->endWidget('WigetClass'); ?>
- * <com:WigetClass name1="value1" name2='value2' name3={value3} />
- * // <?php $this->widget('WigetClass',
- * // array('name1'=>"value1", 'name2'=>'value2', 'name3'=>value3)); ?>
+ * &lt;com:WigetClass name1="value1" name2='value2' name3={value3} &gt;
+ * // &lt;?php $this->beginWidget('WigetClass',
+ * // array('name1'=>"value1", 'name2'=>'value2', 'name3'=>value3)); ?&gt;
+ * &lt;/com:WigetClass &gt;
+ * // &lt;?php $this->endWidget('WigetClass'); ?&gt;
+ * &lt;com:WigetClass name1="value1" name2='value2' name3={value3} /&gt;
+ * // &lt;?php $this->widget('WigetClass',
+ * // array('name1'=>"value1", 'name2'=>'value2', 'name3'=>value3)); ?&gt;
  *
  * // cache tags:
- * <cache:fragmentID name1="value1" name2='value2' name3={value3} >
- * // <?php if($this->beginCache('fragmentID',
- * // array('name1'=>"value1", 'name2'=>'value2', 'name3'=>value3))): ?>
- * </cache:fragmentID >
- * // <?php $this->endCache('fragmentID'); endif; ?>
+ * &lt;cache:fragmentID name1="value1" name2='value2' name3={value3} &gt;
+ * // &lt;?php if($this->beginCache('fragmentID',
+ * // array('name1'=>"value1", 'name2'=>'value2', 'name3'=>value3))): ?&gt;
+ * &lt;/cache:fragmentID &gt;
+ * // &lt;?php $this->endCache('fragmentID'); endif; ?&gt;
  *
  * // clip tags:
- * <clip:clipID >
- * // <?php $this->beginClip('clipID'); ?>
- * </clip:clipID >
- * // <?php $this->endClip('clipID'); ?>
+ * &lt;clip:clipID &gt;
+ * // &lt;?php $this->beginClip('clipID'); ?&gt;
+ * &lt;/clip:clipID &gt;
+ * // &lt;?php $this->endClip('clipID'); ?&gt;
  *
  * // comment tags:
- * <!--- comments --->
+ * &lt;!--- comments ---&gt;
  * // the whole tag will be stripped off
  * </pre>
  *
  * @author Steve Heyns http://customgothic.com/
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.web.renderers
  * @since 1.0
  */
@@ -74,8 +75,8 @@ class CPradoViewRenderer extends CViewRenderer
 	/**
 	 * Parses the source view file and saves the results as another file.
 	 * This method is required by the parent class.
-	 * @param string $sourceFile the source view file path
-	 * @param string $viewFile the resulting view file path
+	 * @param string the source view file path
+	 * @param string the resulting view file path
 	 */
 	protected function generateViewFile($sourceFile,$viewFile)
 	{
@@ -108,9 +109,9 @@ class CPradoViewRenderer extends CViewRenderer
 				else
 					$this->_output.=$this->processWidget($type,$match[4][0],$match[2][1]);
 			}
-			elseif(strpos($str,'</com:')===0)	// closing component tag
+			else if(strpos($str,'</com:')===0)	// closing component tag
 				$this->_output.=$this->processEndWidget($match[3][0],$match[2][1]);
-			elseif(strpos($str,'<cache:')===0)	// opening cache tag
+			else if(strpos($str,'<cache:')===0)	// opening cache tag
 			{
 				$id=$match[3][0];
 				if($str[strlen($str)-2]!=='/')  // open tag
@@ -118,9 +119,9 @@ class CPradoViewRenderer extends CViewRenderer
 				else
 					$this->_output.=$this->processCache($id,$match[4][0],$match[2][1]);
 			}
-			elseif(strpos($str,'</cache:')===0)	// closing cache tag
+			else if(strpos($str,'</cache:')===0)	// closing cache tag
 				$this->_output.=$this->processEndCache($match[3][0],$match[2][1]);
-			elseif(strpos($str,'<clip:')===0)	// opening clip tag
+			else if(strpos($str,'<clip:')===0)	// opening clip tag
 			{
 				$id=$match[3][0];
 				if($str[strlen($str)-2]!=='/')  // open tag
@@ -128,11 +129,11 @@ class CPradoViewRenderer extends CViewRenderer
 				else
 					$this->_output.=$this->processClip($id,$match[4][0],$match[2][1]);
 			}
-			elseif(strpos($str,'</clip:')===0)	// closing clip tag
+			else if(strpos($str,'</clip:')===0)	// closing clip tag
 				$this->_output.=$this->processEndClip($match[3][0],$match[2][1]);
-			elseif(strpos($str,'<%=')===0)	// expression
+			else if(strpos($str,'<%=')===0)	// expression
 				$this->_output.=$this->processExpression($match[1][0],$match[1][1]);
-			elseif(strpos($str,'<%')===0)	// statement
+			else if(strpos($str,'<%')===0)	// statement
 				$this->_output.=$this->processStatement($match[1][0],$match[1][1]);
 		}
 		if($textStart<strlen($this->_input))
@@ -141,11 +142,6 @@ class CPradoViewRenderer extends CViewRenderer
 		file_put_contents($viewFile,$this->_output);
 	}
 
-	/*
-	 * @param string $type type
-	 * @param string $attributes attributes
-	 * @param string $offset offset
-	 */
 	private function processWidget($type,$attributes,$offset)
 	{
 		$attrs=$this->processAttributes($attributes);
@@ -155,11 +151,6 @@ class CPradoViewRenderer extends CViewRenderer
 			return $this->generatePhpCode("\$this->widget('$type', array($attrs));",$offset);
 	}
 
-	/*
-	 * @param string $type type
-	 * @param string $attributes attributes
-	 * @param string $offset offset
-	 */
 	private function processBeginWidget($type,$attributes,$offset)
 	{
 		$attrs=$this->processAttributes($attributes);
@@ -169,30 +160,16 @@ class CPradoViewRenderer extends CViewRenderer
 			return $this->generatePhpCode("\$this->beginWidget('$type', array($attrs));",$offset);
 	}
 
-	/*
-	 * @param string $type type
-	 * @param string $offset offset
-	 */
 	private function processEndWidget($type,$offset)
 	{
 		return $this->generatePhpCode("\$this->endWidget('$type');",$offset);
 	}
 
-	/*
-	 * @param string $id id
-	 * @param string $attributes attributes
-	 * @param string $offset offset
-	 */
 	private function processCache($id,$attributes,$offset)
 	{
 		return $this->processBeginCache($id,$attributes,$offset) . $this->processEndCache($id,$offset);
 	}
 
-	/*
-	 * @param string $id id
-	 * @param string $attributes attributes
-	 * @param string $offset offset
-	 */
 	private function processBeginCache($id,$attributes,$offset)
 	{
 		$attrs=$this->processAttributes($attributes);
@@ -202,30 +179,16 @@ class CPradoViewRenderer extends CViewRenderer
 			return $this->generatePhpCode("if(\$this->beginCache('$id', array($attrs))):",$offset);
 	}
 
-	/*
-	 * @param string $id id
-	 * @param string $offset offset
-	 */
 	private function processEndCache($id,$offset)
 	{
 		return $this->generatePhpCode("\$this->endCache('$id'); endif;",$offset);
 	}
 
-	/*
-	 * @param string $id id
-	 * @param string $attributes attributes
-	 * @param string $offset offset
-	 */
 	private function processClip($id,$attributes,$offset)
 	{
 		return $this->processBeginClip($id,$attributes,$offset) . $this->processEndClip($id,$offset);
 	}
 
-	/*
-	 * @param string $id id
-	 * @param string $attributes attributes
-	 * @param string $offset offset
-	 */
 	private function processBeginClip($id,$attributes,$offset)
 	{
 		$attrs=$this->processAttributes($attributes);
@@ -235,37 +198,21 @@ class CPradoViewRenderer extends CViewRenderer
 			return $this->generatePhpCode("\$this->beginClip('$id', array($attrs));",$offset);
 	}
 
-	/*
-	 * @param string $id id
-	 * @param string $offset offset
-	 */
 	private function processEndClip($id,$offset)
 	{
 		return $this->generatePhpCode("\$this->endClip('$id');",$offset);
 	}
 
-	/*
-	 * @param string $expression expression
-	 * @param string $offset offset
-	 */
 	private function processExpression($expression,$offset)
 	{
 		return $this->generatePhpCode('echo '.$expression,$offset);
 	}
 
-	/*
-	 * @param string $statement statement
-	 * @param string $offset offset
-	 */
 	private function processStatement($statement,$offset)
 	{
 		return $this->generatePhpCode($statement,$offset);
 	}
 
-	/*
-	 * @param string $code code
-	 * @param string $offset offset
-	 */
 	private function generatePhpCode($code,$offset)
 	{
 		$line=$this->getLineNumber($offset);
@@ -273,9 +220,6 @@ class CPradoViewRenderer extends CViewRenderer
 		return "<?php /* line $line */ $code ?>";
 	}
 
-	/*
-	 * @param string $str str
-	 */
 	private function processAttributes($str)
 	{
 		static $pattern='/(\w+)\s*=\s*(\'.*?(?<!\\\\)\'|".*?(?<!\\\\)"|\{.*?\})/msS';
@@ -294,9 +238,6 @@ class CPradoViewRenderer extends CViewRenderer
 		return implode(', ',$attributes);
 	}
 
-	/*
-	 * @param string $offset offset
-	 */
 	private function getLineNumber($offset)
 	{
 		return count(explode("\n",substr($this->_input,0,$offset)));

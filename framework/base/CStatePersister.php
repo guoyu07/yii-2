@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -32,10 +32,11 @@
  * to improve the throughput.
  *
  * CStatePersister is a core application component used to store global application state.
- * It may be accessed via {@link CApplication::getStatePersister()}.
+ * It may be accessed via {@link CApplication::getStatePersister)}.
  * page state persistent method based on cache.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.base
  * @since 1.0
  */
@@ -51,6 +52,7 @@ class CStatePersister extends CApplicationComponent implements IStatePersister
 	 * @var string the ID of the cache application component that is used to cache the state values.
 	 * Defaults to 'cache' which refers to the primary cache application component.
 	 * Set this property to false if you want to disable caching state values.
+	 * @since 1.0.10
 	 */
 	public $cacheID='cache';
 
@@ -82,7 +84,7 @@ class CStatePersister extends CApplicationComponent implements IStatePersister
 			$cacheKey='Yii.CStatePersister.'.$stateFile;
 			if(($value=$cache->get($cacheKey))!==false)
 				return unserialize($value);
-			elseif(($content=@file_get_contents($stateFile))!==false)
+			else if(($content=@file_get_contents($stateFile))!==false)
 			{
 				$cache->set($cacheKey,$content,0,new CFileCacheDependency($stateFile));
 				return unserialize($content);
@@ -90,7 +92,7 @@ class CStatePersister extends CApplicationComponent implements IStatePersister
 			else
 				return null;
 		}
-		elseif(($content=@file_get_contents($stateFile))!==false)
+		else if(($content=@file_get_contents($stateFile))!==false)
 			return unserialize($content);
 		else
 			return null;
@@ -98,7 +100,7 @@ class CStatePersister extends CApplicationComponent implements IStatePersister
 
 	/**
 	 * Saves application state in persistent storage.
-	 * @param mixed $state state data (must be serializable).
+	 * @param mixed state data (must be serializable).
 	 */
 	public function save($state)
 	{

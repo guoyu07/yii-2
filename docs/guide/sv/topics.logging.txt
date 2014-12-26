@@ -104,8 +104,7 @@ uttryckligen stoppa bearbetningen av pågående request, anropa
 [CApplication::end()] signalerar [onEndRequest|CApplication::onEndRequest]-
 händelsen så att meddelanden kan loggas korrekt.
 
-Meddelandefiltrering
---------------------
+### Meddelandefiltrering
 
 Som tidigare nämnts kan meddelanden filtreras enligt deras nivåer och kategorier 
 innan de skickas längs en loggningsväg. Detta utförs genom att sätta propertyna 
@@ -119,13 +118,12 @@ som en kategorihierkarki. Närmare bestämt, säger vi att `xxx` är förälder 
 användas för att representera kategori `xxx` samt alla dess barn- och 
 barnbarnskategorier.
 
-Loggning av kontextinformation
-------------------------------
+### Loggning av kontextinformation
 
-Det är möjligt att specificera loggning av ytterligare kontextinformation, såsom 
-fördefinierade PHP-variabler (t.ex. `$_GET`, `$_SERVER`), sessions-ID, användarnamn, etc. 
-Detta åstadkommmes genom att propertyn [CLogRoute::filter] för en loggningsväg specificeras 
-till ett passande loggningsfilter.
+Från och med version 1.0.6, är det möjligt att specificera loggning av ytterligare 
+kontextinformation, såsom fördefinierade PHP-variabler (t.ex. `$_GET`, `$_SERVER`), 
+sessions-ID, användarnamn, etc. Detta åstadkommmes genom att propertyn 
+[CLogRoute::filter] för en loggningsväg specificeras till ett passande loggningsfilter.
 
 Yii-ramverket innehåller det praktiska [CLogFilter] som i de flesta fall kan användas 
 när ett loggningsfilter erfordras. Som standard loggar [CLogFilter] ett meddelande 
@@ -162,15 +160,15 @@ array(
 ~~~
 
 
-Yii stöder loggning av anropsstacken i meddelanden som loggas genom anrop till `Yii::trace`. 
-Denna finess är som standard inte aktiverad, eftersom den sätter ned prestanda. 
-För att använda denna finess, definiera helt enkelt konstanten `YII_TRACE_LEVEL` 
-placerad i början av startskriptet (före inkludering av `yii.php`) till ett heltal 
-större än 0. Yii kommer då att komplettera varje trace-meddelande med filnamn och 
-radnummer för anrop som tillhör applikationskod. Värdet av `YII_TRACE_LEVEL` avgör 
-hur många nivåer av anropsstacken som skall registreras. Denna information är 
-i synnerhet användbar i utvecklingsfasen, eftersom den kan hjälpa till att 
-identifiera ställen som triggar trace-meddelanden.
+Från och med version 1.0.7 stöder Yii loggning av anropsstacken i meddelanden 
+som loggas genom anrop till `Yii::trace`. Denna finess är som standard inte aktiverad, 
+eftersom den sätter ned prestanda. För att använda denna finess, definiera helt enkelt 
+konstanten `YII_TRACE_LEVEL` placerad i början av startskriptet (före inkludering av 
+`yii.php`) till ett heltal större än 0. Yii kommer då att komplettera varje 
+trace-meddelande med filnamn och radnummer för anrop som tillhör applikationskod. 
+Värdet av `YII_TRACE_LEVEL` avgör hur många nivåer av anropsstacken som skall 
+registreras. Denna information är i synnerhet användbar i utvecklingsfasen, eftersom 
+den kan hjälpa till att identifiera ställen som triggar trace-meddelanden.
 
 
 Prestandaprofilering
@@ -203,14 +201,13 @@ detsamma som vi gör vid vanlig meddelandestyrning. [CProfileLogRoute]-loggnings
 kommer att presentera prestandaresultaten vid slutet av den aktuella sidan.
 
 
-Profilering av SQL-exekvering
------------------------------
+### Profilering av SQL-exekvering
 
 Profilering är speciellt användbar vid arbete med databaser eftersom SQL-exekvering 
 ofta står för den huvudsakliga prestandaförlusten i en applikation. Utöver att vi 
 manuellt kan sätta in `beginProfile`- och `endProfile`-satser på lämpliga ställen, 
-för att mäta tidåtgången i varje SQL-exekvering, tillhandahåller Yii ett mer systematiskt 
-tillvägagångssätt för att lösa detta problem.
+för att mäta tidåtgången i varje SQL-exekvering, tillhandahåller Yii från och med 
+version 1.0.6 ett mer systematiskt tillvägagångssätt för att lösa detta problem.
 
 Genom att sätta [CDbConnection::enableProfiling] till true i applikationskonfigurationen,
 kommer exekveringen av varje SQL-sats att profileras. Resultatet kan med lätthet 
@@ -220,4 +217,4 @@ som spenderas för exekvering av respektive SQL-sats. Vi kan även anropa
 samt total exekveringstid.
 
 
-<div class="revision">$Id: topics.logging.txt 2890 2011-01-18 15:58:34Z qiang.xue $</div>
+<div class="revision">$Id: topics.logging.txt 1142 2009-06-17 21:42:08Z qiang.xue $</div>

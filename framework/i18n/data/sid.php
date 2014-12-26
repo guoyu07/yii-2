@@ -7,17 +7,18 @@
  * Copyright © 1991-2007 Unicode, Inc. All rights reserved.
  * Distributed under the Terms of Use in http://www.unicode.org/copyright.html.
  *
- * @copyright 2008-2013 Yii Software LLC (http://www.yiiframework.com/license/)
+ * Copyright © 2008-2009 Yii Software LLC (http://www.yiiframework.com/license/)
  */
 return array (
-  'version' => '6546',
+  'version' => '1.41',
   'numberSymbols' => 
   array (
-    'alias' => '',
     'decimal' => '.',
     'group' => ',',
     'list' => ';',
     'percentSign' => '%',
+    'nativeZeroDigit' => '0',
+    'patternDigit' => '#',
     'plusSign' => '+',
     'minusSign' => '-',
     'exponential' => 'E',
@@ -31,78 +32,61 @@ return array (
   'currencyFormat' => '¤#,##0.00',
   'currencySymbols' => 
   array (
-    'AUD' => 'AU$',
     'BRL' => 'R$',
-    'CAD' => 'CA$',
-    'CNY' => 'CN¥',
     'EUR' => '€',
-    'GBP' => '£',
-    'HKD' => 'HK$',
-    'ILS' => '₪',
-    'INR' => '₹',
+    'GBP' => 'UK£',
+    'INR' => '0≤Rs.|1≤Re.|1<Rs.',
+    'ITL' => 'IT₤',
     'JPY' => 'JP¥',
-    'KRW' => '₩',
-    'MXN' => 'MX$',
-    'NZD' => 'NZ$',
-    'THB' => '฿',
-    'TWD' => 'NT$',
     'USD' => 'US$',
-    'VND' => '₫',
-    'XAF' => 'FCFA',
-    'XCD' => 'EC$',
-    'XOF' => 'CFA',
-    'XPF' => 'CFPF',
-    'ETB' => 'Br',
+    'ETB' => '$',
   ),
   'monthNames' => 
   array (
     'wide' => 
     array (
-      1 => '1',
-      2 => '2',
-      3 => '3',
-      4 => '4',
-      5 => '5',
-      6 => '6',
-      7 => '7',
-      8 => '8',
-      9 => '9',
-      10 => '10',
-      11 => '11',
-      12 => '12',
+      1 => 'January',
+      2 => 'February',
+      3 => 'March',
+      4 => 'April',
+      5 => 'May',
+      6 => 'June',
+      7 => 'July',
+      8 => 'August',
+      9 => 'September',
+      10 => 'October',
+      11 => 'November',
+      12 => 'December',
     ),
     'abbreviated' => 
     array (
-      1 => '1',
-      2 => '2',
-      3 => '3',
-      4 => '4',
-      5 => '5',
-      6 => '6',
-      7 => '7',
-      8 => '8',
-      9 => '9',
-      10 => '10',
-      11 => '11',
-      12 => '12',
+      1 => 'Jan',
+      2 => 'Feb',
+      3 => 'Mar',
+      4 => 'Apr',
+      5 => 'May',
+      6 => 'Jun',
+      7 => 'Jul',
+      8 => 'Aug',
+      9 => 'Sep',
+      10 => 'Oct',
+      11 => 'Nov',
+      12 => 'Dec',
     ),
-  ),
-  'monthNamesSA' => 
-  array (
     'narrow' => 
     array (
-      1 => '1',
-      2 => '2',
-      3 => '3',
-      4 => '4',
-      5 => '5',
-      6 => '6',
-      7 => '7',
-      8 => '8',
-      9 => '9',
-      10 => '10',
-      11 => '11',
-      12 => '12',
+      1 => 'J',
+      2 => 'F',
+      3 => 'M',
+      4 => 'A',
+      5 => 'M',
+      6 => 'J',
+      7 => 'J',
+      8 => 'A',
+      9 => 'S',
+      10 => 'O',
+      11 => 'N',
+      12 => 'D',
     ),
   ),
   'weekDayNames' => 
@@ -127,9 +111,6 @@ return array (
       5 => 'Arb',
       6 => 'Qid',
     ),
-  ),
-  'weekDayNamesSA' => 
-  array (
     'narrow' => 
     array (
       0 => 'S',
@@ -161,14 +142,14 @@ return array (
   ),
   'dateFormats' => 
   array (
-    'full' => 'EEEE, MMMM dd, y',
-    'long' => 'dd MMMM y',
-    'medium' => 'dd-MMM-y',
+    'full' => 'EEEE, MMMM dd, yyyy',
+    'long' => 'dd MMMM yyyy',
+    'medium' => 'dd-MMM-yyyy',
     'short' => 'dd/MM/yy',
   ),
   'timeFormats' => 
   array (
-    'full' => 'h:mm:ss a zzzz',
+    'full' => 'h:mm:ss a v',
     'long' => 'h:mm:ss a z',
     'medium' => 'h:mm:ss a',
     'short' => 'h:mm a',
@@ -176,17 +157,4 @@ return array (
   'dateTimeFormat' => '{1} {0}',
   'amName' => 'soodo',
   'pmName' => 'hawwaro',
-  'orientation' => 'ltr',
-  'languages' => 
-  array (
-    'sid' => 'Sidaamu Afo',
-  ),
-  'scripts' => 
-  array (
-    'latn' => 'Latin',
-  ),
-  'territories' => 
-  array (
-    'et' => 'Itiyoophiya',
-  ),
 );

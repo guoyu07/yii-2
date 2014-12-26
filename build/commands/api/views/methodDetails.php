@@ -3,7 +3,7 @@
 
 <?php foreach($class->methods as $method): ?>
 <?php if($method->isInherited) continue; ?>
-<div class="detailHeader" id="<?php echo $this->fixMethodAnchor($method->definedBy,$method->name).'-detail'; ?>">
+<div class="detailHeader" id="<?php echo $method->name.'-detail'; ?>">
 <?php echo $method->name; ?>()
 <span class="detailHeaderTag">
 method
@@ -37,9 +37,9 @@ method
 <?php endif; ?>
 </table>
 
-<?php $this->renderPartial('sourceCode',array('object'=>$method)); ?>
-
-<p><?php echo $method->description; ?></p>
+<p>
+<?php echo $method->description; ?>
+</p>
 
 <?php $this->renderPartial('seeAlso',array('object'=>$method)); ?>
 

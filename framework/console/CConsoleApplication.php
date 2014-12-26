@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -23,7 +23,7 @@
  *
  * The command classes reside in the directory {@link getCommandPath commandPath}.
  * The name of the class follows the pattern: &lt;command-name&gt;Command, and its
- * file name is the same as the class name. For example, the 'ShellCommand' class defines
+ * file name is the same the class name. For example, the 'ShellCommand' class defines
  * a 'shell' command and the class file name is 'ShellCommand.php'.
  *
  * To run the console application, enter the following on the command line:
@@ -36,11 +36,8 @@
  * php path/to/entry_script.php help <command name>
  * </pre>
  *
- * @property string $commandPath The directory that contains the command classes. Defaults to 'protected/commands'.
- * @property CConsoleCommandRunner $commandRunner The command runner.
- * @property CConsoleCommand $command The currently active command.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.console
  * @since 1.0
  */
@@ -75,7 +72,7 @@ class CConsoleApplication extends CApplication
 	protected function init()
 	{
 		parent::init();
-		if(empty($_SERVER['argv']))
+		if(!isset($_SERVER['argv'])) // || strncasecmp(php_sapi_name(),'cli',3))
 			die('This script must be run from the command line.');
 		$this->_runner=$this->createCommandRunner();
 		$this->_runner->commands=$this->commandMap;
@@ -84,14 +81,11 @@ class CConsoleApplication extends CApplication
 
 	/**
 	 * Processes the user request.
-	 * This method uses a console command runner to handle the particular user command.
-	 * Since version 1.1.11 this method will exit application with an exit code if one is returned by the user command.
+	 * This method creates a console command runner to handle the particular user command.
 	 */
 	public function processRequest()
 	{
-		$exitCode=$this->_runner->run($_SERVER['argv']);
-		if(is_int($exitCode))
-			$this->end($exitCode);
+		$this->_runner->run($_SERVER['argv']);
 	}
 
 	/**
@@ -107,39 +101,23 @@ class CConsoleApplication extends CApplication
 	 * Displays the captured PHP error.
 	 * This method displays the error in console mode when there is
 	 * no active error handler.
-	 * @param integer $code error code
-	 * @param string $message error message
-	 * @param string $file error file
-	 * @param string $line error line
+	 * @param integer error code
+	 * @param string error message
+	 * @param string error file
+	 * @param string error line
 	 */
 	public function displayError($code,$message,$file,$line)
 	{
 		echo "PHP Error[$code]: $message\n";
-		echo "    in file $file at line $line\n";
-		$trace=debug_backtrace();
-		// skip the first 4 stacks as they do not tell the error position
-		if(count($trace)>4)
-			$trace=array_slice($trace,4);
-		foreach($trace as $i=>$t)
-		{
-			if(!isset($t['file']))
-				$t['file']='unknown';
-			if(!isset($t['line']))
-				$t['line']=0;
-			if(!isset($t['function']))
-				$t['function']='unknown';
-			echo "#$i {$t['file']}({$t['line']}): ";
-			if(isset($t['object']) && is_object($t['object']))
-				echo get_class($t['object']).'->';
-			echo "{$t['function']}()\n";
-		}
+		echo "in file $file at line $line\n";
+		debug_print_backtrace();
 	}
 
 	/**
 	 * Displays the uncaught PHP exception.
 	 * This method displays the exception in console mode when there is
 	 * no active error handler.
-	 * @param Exception $exception the uncaught exception
+	 * @param Exception the uncaught exception
 	 */
 	public function displayException($exception)
 	{
@@ -151,14 +129,13 @@ class CConsoleApplication extends CApplication
 	 */
 	public function getCommandPath()
 	{
-		$applicationCommandPath = $this->getBasePath().DIRECTORY_SEPARATOR.'commands';
-		if($this->_commandPath===null && file_exists($applicationCommandPath))
-			$this->setCommandPath($applicationCommandPath);
+		if($this->_commandPath===null)
+			$this->setCommandPath($this->getBasePath().DIRECTORY_SEPARATOR.'commands');
 		return $this->_commandPath;
 	}
 
 	/**
-	 * @param string $value the directory that contains the command classes.
+	 * @param string the directory that contains the command classes.
 	 * @throws CException if the directory is invalid
 	 */
 	public function setCommandPath($value)
@@ -175,26 +152,5 @@ class CConsoleApplication extends CApplication
 	public function getCommandRunner()
 	{
 		return $this->_runner;
-	}
-
-	/**
-	 * Returns the currently running command.
-	 * This is shortcut method for {@link CConsoleCommandRunner::getCommand()}.
-	 * @return CConsoleCommand|null the currently active command.
-	 * @since 1.1.14
-	 */
-	public function getCommand()
-	{
-		return $this->getCommandRunner()->getCommand();
-	}
-
-	/**
-	 * This is shortcut method for {@link CConsoleCommandRunner::setCommand()}.
-	 * @param CConsoleCommand $value the currently active command.
-	 * @since 1.1.14
-	 */
-	public function setCommand($value)
-	{
-		$this->getCommandRunner()->setCommand($value);
 	}
 }

@@ -70,7 +70,7 @@ i [CWebApplication].
 
 > Tip|Tips: URL:en som genereras av metoden [createUrl|CController::createUrl] 
 är en relativ sådan. För att få en absolut URL kan vi infoga ett prefix med 
-hjälp av `Yii::app()->request->hostInfo`, alternativt anropa 
+hjälp av `Yii::app()->hostInfo`, alternativt anropa 
 [createAbsoluteUrl|CController::createAbsoluteUrl].
 
 Användarvänliga URL:er
@@ -109,66 +109,27 @@ motsvarande en enstaka regel. Mönstret i en regel utgörs av en sträng som
 används till att matcha pathinfo-delen av URL:erna. Routedelen av en regel 
 skall referera till en giltig [kontrollerroute](/doc/guide/basics.controller#route).
 
-Utöver ovanstående mönster-routeformat, kan en regel även specificeras med 
-anpassade alternativ, enligt följande:
-
-~~~
-[php]
-'pattern1'=>array('route1', 'urlSuffix'=>'.xml', 'caseSensitive'=>false)
-~~~
-
-Med start från version 1.1.7, kan även följande format användas (dvs mönstret specificeras som 
-ett element i en vektor), vilket medger att man specificerar ett flertal regler med hjälp av 
-samma mönster:
-
-~~~
-[php]
-array('route1', 'pattern'=>'pattern1', 'urlSuffix'=>'.xml', 'caseSensitive'=>false)
-~~~
-
-I ovanstående exempel innehåller vektorn en lista med extra alternativ till regeln. Möjliga 
-alternativ är:
-
-   - [pattern|CUrlRule::pattern]: mönstret som skall användaas för att matcha och skapa URL:er. 
-   Detta alternativ har varit tillgängligt sedan version 1.1.7.
-
-   - [urlSuffix|CUrlRule::urlSuffix]: URL suffix som skall användas specifikt för denna regel.
-   Standardvärde är null, vilket innebär värdet av [CUrlManager::urlSuffix].
-
-   - [caseSensitive|CUrlRule::caseSensitive]: huruvida denna regel är skiftlägeskänslig.
-   Standardvärde är null, vilket innebär värdet av [CUrlManager::caseSensitive].
-
-   - [defaultParams|CUrlRule::defaultParams]: underförstådda GET-parametrar (namn=>värde) som 
-   denna regel tillhandahåller. När denna regel används för att behandla en inkommen request, 
-   läggs värdena som deklareras i denna property till i $_GET.
-
-   - [matchValue|CUrlRule::matchValue]: huruvida GET-parametervärdena skall matcha motsvarande 
-   delmönster i regeln när en URL skapas. Standardvärde är null, vilket innebär värdet
-   av [CUrlManager::matchValue]. Om denna property är false, innebär det att en regel kommer att
-   användas när en URL skapas, om dess route och parameternamn matchar de som givits. Om denna property
-   är satt till true, måste de givna parametervärdena även matcha motsvarande (parameter-)delmönster.
-   Lägg märke till att prestanda påverkas negativt om detta alternativ är satt till true.
-
-   - [verb|CUrlRule::verb]: HTTP-verbet (t.ex. `GET`, `POST`, `DELETE`) som denna regel måste matcha 
-   för att kunna användas vid analys av aktuell request. Standardvärde är null, med innebörd att regeln 
-   kan matcha varje HTTP-verb. Om en regel kan matcha multipla verb, måste de separeras med kommatecken. 
-   När en regel inte matchar (de) specificerade verb(en), utelämnas den vid analys av request. Det här 
-   alternativet används enbart vid analys av request. Det tillhandahålls huvudsakligen för att stödja 
-   RESTful URL:er. Detta alternativ har varit tillgängligt sedan  1.1.7.
-
-   - [parsingOnly|CUrlRule::parsingOnly]: huruvida regeln används enbart för analys av request. 
-   Standardvärde är false, med innebörden att en regel används både vid analys respektive skapande av URL. 
-   Detta alternativ har varit tillgängligt sedan  1.1.7.
+> Info: med start fr o m version 1.0.6, kan en regel anpassas ytterligare med 
+> hjälp av dess `urlSuffix`- och `caseSensitive`-alternativ. Med start från 
+> version 1.0.8, kan en regel också ha `defaultParams` som representerar en 
+> lista med namn-värdepar att sammanfogas med `$_GET`. För att anpassa en regel 
+> med dessa alternativ, specificera routedelen av regeln i form av en array, 
+> i stil med följande:
+>
+> ~~~
+> [php]
+> 'pattern1'=>array('route1', 'urlSuffix'=>'.xml', 'caseSensitive'=>false)
+> ~~~
+>
 
 
-Användning av namngivna parametrar
-----------------------------------
+### Using Named Parameters
 
 En regel kan associeras med några GET-parametrar. Dessa GET-parametrar uppträder 
 i regelns mönster som speciella symboler på följande format:
 
 ~~~
-<ParamName:ParamPattern>
+&lt;ParamName:ParamPattern&gt;
 ~~~
 
 där `ParamName` specificerar namnet på en GET-parameter och det frivilliga 
@@ -231,13 +192,12 @@ större prestandaförlust. Av denna anledning skall en webbapplikation med
 intensiv trafik minimera sin användning av URL-regler.
 
 
-Parametrisering av route
-------------------------
+### Parametrisering av route
 
-Vi kan referera till namngivna parametrar i routedelen av en regel. Detta medger 
-att regeln appliceras på multipla route baserat på matchningskriterium. Det kan 
-även hjälpa till att reducera antalet regler i en applikation och därmed förbättra 
-totalprestanda.
+Med start fr o m version 1.0.5, kan vi referera till namngivna parametrar i 
+routedelen av en regel. Detta medger att regeln appliceras på multipla route 
+baserat på matchningskriterium. Det kan även hjälpa till att reducera antalet 
+regler i en applikation och därmed förbättra totalprestanda.
 
 Följande exempelregler illustrerar hur route parametriseras med hjälp av 
 namngivna parametrar:
@@ -263,40 +223,7 @@ Och givet routen `comment/list` och GET-parametern `page=2`, kan vi generera
 URL:en `/index.php/comments?page=2`.
 
 
-Parametrisering av värdnamn
----------------------------
-
-Det är möjligt att inkludera värdnamn i regler för tolkning och generering av URL:er. 
-Man kan extrahera delar av ett värdnamn till att bilda en GET-parameter. Till exempel 
-URL:en `http://admin.example.com/en/profile` kan tolkas om till GET-parametrarna 
-`user=admin` och `lang=en`. Å andra sidan kan regler med väednamn även användas till att
-bilda URL:er med parametriserade värdnamn.
-
-För att använda parametriserade värdnamn, deklarera kort och gott URL-regler med värdinformation, 
-till exempel:
-
-~~~
-[php]
-array(
-	'http://<user:\w+>.example.com/<lang:\w+>/profile' => 'user/profile',
-)
-~~~
-
-Ovanstående exempel innebär att det första segmentet i värdnamnet skall bilda `user`-parametern 
-medan det första segmentet i path-delen skall bilda `lang`-parametern. Regeln motsvarar routen 
-`user/profile`.
-
-Märk att [CUrlManager::showScriptName] ignoreras när en en URL skapas med användning av en 
-regel innehållande parametriserat värdnamn.
-
-Lägg även märke till att regeln med parametriserat värdnamn INTE skall innehålla underkatalogen
-om applikationen är placerad i en underkatalog till webbrotkatalogen. Till exempel, om applikationen 
-befinner sig under `http://www.example.com/sandbox/blog`, skall fortfarande samma URL-regel som 
-beskrivs ovan användas, utan underkatalogen `sandbox/blog`.
-
-
-Gömma `index.php`
-----------------
+### Gömma `index.php`
 
 Det finns en sak till att göra för att ytterligare rensa upp URL:er, att 
 eliminera startskriptet `index.php` från URL:en. Detta kräver att vi 
@@ -312,6 +239,8 @@ Märk att samma innehåll även kan placeras i Apaches konfigurationsfil
 inuti elementet `Directory` för `/wwwroot/blog`.
 
 ~~~
+Options +FollowSymLinks
+IndexIgnore */*
 RewriteEngine on
 
 # if a directory or a file exists, use it directly
@@ -329,8 +258,7 @@ Med anropet `$this->createUrl('post/read',array('id'=>100))`, erhålls nu URL:en
 `/post/100`. Och nog så viktigt, denna URL kan kännas igen korrekt av 
 webbapplikationen.
 
-Låtsat URL-suffix
------------------
+### Låtsat URL-suffix
 
 Vi kan även lägga till något suffix till URL:er. Till exempel, kan vi erhålla 
 `/post/100.html` i stället för `/post/100`. Detta liknar mer en URL till en 
@@ -338,95 +266,4 @@ statisk webbsida. För att göra så, konfigurera komponenten
 [urlManager|CWebApplication::urlManager] genom att sätta dess property 
 [urlSuffix|CUrlManager::urlSuffix] till önskad suffixsträng.
 
-
-Anpassade URL-regelklasser
---------------------------
-
-> Note|Märk: Användning av anpassade URL-regelklasser har stöd sedan version 1.1.8.
-
-Som standard representeras varje URL-regel deklarerad med [CUrlManager] som ett 
-[CUrlRule]-objekt som genomför uppgiften att analysera request och skapa URL:er 
-baserat på den specificerade regeln. Även om [CUrlRule] är tillräckligt flexibel 
-att hantera de flesta URL-format, kan det ibland vara önskvärt att utöka den med 
-speciella finesser.
-
-Till exempel, för en bilhandlares webbplats, kan önskemål uppstå om stöd för 
-URL-format som `/Manufacturer/Model`, där `Manufacturer` och `Model` båda måste 
-överensstämma med data i en databastabell. Klassen [CUrlRule] kommer inte att fungera 
-eftersom den till största delen förlitar sig på statiskt deklarerade reguljära uttryck, 
-vilka saknar kunskap om databaser.
-
-En ny URL-regelklass kan skapas genom utökning av [CBaseUrlRule] för användning 
-i en eller flera URL-regler. Med ovanstående bilhandlares webbplats som exempel, 
-kan följande URL-regler deklareras,
-
-~~~
-[php]
-array(
-	// en standardregel som mappar '/' till 'site/index'
-	'' => 'site/index',
-
-	// en standardregel som mappar '/login' till 'site/login', osv
-	'<action:(login|logout|about)>' => 'site/<action>',
-
-	// en anpassad regel för hantering av '/Manufacturer/Model'
-	array(
-	    'class' => 'application.components.CarUrlRule',
-	    'connectionID' => 'db',
-	),
-
-	// en standardregel för hantering av 'post/update' osv
-	'<controller:\w+>/<action:\w+>' => '<controller>/<action>',
-),
-~~~
-
-Ovan används den anpassade URL-regelklassen `CarUrlRule` för hantering 
-av URL-formatet `/Manufacturer/Model`. Klassen kan skrivas som följer:
-
-~~~
-[php]
-class CarUrlRule extends CBaseUrlRule
-{
-	public $connectionID = 'db';
-
-	public function createUrl($manager,$route,$params,$ampersand)
-	{
-		if ($route==='car/index')
-		{
-			if (isset($params['manufacturer'], $params['model']))
-				return $params['manufacturer'] . '/' . $params['model'];
-			else if (isset($params['manufacturer']))
-				return $params['manufacturer'];
-		}
-		return false;  // denna regel tillämpas inte
-	}
-
-	public function parseUrl($manager,$request,$pathInfo,$rawPathInfo)
-	{
-		if (preg_match('%^(\w+)(/(\w+))?$%', $pathInfo, $matches))
-		{
-			// check $matches[1] and $matches[3] to see
-			// if they match a manufacturer and a model in the database
-			// If so, set $_GET['manufacturer'] and/or $_GET['model']
-			// and return 'car/index'
-		}
-		return false;  // denna regel tillämpas inte
-	}
-}
-~~~
-
-Den anpassade URL-klassen måste implementera de två abstrakta metoderna 
-deklarerade i [CBaseUrlRule]:
-
-* [createUrl()|CBaseUrlRule::createUrl()]
-* [parseUrl()|CBaseUrlRule::parseUrl()]
-
-Utöver ovanstående typiska användningssätt kan anpassade URL-regelklasser även 
-implementeras för många andra ändamål. Till exempel kan vi skriva en regelklass 
-som loggar anropen för URL-analys och -konstruktion. Detta kan vara användbart 
-i utvecklingsfasen. Vi kan även skriva en regelklass som presenterar en speciell 
-404-felsida i händelse av att alla andra URL-regler misslyckad med att tolka 
-det aktuella anropet. Märk att i sådant fall måste regeln för denna specialklass 
-deklareras som sista regel.
-
-<div class="revision">$Id: topics.url.txt 3329 2011-06-28 08:31:35Z mdomba $</div>
+<div class="revision">$Id: topics.url.txt 1342 2009-08-17 14:55:58Z qiang.xue $</div>

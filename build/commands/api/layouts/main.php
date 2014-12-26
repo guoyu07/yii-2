@@ -10,9 +10,9 @@
 </head>
 
 <body>
-<div id="apiPage">
+<div id="page">
 
-<div id="apiHeader">
+<div id="header">
 <a href="http://www.yiiframework.com">Yii Framework</a> v<?php echo Yii::getVersion(); ?> Class Reference
 </div><!-- end of header -->
 
@@ -20,8 +20,8 @@
 <?php echo $content; ?>
 </div><!-- end of content -->
 
-<div id="apiFooter">
-&copy; 2008-2013 by <a href="http://www.yiisoft.com">Yii Software LLC</a><br/>
+<div id="footer">
+Copyright &copy; 2008-2009 by <a href="http://www.yiisoft.com">Yii Software LLC</a><br/>
 All Rights Reserved.<br/>
 </div><!-- end of footer -->
 
@@ -29,24 +29,16 @@ All Rights Reserved.<br/>
 /*<![CDATA[*/
 $("a.toggle").toggle(function(){
 	$(this).text($(this).text().replace(/Hide/,'Show'));
-	$(this).parents(".summary").find(".inherited").hide();
+	var a=$(this).parents(".summary");
+	a.find(".inherited").hide();
 },function(){
 	$(this).text($(this).text().replace(/Show/,'Hide'));
 	$(this).parents(".summary").find(".inherited").show();
-});
-$(".sourceCode a.show").toggle(function(){
-	$(this).text($(this).text().replace(/show/,'hide'));
-	$(this).parents(".sourceCode").find("div.code").show();
-},function(){
-	$(this).text($(this).text().replace(/hide/,'show'));
-	$(this).parents(".sourceCode").find("div.code").hide();
-});
-$("a.sourceLink").click(function(){
-	$(this).attr('target','_blank');
 });
 /*]]>*/
 </script>
 
 </div><!-- end of page -->
 </body>
+
 </html>

@@ -1,13 +1,46 @@
 <?php
+/**
+ * PostController class file.
+ *
+ * @author Qiang Xue <qiang.xue@gmail.com>
+ * @link http://www.yiiframework.com/
+ * @copyright Copyright &copy; 2009 Yii Software LLC
+ * @license http://www.yiiframework.com/license/
+ */
 
-class PostController extends Controller
+
+/**
+ * PostController controls the CRUD operations for posts.
+ *
+ * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
+ */
+class PostController extends CController
 {
-	public $layout='column2';
+	/**
+	 * @var string specifies the default action to be 'list'.
+	 */
+	public $defaultAction='list';
 
 	/**
 	 * @var CActiveRecord the currently loaded data model instance.
 	 */
-	private $_model;
+	private $_post;
+
+	/**
+	 * Declares class-based actions.
+	 */
+	public function actions()
+	{
+		return array(
+			// captcha action renders the CAPTCHA image
+			// this is used by the contact page
+			'captcha'=>array(
+				'class'=>'CCaptchaAction',
+				'backColor'=>0xF5F5F5,
+			),
+		);
+	}
 
 	/**
 	 * @return array action filters
@@ -27,11 +60,11 @@ class PostController extends Controller
 	public function accessRules()
 	{
 		return array(
-			array('allow',  // allow all users to access 'index' and 'view' actions.
-				'actions'=>array('index','view'),
+			array('allow',  // allow all users to perform 'list' and 'show' actions
+				'actions'=>array('list','show','captcha'),
 				'users'=>array('*'),
 			),
-			array('allow', // allow authenticated users to access all actions
+			array('allow', // allow authenticated users to perform any action
 				'users'=>array('@'),
 			),
 			array('deny',  // deny all users
@@ -41,148 +74,152 @@ class PostController extends Controller
 	}
 
 	/**
-	 * Displays a particular model.
+	 * Shows a particular post.
 	 */
-	public function actionView()
+	public function actionShow()
 	{
-		$post=$this->loadModel();
+		$post=$this->loadPost();
 		$comment=$this->newComment($post);
-
-		$this->render('view',array(
-			'model'=>$post,
-			'comment'=>$comment,
+		$this->render('show',array(
+			'post'=>$post,
+			'comments'=>$post->comments,
+			'newComment'=>$comment,
 		));
 	}
 
 	/**
-	 * Creates a new model.
-	 * If creation is successful, the browser will be redirected to the 'view' page.
+	 * Creates a new post.
+	 * If creation is successful, the browser will be redirected to the 'show' page.
 	 */
 	public function actionCreate()
 	{
-		$model=new Post;
+		$post=new Post;
 		if(isset($_POST['Post']))
 		{
-			$model->attributes=$_POST['Post'];
-			if($model->save())
-				$this->redirect(array('view','id'=>$model->id));
+			$post->attributes=$_POST['Post'];
+			if(isset($_POST['previewPost']))
+				$post->validate();
+			else if(isset($_POST['submitPost']) && $post->save())
+				$this->redirect(array('show','id'=>$post->id));
 		}
-
-		$this->render('create',array(
-			'model'=>$model,
-		));
+		$this->render('create',array('post'=>$post));
 	}
 
 	/**
-	 * Updates a particular model.
-	 * If update is successful, the browser will be redirected to the 'view' page.
+	 * Updates a particular post.
+	 * If update is successful, the browser will be redirected to the 'show' page.
 	 */
 	public function actionUpdate()
 	{
-		$model=$this->loadModel();
+		$post=$this->loadPost();
 		if(isset($_POST['Post']))
 		{
-			$model->attributes=$_POST['Post'];
-			if($model->save())
-				$this->redirect(array('view','id'=>$model->id));
+			$post->attributes=$_POST['Post'];
+			if(isset($_POST['previewPost']))
+				$post->validate();
+			else if(isset($_POST['submitPost']) && $post->save())
+				$this->redirect(array('show','id'=>$post->id));
 		}
-
-		$this->render('update',array(
-			'model'=>$model,
-		));
+		$this->render('update',array('post'=>$post));
 	}
 
 	/**
-	 * Deletes a particular model.
-	 * If deletion is successful, the browser will be redirected to the 'index' page.
+	 * Deletes a particular post.
+	 * If deletion is successful, the browser will be redirected to the 'list' page.
 	 */
 	public function actionDelete()
 	{
 		if(Yii::app()->request->isPostRequest)
 		{
 			// we only allow deletion via POST request
-			$this->loadModel()->delete();
-
-			// if AJAX request (triggered by deletion via admin grid view), we should not redirect the browser
-			if(!isset($_GET['ajax']))
-				$this->redirect(array('index'));
+			$this->loadPost()->delete();
+			$this->redirect(array('list'));
 		}
 		else
 			throw new CHttpException(400,'Invalid request. Please do not repeat this request again.');
 	}
 
 	/**
-	 * Lists all models.
+	 * Lists all posts.
 	 */
-	public function actionIndex()
+	public function actionList()
 	{
-		$criteria=new CDbCriteria(array(
-			'condition'=>'status='.Post::STATUS_PUBLISHED,
-			'order'=>'update_time DESC',
-			'with'=>'commentCount',
-		));
-		if(isset($_GET['tag']))
-			$criteria->addSearchCondition('tags',$_GET['tag']);
+		$criteria=new CDbCriteria;
+		$criteria->condition='status='.Post::STATUS_PUBLISHED;
+		$criteria->order='createTime DESC';
+		$withOption=array('author');
+		if(!empty($_GET['tag']))
+		{
+			$withOption['tagFilter']['params'][':tag']=$_GET['tag'];
+			$postCount=Post::model()->with($withOption)->count($criteria);
+			$criteria->distinct=true;
+		}
+		else
+			$postCount=Post::model()->count($criteria);
 
-		$dataProvider=new CActiveDataProvider('Post', array(
-			'pagination'=>array(
-				'pageSize'=>Yii::app()->params['postsPerPage'],
-			),
-			'criteria'=>$criteria,
-		));
+		$pages=new CPagination($postCount);
+		$pages->pageSize=Yii::app()->params['postsPerPage'];
+		$pages->applyLimit($criteria);
 
-		$this->render('index',array(
-			'dataProvider'=>$dataProvider,
+		$posts=Post::model()->with($withOption)->findAll($criteria);
+		$this->render('list',array(
+			'posts'=>$posts,
+			'pages'=>$pages,
 		));
 	}
 
 	/**
-	 * Manages all models.
+	 * Manages all posts.
 	 */
 	public function actionAdmin()
 	{
-		$model=new Post('search');
-		if(isset($_GET['Post']))
-			$model->attributes=$_GET['Post'];
+		$criteria=new CDbCriteria;
+
+		$pages=new CPagination(Post::model()->count());
+		$pages->applyLimit($criteria);
+
+		$sort=new CSort('Post');
+		$sort->defaultOrder='status ASC, createTime DESC';
+		$sort->applyOrder($criteria);
+
+		$posts=Post::model()->findAll($criteria);
+
 		$this->render('admin',array(
-			'model'=>$model,
+			'posts'=>$posts,
+			'pages'=>$pages,
+			'sort'=>$sort,
 		));
 	}
 
 	/**
-	 * Suggests tags based on the current user input.
-	 * This is called via AJAX when the user is entering the tags input.
+	 * Generates the hyperlinks for post tags.
+	 * This is mainly used by the view that displays a post.
+	 * @param Post the post instance
+	 * @return string the hyperlinks for the post tags
 	 */
-	public function actionSuggestTags()
+	public function getTagLinks($post)
 	{
-		if(isset($_GET['q']) && ($keyword=trim($_GET['q']))!=='')
-		{
-			$tags=Tag::model()->suggestTags($keyword);
-			if($tags!==array())
-				echo implode("\n",$tags);
-		}
+		$links=array();
+		foreach($post->getTagArray() as $tag)
+			$links[]=CHtml::link(CHtml::encode($tag),array('list','tag'=>$tag));
+		return implode(', ',$links);
 	}
 
 	/**
 	 * Returns the data model based on the primary key given in the GET variable.
 	 * If the data model is not found, an HTTP exception will be raised.
+	 * @param integer the primary key value. Defaults to null, meaning using the 'id' GET variable
 	 */
-	public function loadModel()
+	protected function loadPost($id=null)
 	{
-		if($this->_model===null)
+		if($this->_post===null)
 		{
-			if(isset($_GET['id']))
-			{
-				if(Yii::app()->user->isGuest)
-					$condition='status='.Post::STATUS_PUBLISHED.' OR status='.Post::STATUS_ARCHIVED;
-				else
-					$condition='';
-				$this->_model=Post::model()->findByPk($_GET['id'], $condition);
-			}
-			if($this->_model===null)
-				throw new CHttpException(404,'The requested page does not exist.');
+			if($id!==null || isset($_GET['id']))
+				$this->_post=Post::model()->findbyPk($id!==null ? $id : $_GET['id']);
+			if($this->_post===null || Yii::app()->user->isGuest && $this->_post->status!=Post::STATUS_PUBLISHED)
+				throw new CHttpException(404,'The requested post does not exist.');
 		}
-		return $this->_model;
+		return $this->_post;
 	}
 
 	/**
@@ -196,19 +233,26 @@ class PostController extends Controller
 	protected function newComment($post)
 	{
 		$comment=new Comment;
-		if(isset($_POST['ajax']) && $_POST['ajax']==='comment-form')
-		{
-			echo CActiveForm::validate($comment);
-			Yii::app()->end();
-		}
 		if(isset($_POST['Comment']))
 		{
 			$comment->attributes=$_POST['Comment'];
-			if($post->addComment($comment))
+			$comment->postId=$post->id;
+			if(Yii::app()->params['commentNeedApproval'])
+				$comment->status=Comment::STATUS_PENDING;
+			else
+				$comment->status=Comment::STATUS_APPROVED;
+
+			if(isset($_POST['previewComment']))
+				$comment->validate('insert');
+			else if(isset($_POST['submitComment']) && $comment->save())
 			{
 				if($comment->status==Comment::STATUS_PENDING)
+				{
 					Yii::app()->user->setFlash('commentSubmitted','Thank you for your comment. Your comment will be posted once it is approved.');
-				$this->refresh();
+					$this->refresh();
+				}
+				else
+					$this->redirect(array('show','id'=>$post->id,'#'=>'c'.$comment->id));
 			}
 		}
 		return $comment;

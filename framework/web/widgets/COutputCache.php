@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -39,12 +39,12 @@
  * For more details about cache dependency, see {@link CCacheDependency}.
  *
  * Sometimes, it is necessary to turn off output caching only for certain request types.
- * For example, we only want to cache a form when it is initially requested;
+ * For exapmle, we only want to cache a form when it is initially requested;
  * any subsequent display of the form should not be cached because it contains user input.
  * We can set {@link requestTypes} to be <code>array('GET')</code> to accomplish this task.
  *
  * The content fetched from cache may be variated with respect to
- * some parameters. COutputCache supports four kinds of variations:
+ * some parameters. COutputCache supports two kinds of variations:
  * <ul>
  * <li>{@link varyByRoute}: this specifies whether the cached content
  *   should be varied with the requested route (controller and action)</li>
@@ -54,14 +54,11 @@
  *   should be varied with the user session.</li>
  * <li>{@link varyByExpression}: this specifies whether the cached content
  *   should be varied with the result of the specified PHP expression.</li>
- * <li>{@link varyByLanguage}: this specifies whether the cached content
- *   should by varied with the user's language. Available since 1.1.14.</li>
  * </ul>
  * For more advanced variation, override {@link getBaseCacheKey()} method.
  *
- * @property boolean $isContentCached Whether the content can be found from cache.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.web.widgets
  * @since 1.0
  */
@@ -74,11 +71,7 @@ class COutputCache extends CFilterWidget
 
 	/**
 	 * @var integer number of seconds that the data can remain in cache. Defaults to 60 seconds.
-	 * If it is 0, existing cached content would be removed from the cache.
-	 * If it is a negative value, the cache will be disabled (any existing cached content will
-	 * remain in the cache.)
-	 *
-	 * Note, if cache dependency changes or cache space is limited,
+	 * If 0 or negative, it means the cache is disabled. Note, if cache dependency changes or cache space is limited,
 	 * the data may be purged out of cache earlier.
 	 */
 	public $duration=60;
@@ -102,27 +95,13 @@ class COutputCache extends CFilterWidget
 	 * @var string a PHP expression whose result is used in the cache key calculation.
 	 * By setting this property, the output cache will use different cached data
 	 * for each different expression result.
-	 * The expression can also be a valid PHP callback,
+	 * Starting from version 1.0.11, the expression can also be a valid PHP callback,
 	 * including class method name (array(ClassName/Object, MethodName)),
-	 * or anonymous function (PHP 5.3.0+). The function/method signature should be as follows:
-	 * <pre>
-	 * function foo($cache) { ... }
-	 * </pre>
-	 * where $cache refers to the output cache component.
-	 *
-	 * The PHP expression will be evaluated using {@link evaluateExpression}.
-	 *
-	 * A PHP expression can be any PHP code that has a value. To learn more about what an expression is,
-	 * please refer to the {@link http://www.php.net/manual/en/language.expressions.php php manual}.
+	 * or anonymous function (PHP 5.3.0+). The function/method will be passed a single
+	 * parameter which is the output cache object itself.
+	 * @since 1.0.4
 	 */
 	public $varyByExpression;
-	/**
-	 * @var boolean whether the content being cached should be differentiated according to user's language.
-	 * A language is retrieved via Yii::app()->language.
-	 * Defaults to false.
-	 * @since 1.1.14
-	 */
-	public $varyByLanguage=false;
 	/**
 	 * @var array list of request types (e.g. GET, POST) for which the cache should be enabled only.
 	 * Defaults to null, meaning all request types.
@@ -156,11 +135,11 @@ class COutputCache extends CFilterWidget
 	/**
 	 * Performs filtering before the action is executed.
 	 * This method is meant to be overridden by child classes if begin-filtering is needed.
-	 * @param CFilterChain $filterChain list of filters being applied to an action
 	 * @return boolean whether the filtering process should stop after this filter. Defaults to false.
 	 */
 	public function filter($filterChain)
 	{
+		$this->init();
 		if(!$this->getIsContentCached())
 			$filterChain->run();
 		$this->run();
@@ -176,7 +155,7 @@ class COutputCache extends CFilterWidget
 	{
 		if($this->getIsContentCached())
 			$this->replayActions();
-		elseif($this->_cache!==null)
+		else if($this->_cache!==null)
 		{
 			$this->getController()->getCachingStack()->push($this);
 			ob_start();
@@ -199,14 +178,14 @@ class COutputCache extends CFilterWidget
 			else
 				echo $this->_content;
 		}
-		elseif($this->_cache!==null)
+		else if($this->_cache!==null)
 		{
 			$this->_content=ob_get_clean();
 			$this->getController()->getCachingStack()->pop();
 			$data=array($this->_content,$this->_actions);
 			if(is_array($this->dependency))
 				$this->dependency=Yii::createComponent($this->dependency);
-			$this->_cache->set($this->getCacheKey(),$data,$this->duration,$this->dependency);
+			$this->_cache->set($this->getCacheKey(),$data,$this->duration>0 ? $this->duration : 0,$this->dependency);
 
 			if($this->getController()->isCachingStackEmpty())
 				echo $this->getController()->processDynamicOutput($this->_content);
@@ -233,18 +212,14 @@ class COutputCache extends CFilterWidget
 	protected function checkContentCache()
 	{
 		if((empty($this->requestTypes) || in_array(Yii::app()->getRequest()->getRequestType(),$this->requestTypes))
-			&& ($this->_cache=$this->getCache())!==null)
+			&& $this->duration>0 && ($this->_cache=$this->getCache())!==null)
 		{
-			if($this->duration>0 && ($data=$this->_cache->get($this->getCacheKey()))!==false)
+			if(($data=$this->_cache->get($this->getCacheKey()))!==false)
 			{
 				$this->_content=$data[0];
 				$this->_actions=$data[1];
 				return true;
 			}
-			if($this->duration==0)
-				$this->_cache->delete($this->getCacheKey());
-			if($this->duration<=0)
-				$this->_cache=null;
 		}
 		return false;
 	}
@@ -271,7 +246,7 @@ class COutputCache extends CFilterWidget
 	/**
 	 * Calculates the cache key.
 	 * The key is calculated based on {@link getBaseCacheKey} and other factors, including
-	 * {@link varyByRoute}, {@link varyByParam}, {@link varyBySession} and {@link varyByLanguage}.
+	 * {@link varyByRoute}, {@link varyByParam} and {@link varyBySession}.
 	 * @return string cache key
 	 */
 	protected function getCacheKey()
@@ -312,22 +287,26 @@ class COutputCache extends CFilterWidget
 				$key.=$this->evaluateExpression($this->varyByExpression);
 			$key.='.';
 
-			if($this->varyByLanguage)
-				$key.=Yii::app()->language;
-			$key.='.';
-
 			return $this->_key=$key;
 		}
+	}
+
+	private function evaluateExpression($expression)
+	{
+		if(!is_string($expression) && is_callable($expression))
+			return call_user_func($expression, $this);
+		else
+			return @eval('return '.$expression.';');
 	}
 
 	/**
 	 * Records a method call when this output cache is in effect.
 	 * When the content is served from the output cache, the recorded
 	 * method will be re-invoked.
-	 * @param string $context a property name of the controller. The property should refer to an object
+	 * @param string a property name of the controller. The property should refer to an object
 	 * whose method is being recorded. If empty it means the controller itself.
-	 * @param string $method the method name
-	 * @param array $params parameters passed to the method
+	 * @param string the method name
+	 * @param array parameters passed to the method
 	 */
 	public function recordAction($context,$method,$params)
 	{
@@ -347,13 +326,13 @@ class COutputCache extends CFilterWidget
 		{
 			if($action[0]==='clientScript')
 				$object=$cs;
-			elseif($action[0]==='')
+			else if($action[0]==='')
 				$object=$controller;
 			else
 				$object=$controller->{$action[0]};
 			if(method_exists($object,$action[1]))
 				call_user_func_array(array($object,$action[1]),$action[2]);
-			elseif($action[0]==='' && function_exists($action[1]))
+			else if($action[0]==='' && function_exists($action[1]))
 				call_user_func_array($action[1],$action[2]);
 			else
 				throw new CException(Yii::t('yii','Unable to replay the action "{object}.{method}". The method does not exist.',

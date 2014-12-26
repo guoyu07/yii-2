@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -15,6 +15,7 @@
  * Error handlers may use this status code to decide how to format the error page.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.base
  * @since 1.0
  */
@@ -27,9 +28,9 @@ class CHttpException extends CException
 
 	/**
 	 * Constructor.
-	 * @param integer $status HTTP status code, such as 404, 500, etc.
-	 * @param string $message error message
-	 * @param integer $code error code
+	 * @param integer HTTP status code, such as 404, 500, etc.
+	 * @param string error message
+	 * @param integer error code
 	 */
 	public function __construct($status,$message=null,$code=0)
 	{

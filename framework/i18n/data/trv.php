@@ -7,17 +7,18 @@
  * Copyright © 1991-2007 Unicode, Inc. All rights reserved.
  * Distributed under the Terms of Use in http://www.unicode.org/copyright.html.
  *
- * @copyright 2008-2013 Yii Software LLC (http://www.yiiframework.com/license/)
+ * Copyright © 2008-2009 Yii Software LLC (http://www.yiiframework.com/license/)
  */
 return array (
-  'version' => '6546',
+  'version' => '1.6',
   'numberSymbols' => 
   array (
-    'alias' => '',
     'decimal' => '.',
     'group' => ',',
     'list' => ';',
     'percentSign' => '%',
+    'nativeZeroDigit' => '0',
+    'patternDigit' => '#',
     'plusSign' => '+',
     'minusSign' => '-',
     'exponential' => 'E',
@@ -31,27 +32,13 @@ return array (
   'currencyFormat' => '¤ #,##0.00',
   'currencySymbols' => 
   array (
-    'AUD' => 'AU$',
     'BRL' => 'R$',
-    'CAD' => 'CA$',
-    'CNY' => 'CN¥',
     'EUR' => '€',
-    'GBP' => '£',
-    'HKD' => 'HK$',
-    'ILS' => '₪',
-    'INR' => '₹',
+    'GBP' => 'UK£',
+    'INR' => '0≤Rs.|1≤Re.|1<Rs.',
+    'ITL' => 'IT₤',
     'JPY' => 'JP¥',
-    'KRW' => '₩',
-    'MXN' => 'MX$',
-    'NZD' => 'NZ$',
-    'THB' => '฿',
-    'TWD' => 'NT$',
     'USD' => 'US$',
-    'VND' => '₫',
-    'XAF' => 'FCFA',
-    'XCD' => 'EC$',
-    'XOF' => 'CFA',
-    'XPF' => 'CFPF',
   ),
   'monthNames' => 
   array (
@@ -85,9 +72,6 @@ return array (
       11 => 'Mxk',
       12 => 'Mxd',
     ),
-  ),
-  'monthNamesSA' => 
-  array (
     'narrow' => 
     array (
       1 => 'K',
@@ -126,9 +110,6 @@ return array (
       5 => 'Rim',
       6 => 'Mat',
     ),
-  ),
-  'weekDayNamesSA' => 
-  array (
     'narrow' => 
     array (
       0 => 'E',
@@ -160,14 +141,14 @@ return array (
   ),
   'dateFormats' => 
   array (
-    'full' => 'EEEE, y MMMM dd',
-    'long' => 'y MMMM d',
-    'medium' => 'y MMM d',
+    'full' => 'EEEE, yyyy MMMM dd',
+    'long' => 'yyyy MMMM d',
+    'medium' => 'yyyy MMM d',
     'short' => 'yyyy-MM-dd',
   ),
   'timeFormats' => 
   array (
-    'full' => 'HH:mm:ss zzzz',
+    'full' => 'HH:mm:ss v',
     'long' => 'HH:mm:ss z',
     'medium' => 'HH:mm:ss',
     'short' => 'HH:mm',
@@ -175,61 +156,4 @@ return array (
   'dateTimeFormat' => '{1} {0}',
   'amName' => 'Brax kndaax',
   'pmName' => 'Baubau kndaax',
-  'orientation' => 'ltr',
-  'languages' => 
-  array (
-    'bn' => 'patas Monchiara',
-    'de' => 'patas Towjih',
-    'en' => 'patas Ingrisi',
-    'es' => 'patas Espanniu',
-    'fr' => 'patas Bosey',
-    'hi' => 'patas Heyti',
-    'it' => 'patas Itariya',
-    'ja' => 'patas Nihong',
-    'pt' => 'patas Bowdu',
-    'pt_br' => 'patas Pajey',
-    'ru' => 'patas Ruski',
-    'sr' => 'patas Srpian',
-    'und' => 'Ini klayna patas ni',
-    'ur' => 'patas Yurtu',
-    'zh' => 'patas Ipaw',
-    'zh_hans' => 'Qantan Ipaw patas',
-    'zh_hant' => 'Baday Ipaw patas',
-  ),
-  'scripts' => 
-  array (
-    'arab' => 'tasan Arapit',
-    'cyrl' => 'tasan Sirorik',
-    'hans' => 'Qantan tasan Ipaw',
-    'hant' => 'Baday tasan Ipaw',
-    'latn' => 'tasan Ratin',
-    'zxxx' => 'Unat tasan',
-    'zzzz' => 'ini klayi tasan ni',
-  ),
-  'territories' => 
-  array (
-    'aq' => 'alang Nanci',
-    'ba' => 'alang Posniya',
-    'br' => 'alang Pajey',
-    'bv' => 'alang Puwei',
-    'ch' => 'alang Switjrrant',
-    'cn' => 'alang Ipaw',
-    'de' => 'alang Towjih',
-    'fr' => 'alang Posey',
-    'gb' => 'alang Inglis',
-    'gs' => 'alang Nanjiouya ni Nansanminji',
-    'hm' => 'alang Htee ni Mayktan',
-    'hr' => 'alang Krowtia',
-    'in' => 'alang Intu',
-    'io' => 'alang Inglis niq Intu',
-    'it' => 'alang Itariya',
-    'jp' => 'alang Nihong',
-    'me' => 'alang Mondineygrw',
-    'rs' => 'alang Srbia',
-    'ru' => 'alang Ruski',
-    'sm' => 'alang Snmarinow',
-    'tf' => 'alang Posey niq Nan',
-    'us' => 'alang Amarika',
-    'zz' => 'ini klayi na alang ni',
-  ),
 );

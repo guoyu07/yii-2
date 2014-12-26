@@ -1,8 +1,6 @@
-<?php
-$this->breadcrumbs=array(
-	'Create Post',
-);
-?>
-<h1>Create Post</h1>
+<h2>Create New Post</h2>
 
-<?php echo $this->renderPartial('_form', array('model'=>$model)); ?>
+<?php $this->renderPartial('_form', array(
+	'post'=>$post,
+	'update'=>false,
+)); ?>

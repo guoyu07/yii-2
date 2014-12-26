@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -22,10 +22,8 @@
  * foreach($queue as $item) ...
  * </pre>
  *
- * @property Iterator $iterator An iterator for traversing the items in the queue.
- * @property integer $count The number of items in the queue.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.collections
  * @since 1.0
  */
@@ -45,7 +43,7 @@ class CQueue extends CComponent implements IteratorAggregate,Countable
 	/**
 	 * Constructor.
 	 * Initializes the queue with an array or an iterable object.
-	 * @param array $data the initial data. Default is null, meaning no initialization.
+	 * @param array the intial data. Default is null, meaning no initialization.
 	 * @throws CException If data is not null and neither an array nor an iterator.
 	 */
 	public function __construct($data=null)
@@ -65,7 +63,7 @@ class CQueue extends CComponent implements IteratorAggregate,Countable
 	/**
 	 * Copies iterable data into the queue.
 	 * Note, existing data in the list will be cleared first.
-	 * @param mixed $data the data to be copied from, must be an array or object implementing Traversable
+	 * @param mixed the data to be copied from, must be an array or object implementing Traversable
 	 * @throws CException If data is neither an array nor a Traversable.
 	 */
 	public function copyFrom($data)
@@ -79,7 +77,7 @@ class CQueue extends CComponent implements IteratorAggregate,Countable
 				++$this->_c;
 			}
 		}
-		elseif($data!==null)
+		else if($data!==null)
 			throw new CException(Yii::t('yii','Queue data must be an array or an object implementing Traversable.'));
 	}
 
@@ -93,7 +91,7 @@ class CQueue extends CComponent implements IteratorAggregate,Countable
 	}
 
 	/**
-	 * @param mixed $item the item
+	 * @param mixed the item
 	 * @return boolean whether the queue contains the item
 	 */
 	public function contains($item)
@@ -132,12 +130,12 @@ class CQueue extends CComponent implements IteratorAggregate,Countable
 
 	/**
 	 * Adds an object to the end of the queue.
-	 * @param mixed $item the item to be appended into the queue
+	 * @param mixed the item to be appended into the queue
 	 */
 	public function enqueue($item)
 	{
 		++$this->_c;
-		$this->_d[]=$item;
+		array_push($this->_d,$item);
 	}
 
 	/**
@@ -151,7 +149,6 @@ class CQueue extends CComponent implements IteratorAggregate,Countable
 	}
 
 	/**
-	 * Returns the number of items in the queue.
 	 * @return integer the number of items in the queue
 	 */
 	public function getCount()

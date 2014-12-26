@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -20,9 +20,8 @@
  * is NOT volatile. If you want to use {@link CDbCache} as storage medium, use {@link CDbHttpSession}
  * is a better choice.
  *
- * @property boolean $useCustomStorage Whether to use custom storage.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.web
  * @since 1.0
  */
@@ -68,7 +67,7 @@ class CCacheHttpSession extends CHttpSession
 	/**
 	 * Session read handler.
 	 * Do not call this method directly.
-	 * @param string $id session ID
+	 * @param string session ID
 	 * @return string the session data
 	 */
 	public function readSession($id)
@@ -80,8 +79,8 @@ class CCacheHttpSession extends CHttpSession
 	/**
 	 * Session write handler.
 	 * Do not call this method directly.
-	 * @param string $id session ID
-	 * @param string $data session data
+	 * @param string session ID
+	 * @param string session data
 	 * @return boolean whether session write is successful
 	 */
 	public function writeSession($id,$data)
@@ -92,7 +91,7 @@ class CCacheHttpSession extends CHttpSession
 	/**
 	 * Session destroy handler.
 	 * Do not call this method directly.
-	 * @param string $id session ID
+	 * @param string session ID
 	 * @return boolean whether session is destroyed successfully
 	 */
 	public function destroySession($id)
@@ -102,7 +101,7 @@ class CCacheHttpSession extends CHttpSession
 
 	/**
 	 * Generates a unique key used for storing session data in cache.
-	 * @param string $id session variable name
+	 * @param string session variable name
 	 * @return string a safe cache key associated with the session variable name
 	 */
 	protected function calculateKey($id)

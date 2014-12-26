@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -17,6 +17,7 @@
  * (see {@link http://digitalbush.com/projects/masked-input-plugin}).
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.web.widgets
  * @since 1.0
  */
@@ -25,10 +26,9 @@ class CMaskedTextField extends CInputWidget
 	/**
 	 * @var string the input mask (e.g. '99/99/9999' for date input). The following characters are predefined:
 	 * <ul>
-	 * <li>a: represents an alpha character (A-Z,a-z).</li>
-	 * <li>9: represents a numeric character (0-9).</li>
+	 * <li>a: represents an alpha character (A-Z,a-z)</li>
+	 * <li>9: represents a numeric character (0-9)</li>
 	 * <li>*: represents an alphanumeric character (A-Z,a-z,0-9).</li>
-	 * <li>?: anything listed after '?' within the mask is considered optional user input.</li>
 	 * </ul>
 	 * Additional characters can be defined by specifying the {@link charMap} property.
 	 */
@@ -55,16 +55,11 @@ class CMaskedTextField extends CInputWidget
 	 */
 	public function run()
 	{
-		if($this->mask=='')
-			throw new CException(Yii::t('yii','Property CMaskedTextField.mask cannot be empty.'));
-
 		list($name,$id)=$this->resolveNameID();
-		if(isset($this->htmlOptions['id']))
-			$id=$this->htmlOptions['id'];
-		else
+		if(!isset($this->htmlOptions['id']))
 			$this->htmlOptions['id']=$id;
-		if(isset($this->htmlOptions['name']))
-			$name=$this->htmlOptions['name'];
+		if(!isset($this->htmlOptions['name']))
+			$this->htmlOptions['name']=$name;
 
 		$this->registerClientScript();
 
@@ -76,6 +71,7 @@ class CMaskedTextField extends CInputWidget
 
 	/**
 	 * Registers the needed CSS and JavaScript.
+	 * @since 1.0.1
 	 */
 	public function registerClientScript()
 	{
@@ -100,15 +96,13 @@ class CMaskedTextField extends CInputWidget
 		$options=array();
 		if($this->placeholder!==null)
 			$options['placeholder']=$this->placeholder;
-
-		if($this->completed!==null)
+		if(is_string($this->completed))
 		{
-			if($this->completed instanceof CJavaScriptExpression)
-				$options['completed']=$this->completed;
+			if(strncmp($this->completed,'js:',3))
+				$options['completed']='js:'.$this->completed;
 			else
-				$options['completed']=new CJavaScriptExpression($this->completed);
+				$options['completed']=$this->completed;
 		}
-
 		return $options;
 	}
 }

@@ -4,21 +4,15 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
 /**
  * CTheme represents an application theme.
  *
- * @property string $name Theme name.
- * @property string $baseUrl The relative URL to the theme folder (without ending slash).
- * @property string $basePath The file path to the theme folder.
- * @property string $viewPath The path for controller views. Defaults to 'ThemeRoot/views'.
- * @property string $systemViewPath The path for system views. Defaults to 'ThemeRoot/views/system'.
- * @property string $skinPath The path for widget skins. Defaults to 'ThemeRoot/views/skins'.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.web
  * @since 1.0
  */
@@ -30,9 +24,9 @@ class CTheme extends CComponent
 
 	/**
 	 * Constructor.
-	 * @param string $name name of the theme
-	 * @param string $basePath base theme path
-	 * @param string $baseUrl base theme URL
+	 * @param string name of the theme
+	 * @param string base theme path
+	 * @param string base theme URL
 	 */
 	public function __construct($name,$basePath,$baseUrl)
 	{
@@ -82,40 +76,28 @@ class CTheme extends CComponent
 	}
 
 	/**
-	 * @return string the path for widget skins. Defaults to 'ThemeRoot/views/skins'.
-	 * @since 1.1
-	 */
-	public function getSkinPath()
-	{
-		return $this->getViewPath().DIRECTORY_SEPARATOR.'skins';
-	}
-
-	/**
 	 * Finds the view file for the specified controller's view.
-	 * @param CController $controller the controller
-	 * @param string $viewName the view name
+	 * @param CController the controller
+	 * @param string the view name
 	 * @return string the view file path. False if the file does not exist.
 	 */
 	public function getViewFile($controller,$viewName)
 	{
-		$moduleViewPath=$this->getViewPath();
-		if(($module=$controller->getModule())!==null)
-			$moduleViewPath.='/'.$module->getId();
-		return $controller->resolveViewFile($viewName,$this->getViewPath().'/'.$controller->getUniqueId(),$this->getViewPath(),$moduleViewPath);
+		return $controller->resolveViewFile($viewName,$this->getViewPath().'/'.$controller->getUniqueId(),$this->getViewPath());
 	}
 
 	/**
 	 * Finds the layout file for the specified controller's layout.
-	 * @param CController $controller the controller
-	 * @param string $layoutName the layout name
+	 * @param CController the controller
+	 * @param string the layout name
 	 * @return string the layout file path. False if the file does not exist.
 	 */
 	public function getLayoutFile($controller,$layoutName)
 	{
-		$moduleViewPath=$basePath=$this->getViewPath();
-		$module=$controller->getModule();
+		$basePath=$this->getViewPath();
 		if(empty($layoutName))
 		{
+			$module=$controller->getModule();
 			while($module!==null)
 			{
 				if($module->layout===false)
@@ -125,16 +107,18 @@ class CTheme extends CComponent
 				$module=$module->getParentModule();
 			}
 			if($module===null)
-				$layoutName=Yii::app()->layout;
+				return $controller->resolveViewFile(Yii::app()->layout,$basePath.'/layouts',$basePath);
 			else
 			{
-				$layoutName=$module->layout;
-				$moduleViewPath.='/'.$module->getId();
+				$basePath.='/'.$module->getId();
+				return $controller->resolveViewFile($module->layout,$basePath.'/layouts',$basePath);
 			}
 		}
-		elseif($module!==null)
-			$moduleViewPath.='/'.$module->getId();
-
-		return $controller->resolveViewFile($layoutName,$moduleViewPath.'/layouts',$basePath,$moduleViewPath);
+		else
+		{
+			if(($module=$controller->getModule())!==null)
+				$basePath.='/'.$module->getId();
+			return $controller->resolveViewFile($layoutName,$basePath.'/layouts',$basePath);
+		}
 	}
 }

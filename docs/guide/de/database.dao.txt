@@ -1,37 +1,38 @@
 ﻿Data Access Objects (DAO)
 =========================
 
-Data Access Objects (Datenzugriffsobjekte, DAO) bieten eine einheitliche
-Schnittstelle für den Zugriff auf unterschiedliche Datenbanksysteme (DMBS).
-Verwendet man DAO, kann auf ein anderes DBMS umgestellt werden, ohne den
-entsprechenden Code ändern zu müssen.
+Data Access Objects (Datenzugriffsobjekte, DAO) bieten eine allgemeine
+API (Programmierschnittstelle) für den Zugriff auf Daten, die in unterschiedlichen 
+Datenbankmanagementsystemen (DBMS) gespeichert sind. Dadurch kann das zugrundeliegende DBMS ausgetauscht
+werden ohne dass der Code, der DAO für den Zugriff auf die Daten nutzt, geändert
+werden muss.
 
-Yii DAO basieren auf den [PHP Data Objects
-(PDO)](http://php.net/manual/en/book.pdo.php).
-Diese PHP-Erweiterung ermöglicht vereinheitlichten Zugriff auf viele bekannte
-DMBS, wie z.B. MySQL und PostgreSQL. Möchte man Yii DAO verwenden, muss daher
-die PDO-Erweiterung und die entsprechenden PDO-Datenbanktreiber 
-(z.B. `PDO_MYSQL`) installiert sein.
+Yii-DAO setzt auf [PHP Data Objects (PDO)](http://php.net/manual/en/book.pdo.php)
+auf. Das ist eine Erweiterung, die einen einheitlichen Datenzugriff auf viele, 
+weit verbreitete DBMS biete, wie z.B. MySQL und PostgreSQL. Um Yii-DAO nutzen
+zu können, müssen daher die PDO-Erweiterung und die spezifischen PDO-Datenbanktreiber,
+(z.B. `PDO_MYSQL`) installiert werden.
 
-Yii DAO besteht im Wesentlichen aus den folgenden vier Klassen:
+Yii-DAO besteht hauptsächlich aus den folgenden vier Klassen:
 
-   - [CDbConnection]: entspricht einer Datenbankverbindung
-   - [CDbCommand]: entspricht einer auzuführende SQL-Anweisung
-   - [CDbDataReader]: repräsentiert einen Datenstrom von Ergebniszeilen mit
-"Vorwärts-Cursor" (forward-only)
-   - [CDbTransaction]: entspricht eine Datenbank-Transaktion.
+   - [CDbConnection]: repräsentiert eine Verbindung zur Datenbank.
+   - [CDbCommand]: repräsentiert eine SQL-Anweisung, die gegenüber der Datenbank ausgeführt werden soll.
+   - [CDbDataReader]: repräsentiert einen forward-only (sinngem.:nur vorwärts
+gerichteten) Datenstrom von Zeilen aus der Ergebnismenge einer Suchanfrage.
+   - [CDbTransaction]: repräsentiert eine DB Transaktion.
   
-In den folgenden Abschnitten zeigen wir, wie man mit DAO arbeitet.
+Nachfolgend zeigen wir den Einsatz von Yii-DAO in unterschiedlichen
+Anwendungsfällen.
 
-Aufbauen einer Datenbankverbindung
-----------------------------------
+Aufbauen der Datenbankverbindung
+--------------------------------
 
-Um eine Verbindung zur Datenbank aufzubauen, muss eine [CDbConnection]-Instanz
-erzeugt und aktiviert werden. Die Anmeldeinformationen werden dabei in Form
-eines DSN (Data Source Name) angegeben. Auch Benutzername und Passwort können 
-erforderlich sein. Tritt während des Verbindungsaufbaus ein Fehler auf 
-(weil z.B. der DSN ungültig oder Benutzername bzw. Passwort falsch waren), 
-wird eine Exception ausgelöst.
+Um eine Verbindung zur Datenbank aufzubauen, müssen Sie eine [CDbConnection]-
+Instanz erzeugen und aktivieren. Um die Anmeldeinformationen anzugeben, ist
+ein Data Source Name (DSN) erforderlich. Benutzername und ein Passwort können ebenfalls
+benötigt werden. Im Falle eines Fehlers (also ungültiger DSN oder falscher 
+Benutzername bzw. Passwort) während des Verbindungsaufbaus wird
+eine Exception ausgelöst.
 
 ~~~
 [php]
@@ -45,20 +46,21 @@ $connection->active=false;  // Verbindung beenden
 
 Das DSN-Format hängt vom benutzten PDO-Datenbanktreiber ab. Im Allgemeinen
 enthält ein DSN den PDO-Treibernamen, gefolgt von einem Doppelpunkt, gefolgt
-von der treiberspezifischen Verbindungssyntax. Nähere Informationen finden Sie
-in der [PDO-Dokumentation](http://www.php.net/manual/de/pdo.construct.php).
-Die gebräuchlichsten DSN-Formate sind:
+von der treiberspezifischen Verbindungssyntax. Siehe [PDO
+Dokumentation](http://www.php.net/manual/en/pdo.construct.php) für weitere
+Informationen. Nachfolgend eine Liste der gebräuchlichsten DSN-Formate: 
 
-   - SQLite: `sqlite:/pfad/zu/dbdatei`
+   - SQLite: `sqlite:/path/to/dbfile`
    - MySQL: `mysql:host=localhost;dbname=testdb`
    - PostgreSQL: `pgsql:host=localhost;port=5432;dbname=testdb`
    - SQL Server: `mssql:host=localhost;dbname=testdb`
    - Oracle: `oci:dbname=//localhost:1521/testdb`
 
-Da [CDbConnection] von [CApplicationComponent] abgeleitet ist, kann man sie
-auch als [Anwendungskomponente](/doc/guide/basics.application#application-component)
-verwenden. Dazu erstellt man in der [Anwendungskonfiguration](/doc/guide/basics.application#application-configuration)
-eine Komponente `db` (die allerdings auch beliebig anders heißen kann):
+Da [CDbConnection] von [CApplicationComponent] abgeleitet ist, können wir sie auch
+als [Applikationskomponente](/doc/guide/basics.application#application-component)
+einsetzen. Dazu muss eine Anwendungskomponente `db` (die auch anderse benannt
+sein kann) in der [Applikationskonfiguration](/doc/guide/basics.application#application-configuration)
+wie folgt konfiguriert werden:
 
 ~~~
 [php]
@@ -77,60 +79,59 @@ array(
 )
 ~~~
 
-Über `Yii::app()->db` kann man dann auf eine bereits aktivierte
-Verbindung zugreifen, es sei denn, [CDbConnection::autoConnect]
-wurde auf false gesetzt. Auf diese Weise steht in der gesamten 
-Anwendung die selbe DB-Verbindung zur Verfügung. 
+Wir können dann auf die bereits automatisch aktivierte DB-Verbindung mittels
+`Yii::app()->db` zugreifen, es sei denn, wir haben [CDbConnection::autoConnect]
+mit false konfiguriert. Mit dieser Vorgehensweise kann eine einzelne
+DB-Verbindung an vielen Stellen in unserm Code gemeinsam benutzt werden.
  
 Ausführen von SQL-Anweisungen
 -----------------------------
 
-Steht die Datenbankverbindung, kann man mit Hilfe von [CDbCommand] 
-SQL-Anweisungen ausführen. Eine [CDbCommand]-Instanz wird erzeugt, indem
+Nachdem eine Verbindung zur Datenbank aufgebaut ist, können mit [CDbCommand]
+SQL-Anweisungen ausgeführt werden. Eine [CDbCommand]-Instanz wird erzeugt, indem
 man [CDbConnection::createCommand()] mit der entsprechenden SQL-Anweisung
 aufruft:
 
 ~~~
 [php]
-$connection=Yii::app()->db;   // Vorausgesetzt, Sie haben eine "db"-Komponente konfiguriert
-// Falls nicht, können Sie auch eine neue Verbindung erstellen:
-// $connection=new CDbConnection($dsn,$username,$password);
 $command=$connection->createCommand($sql);
-// Falls erforderlich, kann man die SQL-Anweisung so aktualisieren:
+// falls erforderlich, kann die SQL Anweisung folgendermaßen aktualisiert werden:
 // $command->text=$neuesSQL;
 ~~~
 
-Die Anweisung wird beim Aufruf einer dieser [CDbCommand]-Methoden ausgeführt:
+Eine SQL-Anweisung wird über [CDbCommand] auf eine der folgenden beiden Arten
+ausgeführt:
 
-   - [query()|CDbCommand::query]: führt SQL-Abfragen wie `SELECT` aus, die
-ein Ergebnis zurückliefern. Falls nötig, gibt sie eine [CDbDataReader]-Instanz
-zurück, mit der man die Datenzeilen des Ergebnisses durchlaufen kann. Der Einfachheit
-halber stehen auch einige `queryXXX()`-Methoden bereit, die das Abfrageergebnis
+   - [execute()|CDbCommand::execute]: führt eine SQL-Anweisung aus, die keine
+Abfrage ist, wie `INSERT`, `UPDATE` und `DELETE`. Bei Erfolg, liefert sie die Anzahl
+der betroffenen Zeilen zurück.
+
+   - [query()|CDbCommand::query]: führt eine SQL-Abfrage wie `SELECT` aus, die
+Datenzeilen zurückliefert. Falls erfolgreich, gibt sie eine [CDbDataReader]-Instanz
+zurück, mit dem man die resultierenden Datenzeilen durchlaufen kann. Der Einfachheit
+halber ist auch eine Reihe von `queryXXX()`-Methoden implementiert, die das Abfrageergebnis
 direkt zurückliefern.
 
-   - [execute()|CDbCommand::execute]: führt sämtliche sonstigen SQL-Anweisungen,
-wie `INSERT`, `UPDATE` und `DELETE` aus. Bei Erfolg liefert sie die Anzahl der 
-betroffenen Zeilen zurück.
-
-Tritt bei der Ausführung ein Fehler auf, wird eine Exception ausgelöst.
+Falls ein Fehler während der Ausführung der SQL-Anweisung
+auftritt, wird eine Exception ausgelöst, 
 
 ~~~
 [php]
-$dataReader=$command->query();   // Führt eine SQL-Abfrage aus (SELECT...)
-$rowCount=$command->execute();   // Führt eine sonstige SQL-Anweisung aus
+$rowCount=$command->execute();   // führe die "Nicht-Abfrage"-SQL-Anweisung aus
+$dataReader=$command->query();   // führe die SQL-Abfrage aus
 $rows=$command->queryAll();      // Abfragen und Zurückgeben aller Zeilen des Ergebnisses
 $row=$command->queryRow();       // Abfragen und Zurückgeben der ersten Zeile des Ergebnisses
 $column=$command->queryColumn(); // Abfragen und Zurückgeben der ersten Spalte des Ergebnisses
 $value=$command->queryScalar();  // Abfragen und Zurückgeben des ersten Feldes in der ersten Zeile
 ~~~
 
-Auslesen von Abfrageergebnissen
--------------------------------
+Arbeiten mit Query-Ergebnissen
+------------------------------
 
-Hat man von [CDbCommand::query()] eine Instanz von [CDbDataReader]
-zurückerhalten, kann man die einzelnen Ergebniszeilen durch wiederholten 
-Aufruf von [CDbDataReader::read()] abfragen. Auch der Einsatz in einer
-foreach-Schleife ist möglich:
+Nachdem [CDbCommand::query()] eine Instanz von [CDbDataReader] erzeugt hat,
+kann man, durch wiederholten Aufruf von [CDbDataReader::read()], Zeilen der 
+resultierenden Daten abfragen. Man kann [CDbDataReader] auch mit dem PHP 
+`foreach`-Konstrukt zum zeilenweise Abfragen nutzen.
 
 ~~~
 [php]
@@ -139,30 +140,33 @@ $dataReader=$command->query();
 while(($row=$dataReader->read())!==false) { ... }
 // Mit foreach wird jede Datenzeile durchlaufen
 foreach($dataReader as $row) { ... }
-// Abfragen aller Zeilen in ein einzelnes Array
+// Abfragen aller Zeilen auf einmal in ein einzelnes Array
 $rows=$dataReader->readAll();
 ~~~
 
 > Note|Hinweis: Anders als [query()|CDbCommand::query] liefern alle
-`queryXXX()`-Methoden die Daten direkt zurück. Zum Beispiel liefert
-[queryRow()|CDbCommand::queryRow] ein Array mit den Daten der ersten Zeile des
-Abfrageergebnisses.
+`queryXXX()`-Methoden die Daten direkt zurück. Zum Beispiel gibt
+[queryRow()|CDbCommand::queryRow] ein Array zurück, das die
+erste Zeile des Abfrageergebnisses repräsentiert.
 
 Verwenden von Transaktionen
 ---------------------------
 
-Wenn eine Anwendung mehrere lesende und/oder schreibende Anweisungen ausführt, 
-ist es wichtig, dass die Datenbank am Ende nicht in einem inkonsistenten Zustand 
-verbleibt, weil nicht alle Anweisungen erfolgreich abgeschlossen werden
-konnten. Zu diesem Zweck leitet man am besten eine Transaktion ein, die in 
-Yii durch eine Instanz von [CDbTransaction] repräsentiert wird.
+Wenn eine Anwendung einige Abfragen ausführt, von denen jede Informationen
+aus der Datenbank liest und/oder in sie schreibt, ist es wichtig, sicherzustellen, 
+dass in der Datenbank auch alle davon ausgeführt wurden.
+In diesem Fall kann eine Transaktion gestartet werden, welche in Yii 
+durch eine [CDbTransaction]-Instanz repräsentiert wird:
 
-   - Transaktion beginnen.
-   - Abfragen der Reihe nach ausführen. Änderungen sind von außen noch nicht sichtbar.
-   - Abschließen der Transaktion mit Commit. Bei Erfolg sind die Änderungen danach auch von außen sichtbar.
-   - Scheitert eine der Anfragen, wird die ganze Transaktion zurückgefahren.
+   - Beginne die Transaktion.
+   - Führe die Abfragen der Reihe nach aus. Alle Datenbankaktualisierungen sind für die
+Außenwelt unsichtbar.
+   - Abschließen der Transaktion mit Commit. Die Aktualisierungen werden sichtbar, falls
+die Transaktion erfolgreich war.
+   - Falls eine der Anfragen fehlschlägt, wird die ganze Transaktion
+zurückgefahren.
 
-Diesen Ablauf kann man in Yii so implementieren:
+Der obige Ablauf kann mit dem folgenden Code implementiert werden:
 
 ~~~
 [php]
@@ -183,86 +187,64 @@ catch(Exception $e) // Eine Exception wird ausgelöst, falls eine Abfrage fehlsc
 Binden von Parametern
 ---------------------
 
-Um Angriffe wie [SQL-Injection](http://de.wikipedia.org/wiki/SQL-Injection) zu
-vermeiden und um mehrfach auszuführende SQL-Anweisungen zu beschleunigen,
-kann man eine Anweisung "vorbereiten" (engl. prepare), die optional auch
-Platzhalter für Parameter enthalten kann. Beim sogenannten "Binden" werden 
-diese Platzhalter dann durch die eigentlichen Parameterwerte ersetzt.
+Um [SQL-Injection](http://de.wikipedia.org/wiki/SQL-Injection)-Angriffe zu
+vermeiden, und um die Geschwindigkeit mehrfach verwendeter SQL-Anweisungen zu verbessern,
+kann man eine SQL Anweisung mit optionalen Platzhaltern für Parameter
+"vorbereiten" (engl. prepare). Die Platzhalter werden während des 
+Bindungsprozesses durch die eigentlichen Parameter ersetzt.
 
-Platzhalter können entweder aus einer eindeutigen Zeichenkette oder einem
-Fragezeichen bestehen. Mit [CDbCommand::bindParam()] oder [CDbCommand::bindValue()] 
-werden die eigentlichen Parameter an die Stelle der Platzhalter gesetzt.
-Sonderzeichen in diesen Parametern bedürfen dabei keiner speziellen
-Beachtung. Der zugrundeliegende Datenbanktreiber kümmert sich automatisch 
-um deren korrekte und sichere Verarbeitung. Dieses Binden muss vor dem
-Ausführen der Anweisung erfolgen.
+Die Platzhalter für Parameter können entweder benannt (durch eine eindeutige
+Zeichenkette) oder unbenannt (dargestellt durch Fragezeichen) sein. Rufen Sie
+[CDbCommand::bindParam()] oder [CDbCommand::bindValue()] auf, um diese Platzhalter
+durch die eigentlichen Parameter zu ersetzen. Die Parameter müssen nicht in
+Anführungszeichen gesetzt werden. Der zugrundeliegende Datenbanktreiber erledigt 
+das für sie. Das Binden der Parameter muss
+vor der Ausführung der SQL Anweisung erfolgen.
 
 ~~~
 [php]
 // SQL-Anweisung mit zwei Platzhaltern ":username" und ":email"
-$sql="INSERT INTO tbl_user(username, email) VALUES(:username,:email)";
+$sql="INSERT INTO users(username, email) VALUES(:username,:email)";
 $command=$connection->createCommand($sql);
-// Ersetzt ":username" durch den tatsächlichen Benutzernamen
+// Ersetze den Platzhalter ":username" durch den tatsächlichen Benutzernamen
 $command->bindParam(":username",$username,PDO::PARAM_STR);
-// Ersetzt ":email" durch die tatsächliche E-Mail Adresse
+// Ersetze den Platzhalter ":email" durch die tatsächliche E-Mail Adresse
 $command->bindParam(":email",$email,PDO::PARAM_STR);
 $command->execute();
-// Fügt eine weitere Zeile mit anderen Parametern ein
+// Füge eine weitere Zeile mit einem neuen Parametersatz ein
 $command->bindParam(":username",$username2,PDO::PARAM_STR);
 $command->bindParam(":email",$email2,PDO::PARAM_STR);
 $command->execute();
 ~~~
 
-Der einzige Unterschied zwischen den erwähnten Befehlen besteht darin,
-dass [bindValue()|CDbCommand::bindValue()] einen konkreten Wert an einen 
-Platzhalter bindet, während [bindParam()|CDbCommand::bindParam] den Platzhalter 
-an eine Referenz auf eine PHP-Variable bindet. Bei umfangreichen
-Parameterdaten ist letzteres aus Performancegründen zu bevorzugen.
+Die Methoden [bindParam()|CDbCommand::bindParam] und [bindValue()|CDbCommand::bindValue] 
+sind sehr ähnlich. Der einzige Unterschied besteht darin,
+dass erstere einen Parameter als Referenz auf eine PHP-Variable, letztere dagegen 
+mit einem Wert bindet. Für Parameter, die für einen großen Block von Daten
+stehen, ist ersteres aus Performancegründen zu bevorzugen.
 
-Weitere Einzelheiten zum Binden von Parametern finden Sie in der
-[entsprechenden PHP Dokumentation](http://www.php.net/manual/de/pdostatement.bindparam.php).
+Weitere Einzelheiten zum Binden von Parametern finden Sie in der [einschlägigen PHP
+Dokumentation](http://www.php.net/manual/en/pdostatement.bindparam.php).
 
 Binden von Spalten
 ------------------
 
-Man kann auch ganze Spalten aus einem Abfrageergebnis an PHP Variablen binden.
-Bei jedem Zugriff auf eine Zeile sind diese Variablen dann automatisch mit den
-aktuellen Zeilendaten befüllt.
+Beim Auslesen von Abfrageergebnissen kann man auch Spalten an PHP Variablen
+binden, so dass sie jedes Mal beim Zugriff auf eine Zeile automatisch mit den
+aktuellen Daten befüllt werden.
 
 ~~~
 [php]
-$sql="SELECT username, email FROM tbl_user";
+$sql="SELECT username, email FROM users";
 $dataReader=$connection->createCommand($sql)->query();
-// Bindet die 1. Spalte (username) an die Variable $username
+// Binde die 1. Spalte (username) an die Variable $username
 $dataReader->bindColumn(1,$username);
-// Bindet die 2. Spalte (email) an die Variable $email
+// Binde die 2. Spalte (email) an die Variable $email
 /$dataReader->bindColumn(2,$email);
 while($dataReader->read()!==false)
 {
-    // $username und $email enthalten Benutzernamen und die E-Mail-Adresse der aktuellen Zeile
+    // $username und $email enthalten den Benutzernamen und die E-Mail-Adresse der aktuellen Zeile
 }
 ~~~
 
-Verwenden eines Tabellenpräfix
-------------------------------
-
-Ein Tabellenpräfix wird allen Tabellennamen der aktuellen Verbindung
-vorangestellt.  Es wird meist in gemeinsam genutzten Hosting-Umgebungen verwendet, wo mehrere
-Anwendungen sich eine einzelne Datenbank teilen und zur Unterscheidung eben
-verschiedene Präfixe verwenden. Eine Anwendung könnte z.B. `tbl_`, eine andere
-`yii_` vor alle Tabellennamen stellen.
-
-Ein Tabellenpräfix wird über die Eigenschaft [CDbConnection::tablePrefix]
-konfiguriert. In SQL-Ausdrücken kann man dann `{{TabellenName}}` statt
-des Tabellennamens verwenden, wobei `TabellenName` dem Namen
-ohne Präfix entspricht. Wenn die Datenbank z.B. eine Tabelle `tbl_user` 
-enthält und `tbl_` als Tabellenpräfix konfiguriert wurde,
-kann eine Anfrage so aussehen:
-
-~~~
-[php]
-$sql='SELECT * FROM {{user}}';
-$users=$connection->createCommand($sql)->queryAll();
-~~~
-
-<div class="revision">$Id: database.dao.txt 2890 2011-01-18 15:58:34Z qiang.xue $</div>
+<div class="revision">$Id: database.dao.txt 1413 2009-09-14 23:38:53Z qiang.xue $</div>

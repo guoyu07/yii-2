@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -12,28 +12,330 @@
  * CActiveRecord is the base class for classes representing relational data.
  *
  * It implements the active record design pattern, a popular Object-Relational Mapping (ORM) technique.
- * Please check {@link http://www.yiiframework.com/doc/guide/database.ar the Guide} for more details
- * about this class.
  *
- * @property CDbCriteria $dbCriteria The query criteria that is associated with this model.
- * This criteria is mainly used by {@link scopes named scope} feature to accumulate
- * different criteria specifications.
- * @property CActiveRecordMetaData $metaData The meta for this AR class.
- * @property CDbConnection $dbConnection The database connection used by active record.
- * @property CDbTableSchema $tableSchema The metadata of the table that this AR belongs to.
- * @property CDbCommandBuilder $commandBuilder The command builder used by this AR.
- * @property array $attributes Attribute values indexed by attribute names.
- * @property boolean $isNewRecord Whether the record is new and should be inserted when calling {@link save}.
- * This property is automatically set in constructor and {@link populateRecord}.
- * Defaults to false, but it will be set to true if the instance is created using
- * the new operator.
- * @property mixed $primaryKey The primary key value. An array (column name=>column value) is returned if the primary key is composite.
- * If primary key is not defined, null will be returned.
- * @property mixed $oldPrimaryKey The old primary key value. An array (column name=>column value) is returned if the primary key is composite.
- * If primary key is not defined, null will be returned.
- * @property string $tableAlias The default table alias.
+ * Each active record class represents a database table/view, while an active record instance
+ * represents a row in that table. Using CActiveRecord, one can perform CRUD
+ * (create, read, update, delete) database actions in an object-oriented way. For example,
+ * the following code inserts a row to the 'Post' table (where 'Post' is the class representing
+ * the 'Post' table):
+ * <pre>
+ * $post=new Post;
+ * $post->title='sample post';
+ * $post->save();
+ * </pre>
+ *
+ * In the following, we elaborate how to use CActiveRecord.
+ *
+ * First, we need to set up a database connection to be used by CActiveRecord. This is
+ * done by loading a {@link CDbConnection} application component whose ID is "db", using the following application
+ * configuration:
+ * <pre>
+ * array(
+ *     'components'=>array(
+ *         'db'=>array(
+ *             'class'=>'CDbConnection',
+ *             'connectionString'=>'sqlite:test.db',
+ *         ),
+ *     )
+ * );
+ * </pre>
+ * To use a different database connection, you should override {@link getDbConnection}.
+ *
+ * Second, for every database table that we want to access, define an active record class.
+ * The following example shows the minimal code needed for a 'Post' class, which represents
+ * the 'Post' table.
+ * <pre>
+ * class Post extends CActiveRecord
+ * {
+ *     public static function model($className=__CLASS__)
+ *     {
+ *         return parent::model($className);
+ *     }
+ * }
+ * </pre>
+ * The 'model()' method is declared as such for every active record class (to be explained shortly).
+ * By convention, the 'Post' class is associated with the database table named 'Post' (the class name).
+ * If the class should be associated with some other table, you may override
+ * the {@link tableName()} method.
+ *
+ * To access column values, use $record->columnName, where $record refers to an active record instance.
+ * For example, the following code sets the 'title' column (attribute) of $post:
+ * <pre>
+ * $post=new Post;
+ * $post->title='a sample post';
+ * </pre>
+ * Although we never explicitly declare the 'title' property in the 'Post' class, we can
+ * still access it in the above code. This is because 'title' is a column in the 'Post' table,
+ * and CActiveRecord makes it accessible as a property with the help of PHP __get() magic method.
+ * If you attempt to access a non-existing column in the same way, an exception will be thrown.
+ *
+ * To insert a new row into 'Post', we first create a new instance of 'Post' class,
+ * and then call 'save()' to do the insertion.
+ * <pre>
+ * $post=new Post;
+ * $post->title='sample post';
+ * $post->save();
+ * </pre>
+ * After insertion, the $post object will contain an updated primary key if it is auto-incremental.
+ *
+ * To query for posts, we will use the 'model' method we defined earlier on. The 'model' method
+ * is the only static method defined in CActiveRecord. It returns a static active record instance
+ * that is used to access class-level methods (something similar to static class methods).
+ * The following 'find' methods are all class-level methods that CActiveRecord implements to
+ * facilitate database querying:
+ * <pre>
+ * // find the first row satisfying the specified condition
+ * $post=Post::model()->find($condition,$params);
+ *
+ * // find all rows satisfying the specified condition
+ * $posts=Post::model()->findAll($condition,$params);
+ *
+ * // find the row with the specified primary key
+ * $post=Post::model()->findByPk($postID,$condition,$params);
+ *
+ * // find all rows with the specified primary keys
+ * $posts=Post::model()->findAllByPk($postIDs,$condition,$params);
+ *
+ * // find the row with the specified attribute values
+ * $post=Post::model()->findByAttributes($attributes,$condition,$params);
+ *
+ * // find all rows with the specified attribute values
+ * $posts=Post::model()->findAllByAttributes($attributes,$condition,$params);
+ *
+ * // find the first row using the specified SQL statement
+ * $post=Post::model()->findBySql($sql,$params);
+ *
+ * // find all rows using the specified SQL statement
+ * $posts=Post::model()->findAllBySql($sql,$params);
+ *
+ * // get the number of rows satisfying the specified condition
+ * $n=Post::model()->count($condition,$params);
+ *
+ * // get the number of rows using the specified SQL statement
+ * $n=Post::model()->countBySql($sql,$params);
+ * </pre>
+ * where $condition specifies the WHERE clause, and $params gives a list of parameters that
+ * should be bound to the generated SQL statement.
+ * You may also pass a {@link CDbCriteria} object at the place of $condition to specify
+ * more complex query conditions (in that case, $params will be ignored since you can sepcify it
+ * in the {@link CDbCriteria} object.)
+ *
+ * As we can see from the above, we have a set of find() methods and a set of findAll() methods.
+ * The result of the former is either an active record instance or null
+ * if no result is found, while the result of the latter is always an array.
+ *
+ * After obtaining an active record from query, we can update it or delete it.
+ * <pre>
+ * $post->title='new post title';
+ * $post->save(); // or $post->delete();
+ * </pre>
+ * In the above, we are using the same 'save()' method to do both insertion and update.
+ * CActiveRecord is intelligent enough to differentiate these two scenarios.
+ *
+ * CActiveRecord also has a few class-level methods to facilitate updating and deleting rows
+ * without instantiating active record objects. Below is a summary:
+ * <pre>
+ * // update all records with the specified attributes and condition
+ * Post::model()->updateAll($attributes,$condition,$params);
+ *
+ * // update one or several records with the specified primary key(s) and attribute values
+ * Post::model()->updateByPk($postID,$attributes,$condition,$params);
+ *
+ * // update one or several counter columns
+ * Post::model()->updateCounters($counters,$condition,$params);
+ *
+ * // delete one or several records with the specified primary key(s) and attribute values
+ * Post::model()->deleteByPk($pk,$condition,$params);
+ *
+ * // delete all records with the specified condition
+ * Post::model()->deleteAll($condition,$params);
+ *
+ * // delete all records which match the specified attribute values
+ * Post::model()->deleteAllByAttributes($condition,$params);
+ *
+ * // check if a record exists with the specified condition
+ * Post::model()->exists($condition,$params);
+ * </pre>
+ *
+ * A very useful feature that CActiveRecord supports is retrieving related active records.
+ * An active record is often related with other active records, via the relationship
+ * defined between database tables. For example, a post belongs to an author and has many comments;
+ * a user has a profile; a post belongs to and has many categories. CActiveRecord makes retrieving
+ * these related objects very easy.
+ *
+ * Before retrieving related objects, we need to declare these relations in the class definition.
+ * This is done by overriding the {@link relations} method:
+ * <pre>
+ * class Post extends CActiveRecord
+ * {
+ *     public function relations()
+ *     {
+ *         return array(
+ *             'author'=>array(self::BELONGS_TO, 'User', 'authorID'),
+ *             'comments'=>array(self::HAS_MANY, 'Comment', 'postID'),
+ *         );
+ *     }
+ * }
+ * </pre>
+ * In the above, we declare two relations:
+ * <ul>
+ * <li>the 'author' relation is of BELONGS_TO type; it references the 'User' active record class;
+ *   and the 'authorID' column of the 'Post' table is the foreign key.</li>
+ * <li>the 'comments' relation is of HAS_MANY type; it references the 'Comment' active record class;
+ *   and the 'postID' column of the 'Comment' table is the foreign key.</li>
+ * </ul>
+ *
+ * Since the 'Post' class knows what kind of related objects it has, we can use
+ * the following code to access the author and comments of a post:
+ * <pre>
+ * $post=Post::model()->findByPk($postID);
+ * $author=$post->author;
+ * $comments=$post->comments;
+ * </pre>
+ * Internally, when we access 'author' or 'comments' the first time, an SQL query will
+ * be executed to fetch the corresponding active record(s). This is the so-called
+ * lazy loading, i.e., the related objects are loaded the first time when they are accessed.
+ *
+ * If we have 100 posts and would like to obtain the author and comments for every post,
+ * lazy loading would be very inefficient, because it means we will need 200 SQL queries
+ * in order to fetch those related objects. In this situation, we should resort to
+ * the so-called eager loading.
+ * <pre>
+ * $posts=Post::model()->with('author','comments')->findAll($condition,$params);
+ * </pre>
+ * Here we used the 'with' method to specify that we want to bring back post records
+ * together with their related author and comments. Internally, two SQL queries
+ * will be created and executed: one brings back the posts and their authors, and the other
+ * brings back the comments). The reason we do not fetch them all together in one shot is
+ * because the returned rows would otherwise contain many repetitive results (e.g. the post
+ * information is repeated for every comment it has), which is both inefficient for database
+ * server and PHP code.
+ *
+ * Eager loading can be nested. For example, if for every comment, we also want to know
+ * its author, we could use the following 'with' find:
+ * <pre>
+ * $posts=Post::model()->with(array('author','comments'=>'author'))->findAll($condition,$params);
+ * </pre>
+ * How many SQL queries do we need now? Still two (one for posts and their authors, and one
+ * for comments and their authors)! In fact, if there are N HAS_MANY/MANY_MANY relations involved,
+ * we would need N+1 queries in total.
+ *
+ * There is a minor inconvenience when using eager loading, though. That is, we need to
+ * disambiguate any column references in conditions or search criteria, because we are
+ * joining several tables together. In general, it would be safe if we prefix every column referenced
+ * in the condition or search criteria with the table name.
+ *
+ * Now let's describe more about the possible relations we can declare for active records.
+ * From database point of view, the relationship between two tables A and B has three types:
+ * one-to-many, one-to-one and many-to-many. In active records, these are classified into four types:
+ * <ul>
+ * <li>BELONGS_TO: if A vs. B is one-to-many, then B belongs to A (e.g. a post belongs to an author);</li>
+ * <li>HAS_MANY: if A vs. B is one-to-many, then A has many B (e.g. an author has many posts);</li>
+ * <li>HAS_ONE: this is special case of has-many where A has at most one B;</li>
+ * <li>MANY_MANY: this corresponds to many-to-many relationship in database. An intermediate
+ *   join table is needed as most DBMS do not support many-to-many relationship directly.
+ *   For example, a post can belong to many categories and a category can have many posts.
+ *   We would use a table 'post_category' to join the 'posts' and 'categories' tables together.</li>
+ * </ul>
+ *
+ * We already see how to declare a relation in an active record class. In many situations,
+ * we often have more constraints on those related objects, such as the conditions that the related
+ * objects should satisfy, their orderings, etc. These can be specified as additional options
+ * in our relation declaration. For example,
+ * <pre>
+ * class Post extends CActiveRecord
+ * {
+ *     ......
+ *     public function relations()
+ *     {
+ *         return array(
+ *             'comments'=>array(self::HAS_MANY,'Comment','postID',
+ *                               'order'=>'??.createTime DESC',
+ *                               'with'=>'author'),
+ *         );
+ *     }
+ * }
+ * </pre>
+ * where the 'order' option specifies that the comments should be sorted by their creation time,
+ * and the 'with' option specifies that the comments should be loaded together with their authors.
+ * The special token '??.' is for disamibiguating the column reference. When SQL statement
+ * is generated, it will be replaced automatically by the table alias for the 'Comment' table.
+ * More detailed description about possible options can be found in {@link CActiveRelation} and
+ * {@link CHasManyRelation}.
+ *
+ * Since version 1.0.4, a new relational query, called STAT, is supported. It is meant
+ * to perform relational queries that return statistical information about related objects
+ * (e.g. the number of comments that each post has). To use this new relational query,
+ * we need to declare it in the {@link relations} method like other relations:
+ * <pre>
+ * class Post extends CActiveRecord
+ * {
+ *     ......
+ *     public function relations()
+ *     {
+ *         return array(
+ *             'commentCount'=>array(self::STAT,'Comment','postID'),
+ *
+ *             'comments'=>array(self::HAS_MANY,'Comment','postID',
+ *                               'order'=>'??.createTime DESC',
+ *                               'with'=>'author'),
+ *         );
+ *     }
+ * }
+ * </pre>
+ * In the above, we declare 'commentCount' to be a STAT relation that is related with
+ * the <code>Comment</code> model via its foreign key <code>postID</code>. Given a post
+ * model instance, we can then obtain the number of comments it has via the expression
+ * <code>$post->commentCount</code>. We can also obtain the number of comments for a list
+ * of posts via eager loading:
+ * <pre>
+ * $posts=Post::model()->with('commentCount')->findAll();
+ * </pre>
+ *
+ *
+ * CActiveRecord has built-in validation functionality that validates the user input data
+ * before they are saved to database. To use the validation, override {@link CModel::rules()} as follows,
+ * <pre>
+ * class Post extends CActiveRecord
+ * {
+ *     public function rules()
+ *     {
+ *         return array(
+ *             array('title, content', 'required'),
+ *             array('title', 'length', 'min'=>5),
+ *         );
+ *     }
+ * }
+ * </pre>
+ * The method returns a list of validation rules, each represented as an array of the following format:
+ * <pre>
+ * array('attribute list', 'validator name', 'on'=>'insert', ...validation parameters...)
+ * </pre>
+ * where
+ * <ul>
+ * <li>attribute list: specifies the attributes to be validated;</li>
+ * <li>validator name: specifies the validator to be used. It can be a class name (or class in dot syntax),
+ *   or a validation method in the AR class. A validator class must extend from {@link CValidator},
+ *   while a validation method must have the following signature:
+ * <pre>
+ * function validatorName($attribute,$params)
+ * </pre>
+ *   When using a built-in validator class, you can use an alias name instead of the full class name.
+ *   For example, you can use "required" instead of "system.validators.CRequiredValidator".
+ *   For more details, see {@link CValidator}.</li>
+ * <li>on: this specifies the scenario when the validation rule should be performed. Please see {@link CModel::validate}
+ *   for more details about this option. NOTE: if the validation is triggered by the {@link save} call,
+ *   it will use 'insert' to indicate an insertion operation, and 'update' an updating operation.
+ *   You may thus specify a rule with the 'on' option so that it is applied only to insertion or updating.</li>
+ * <li>additional parameters are used to initialize the corresponding validator properties. See {@link CValidator}
+ *   for possible properties.</li>
+ * </ul>
+ *
+ * When {@link save} is called, validation will be performed. If there are any validation errors,
+ * {@link save} will return false and the errors can be retrieved back via {@link getErrors}.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.db.ar
  * @since 1.0
  */
@@ -53,25 +355,28 @@ abstract class CActiveRecord extends CModel
 	public static $db;
 
 	private static $_models=array();			// class name => model
-	private static $_md=array();				// class name => meta data
 
+	private $_md;								// meta data
 	private $_new=false;						// whether this instance is new or not
 	private $_attributes=array();				// attribute name => attribute value
 	private $_related=array();					// attribute name => related objects
 	private $_c;								// query criteria (used by finder only)
-	private $_pk;								// old primary key value
-	private $_alias='t';						// the table alias being used for query
 
 
 	/**
 	 * Constructor.
-	 * @param string $scenario scenario name. See {@link CModel::scenario} for more details about this parameter.
-	 * Note: in order to setup initial model parameters use {@link init()} or {@link afterConstruct()}.
-	 * Do NOT override the constructor unless it is absolutely necessary!
+	 * @param array initial attributes (name => value). The attributes
+	 * are subject to filtering via {@link setAttributes}. If this parameter is null,
+	 * nothing will be done in the constructor (this is internally used by {@link populateRecord}).
+	 * @param string scenario name. See {@link setAttributes} for more details about this parameter.
+	 * This parameter has been available since version 1.0.2.
+	 * As of version 1.0.4, this parameter will be used to set the {@link CModel::scenario scenario}
+	 * property of the model.
+	 * @see setAttributes
 	 */
-	public function __construct($scenario='insert')
+	public function __construct($attributes=array(),$scenario='')
 	{
-		if($scenario===null) // internally used by populateRecord() and model()
+		if($attributes===null) // internally used by populateRecord() and model()
 			return;
 
 		$this->setScenario($scenario);
@@ -80,54 +385,38 @@ abstract class CActiveRecord extends CModel
 
 		$this->init();
 
+		if($attributes!==array())
+			$this->setAttributes($attributes);
+
 		$this->attachBehaviors($this->behaviors());
 		$this->afterConstruct();
 	}
 
 	/**
 	 * Initializes this model.
-	 * This method is invoked when an AR instance is newly created and has
-	 * its {@link scenario} set.
+	 * This method is invoked in the constructor right after {@link scenario} is set.
 	 * You may override this method to provide code that is needed to initialize the model (e.g. setting
 	 * initial property values.)
+	 * @since 1.0.8
 	 */
 	public function init()
 	{
 	}
 
 	/**
-	 * Sets the parameters about query caching.
-	 * This is a shortcut method to {@link CDbConnection::cache()}.
-	 * It changes the query caching parameter of the {@link dbConnection} instance.
-	 * @param integer $duration the number of seconds that query results may remain valid in cache.
-	 * If this is 0, the caching will be disabled.
-	 * @param CCacheDependency|ICacheDependency $dependency the dependency that will be used when saving
-	 * the query results into cache.
-	 * @param integer $queryCount number of SQL queries that need to be cached after calling this method. Defaults to 1,
-	 * meaning that the next SQL query will be cached.
-	 * @return static the active record instance itself.
-	 * @since 1.1.7
-	 */
-	public function cache($duration, $dependency=null, $queryCount=1)
-	{
-		$this->getDbConnection()->cache($duration, $dependency, $queryCount);
-		return $this;
-	}
-
-	/**
 	 * PHP sleep magic method.
 	 * This method ensures that the model meta data reference is set to null.
-	 * @return array
 	 */
 	public function __sleep()
 	{
+		$this->_md=null;
 		return array_keys((array)$this);
 	}
 
 	/**
 	 * PHP getter magic method.
 	 * This method is overridden so that AR attributes can be accessed like properties.
-	 * @param string $name property name
+	 * @param string property name
 	 * @return mixed property value
 	 * @see getAttribute
 	 */
@@ -135,11 +424,11 @@ abstract class CActiveRecord extends CModel
 	{
 		if(isset($this->_attributes[$name]))
 			return $this->_attributes[$name];
-		elseif(isset($this->getMetaData()->columns[$name]))
+		else if(isset($this->getMetaData()->columns[$name]))
 			return null;
-		elseif(isset($this->_related[$name]))
+		else if(isset($this->_related[$name]))
 			return $this->_related[$name];
-		elseif(isset($this->getMetaData()->relations[$name]))
+		else if(isset($this->getMetaData()->relations[$name]))
 			return $this->getRelated($name);
 		else
 			return parent::__get($name);
@@ -148,8 +437,8 @@ abstract class CActiveRecord extends CModel
 	/**
 	 * PHP setter magic method.
 	 * This method is overridden so that AR attributes can be accessed like properties.
-	 * @param string $name property name
-	 * @param mixed $value property value
+	 * @param string property name
+	 * @param mixed property value
 	 */
 	public function __set($name,$value)
 	{
@@ -166,18 +455,19 @@ abstract class CActiveRecord extends CModel
 	 * Checks if a property value is null.
 	 * This method overrides the parent implementation by checking
 	 * if the named attribute is null or not.
-	 * @param string $name the property name or the event name
+	 * @param string the property name or the event name
 	 * @return boolean whether the property value is null
+	 * @since 1.0.1
 	 */
 	public function __isset($name)
 	{
 		if(isset($this->_attributes[$name]))
 			return true;
-		elseif(isset($this->getMetaData()->columns[$name]))
+		else if(isset($this->getMetaData()->columns[$name]))
 			return false;
-		elseif(isset($this->_related[$name]))
+		else if(isset($this->_related[$name]))
 			return true;
-		elseif(isset($this->getMetaData()->relations[$name]))
+		else if(isset($this->getMetaData()->relations[$name]))
 			return $this->getRelated($name)!==null;
 		else
 			return parent::__isset($name);
@@ -187,13 +477,14 @@ abstract class CActiveRecord extends CModel
 	 * Sets a component property to be null.
 	 * This method overrides the parent implementation by clearing
 	 * the specified attribute value.
-	 * @param string $name the property name or the event name
+	 * @param string the property name or the event name
+	 * @since 1.0.1
 	 */
 	public function __unset($name)
 	{
 		if(isset($this->getMetaData()->columns[$name]))
 			unset($this->_attributes[$name]);
-		elseif(isset($this->getMetaData()->relations[$name]))
+		else if(isset($this->getMetaData()->relations[$name]))
 			unset($this->_related[$name]);
 		else
 			parent::__unset($name);
@@ -203,9 +494,10 @@ abstract class CActiveRecord extends CModel
 	 * Calls the named method which is not a class method.
 	 * Do not call this method. This is a PHP magic method that we override
 	 * to implement the named scope feature.
-	 * @param string $name the method name
-	 * @param array $parameters method parameters
+	 * @param string the method name
+	 * @param array method parameters
 	 * @return mixed the method return value
+	 * @since 1.0.5
 	 */
 	public function __call($name,$parameters)
 	{
@@ -234,18 +526,13 @@ abstract class CActiveRecord extends CModel
 	 * or null if the object does not exist.
 	 * If the relation is HAS_MANY or MANY_MANY, it will return an array of objects
 	 * or an empty array.
-	 * @param string $name the relation name (see {@link relations})
-	 * @param boolean $refresh whether to reload the related objects from database. Defaults to false.
-	 * If the current record is not a new record and it does not have the related objects loaded they
-	 * will be retrieved from the database even if this is set to false.
-	 * If the current record is a new record and this value is false, the related objects will not be
-	 * retrieved from the database.
-	 * @param mixed $params array or CDbCriteria object with additional parameters that customize the query conditions as specified in the relation declaration.
-	 * If this is supplied the related record(s) will be retrieved from the database regardless of the value or {@link $refresh}.
-	 * The related record(s) retrieved when this is supplied will only be returned by this method and will not be loaded into the current record's relation.
-	 * The value of the relation prior to running this method will still be available for the current record if this is supplied.
+	 * @param string the relation name (see {@link relations})
+	 * @param boolean whether to reload the related objects from database. Defaults to false.
+	 * @param array additional parameters that customize the query conditions as specified in the relation declaration.
+	 * This parameter has been available since version 1.0.5.
 	 * @return mixed the related object(s).
 	 * @throws CDbException if the relation is not specified in {@link relations}.
+	 * @since 1.0.2
 	 */
 	public function getRelated($name,$refresh=false,$params=array())
 	{
@@ -259,7 +546,7 @@ abstract class CActiveRecord extends CModel
 
 		Yii::trace('lazy loading '.get_class($this).'.'.$name,'system.db.ar.CActiveRecord');
 		$relation=$md->relations[$name];
-		if($this->getIsNewRecord() && !$refresh && ($relation instanceof CHasOneRelation || $relation instanceof CHasManyRelation))
+		if($this->getIsNewRecord() && ($relation instanceof CHasOneRelation || $relation instanceof CHasManyRelation))
 			return $relation instanceof CHasOneRelation ? null : array();
 
 		if($params!==array()) // dynamic query
@@ -267,24 +554,20 @@ abstract class CActiveRecord extends CModel
 			$exists=isset($this->_related[$name]) || array_key_exists($name,$this->_related);
 			if($exists)
 				$save=$this->_related[$name];
-
-			if($params instanceof CDbCriteria)
-				$params = $params->toArray();
-
+			unset($this->_related[$name]);
 			$r=array($name=>$params);
 		}
 		else
 			$r=$name;
-		unset($this->_related[$name]);
 
-		$finder=$this->getActiveFinder($r);
+		$finder=new CActiveFinder($this,$r);
 		$finder->lazyFind($this);
 
 		if(!isset($this->_related[$name]))
 		{
 			if($relation instanceof CHasManyRelation)
 				$this->_related[$name]=array();
-			elseif($relation instanceof CStatRelation)
+			else if($relation instanceof CStatRelation)
 				$this->_related[$name]=$relation->defaultValue;
 			else
 				$this->_related[$name]=null;
@@ -305,8 +588,9 @@ abstract class CActiveRecord extends CModel
 
 	/**
 	 * Returns a value indicating whether the named related object(s) has been loaded.
-	 * @param string $name the relation name
-	 * @return boolean a value indicating whether the named related object(s) has been loaded.
+	 * @param string the relation name
+	 * @return booolean a value indicating whether the named related object(s) has been loaded.
+	 * @since 1.0.3
 	 */
 	public function hasRelated($name)
 	{
@@ -315,10 +599,11 @@ abstract class CActiveRecord extends CModel
 
 	/**
 	 * Returns the query criteria associated with this model.
-	 * @param boolean $createIfNull whether to create a criteria instance if it does not exist. Defaults to true.
+	 * @param boolean whether to create a criteria instance if it does not exist. Defaults to true.
 	 * @return CDbCriteria the query criteria that is associated with this model.
 	 * This criteria is mainly used by {@link scopes named scope} feature to accumulate
 	 * different criteria specifications.
+	 * @since 1.0.5
 	 */
 	public function getDbCriteria($createIfNull=true)
 	{
@@ -331,43 +616,17 @@ abstract class CActiveRecord extends CModel
 	}
 
 	/**
-	 * Sets the query criteria for the current model.
-	 * @param CDbCriteria $criteria the query criteria
-	 * @since 1.1.3
-	 */
-	public function setDbCriteria($criteria)
-	{
-		$this->_c=$criteria;
-	}
-
-	/**
 	 * Returns the default named scope that should be implicitly applied to all queries for this model.
 	 * Note, default scope only applies to SELECT queries. It is ignored for INSERT, UPDATE and DELETE queries.
 	 * The default implementation simply returns an empty array. You may override this method
 	 * if the model needs to be queried with some default criteria (e.g. only active records should be returned).
 	 * @return array the query criteria. This will be used as the parameter to the constructor
 	 * of {@link CDbCriteria}.
+	 * @since 1.0.5
 	 */
 	public function defaultScope()
 	{
 		return array();
-	}
-
-	/**
-	 * Resets all scopes and criterias applied.
-	 *
-	 * @param boolean $resetDefault including default scope. This parameter available since 1.1.12
-	 * @return static the AR instance itself
-	 * @since 1.1.2
-	 */
-	public function resetScope($resetDefault=true)
-	{
-		if($resetDefault)
-			$this->_c=new CDbCriteria();
-		else
-			$this->_c=null;
-
-		return $this;
 	}
 
 	/**
@@ -383,8 +642,8 @@ abstract class CActiveRecord extends CModel
 	 * }
 	 * </pre>
 	 *
-	 * @param string $className active record class name.
-	 * @return static active record model instance.
+	 * @param string active record class name.
+	 * @return CActiveRecord active record model instance.
 	 */
 	public static function model($className=__CLASS__)
 	{
@@ -394,23 +653,20 @@ abstract class CActiveRecord extends CModel
 		{
 			$model=self::$_models[$className]=new $className(null);
 			$model->attachBehaviors($model->behaviors());
+			$model->_md=new CActiveRecordMetaData($model);
 			return $model;
 		}
 	}
 
 	/**
-	 * Returns the meta-data for this AR
 	 * @return CActiveRecordMetaData the meta for this AR class.
 	 */
 	public function getMetaData()
 	{
-		$className=get_class($this);
-		if(!array_key_exists($className,self::$_md))
-		{
-			self::$_md[$className]=null; // preventing recursive invokes of {@link getMetaData()} via {@link __get()}
-			self::$_md[$className]=new CActiveRecordMetaData($this);
-		}
-		return self::$_md[$className];
+		if($this->_md!==null)
+			return $this->_md;
+		else
+			return $this->_md=self::model(get_class($this))->_md;
 	}
 
 	/**
@@ -419,12 +675,14 @@ abstract class CActiveRecord extends CModel
 	 * This is useful if the table schema has been changed and you want to use the latest
 	 * available table schema. Make sure you have called {@link CDbSchema::refresh}
 	 * before you call this method. Otherwise, old table schema data will still be used.
+	 * @since 1.0.8
 	 */
 	public function refreshMetaData()
 	{
-		$className=get_class($this);
-		if(array_key_exists($className,self::$_md))
-			unset(self::$_md[$className]);
+		$finder=self::model(get_class($this));
+		$finder->_md=new CActiveRecordMetaData($finder);
+		if($this!==$finder)
+			$this->_md=$finder->_md;
 	}
 
 	/**
@@ -435,10 +693,7 @@ abstract class CActiveRecord extends CModel
 	 */
 	public function tableName()
 	{
-		$tableName = get_class($this);
-		if(($pos=strrpos($tableName,'\\')) !== false)
-			return substr($tableName,$pos+1);
-		return $tableName;
+		return get_class($this);
 	}
 
 	/**
@@ -451,6 +706,7 @@ abstract class CActiveRecord extends CModel
 	 * If the key is a single column, it should return the column name;
 	 * If the key is a composite one consisting of several columns, it should
 	 * return the array of the key column names.
+	 * @since 1.0.4
 	 */
 	public function primaryKey()
 	{
@@ -467,10 +723,9 @@ abstract class CActiveRecord extends CModel
 	 * <li>MANY_MANY: e.g. a member has many skills and a skill belongs to a member.</li>
 	 * </ul>
 	 *
-	 * Besides the above relation types, a special relation called STAT is also supported
-	 * that can be used to perform statistical query (or aggregational query).
-	 * It retrieves the aggregational information about the related objects, such as the number
-	 * of comments for each post, the average rating for each product, etc.
+	 * By declaring these relations, CActiveRecord can bring back related objects
+	 * in either lazy loading or eager loading approach, and you save the effort of
+	 * writing complex JOIN SQL statements.
 	 *
 	 * Each kind of related objects is defined in this method as an array with the following elements:
 	 * <pre>
@@ -481,55 +736,54 @@ abstract class CActiveRecord extends CModel
 	 * following four constants: self::BELONGS_TO, self::HAS_ONE, self::HAS_MANY and self::MANY_MANY;
 	 * 'className' refers to the name of the active record class that the related object(s) is of;
 	 * and 'foreignKey' states the foreign key that relates the two kinds of active record.
-	 * Note, for composite foreign keys, they can be either listed together, separated by commas or specified as an array
-	 * in format of array('key1','key2'). In case you need to specify custom PK->FK association you can define it as
-	 * array('fk'=>'pk'). For composite keys it will be array('fk_c1'=>'pk_с1','fk_c2'=>'pk_c2').
-	 * For foreign keys used in MANY_MANY relation, the joining table must be declared as well
-	 * (e.g. 'join_table(fk1, fk2)').
+	 * Note, for composite foreign keys, they must be listed together, separating with space or comma;
+	 * and for foreign keys used in MANY_MANY relation, the joining table must be declared as well
+	 * (e.g. 'joinTable(fk1, fk2)').
 	 *
 	 * Additional options may be specified as name-value pairs in the rest array elements:
 	 * <ul>
 	 * <li>'select': string|array, a list of columns to be selected. Defaults to '*', meaning all columns.
-	 *   Column names should be disambiguated if they appear in an expression (e.g. COUNT(relationName.name) AS name_count).</li>
+	 *   Column names should be disambiguated if they appear in an expression (e.g. COUNT(??.name) AS name_count).</li>
 	 * <li>'condition': string, the WHERE clause. Defaults to empty. Note, column references need to
-	 *   be disambiguated with prefix 'relationName.' (e.g. relationName.age&gt;20)</li>
+	 *   be disambiguated with prefix '??.' (e.g. ??.age&gt;20)</li>
 	 * <li>'order': string, the ORDER BY clause. Defaults to empty. Note, column references need to
-	 *   be disambiguated with prefix 'relationName.' (e.g. relationName.age DESC)</li>
+	 *   be disambiguated with prefix '??.' (e.g. ??.age DESC)</li>
 	 * <li>'with': string|array, a list of child related objects that should be loaded together with this object.
 	 *   Note, this is only honored by lazy loading, not eager loading.</li>
 	 * <li>'joinType': type of join. Defaults to 'LEFT OUTER JOIN'.</li>
+	 * <li>'aliasToken': the column prefix for column reference disambiguation. Defaults to '??.'.</li>
 	 * <li>'alias': the alias for the table associated with this relationship.
-	 *   It defaults to null,
-	 *   meaning the table alias is the same as the relation name.</li>
-	 * <li>'params': the parameters to be bound to the generated SQL statement.
-	 *   This should be given as an array of name-value pairs.</li>
+	 *   This option has been available since version 1.0.1. It defaults to null,
+	 *   meaning the table alias is automatically generated. This is different
+	 *   from `aliasToken` in that the latter is just a placeholder and will be
+	 *   replaced by the actual table alias.</li>
+     * <li>'params': the parameters to be bound to the generated SQL statement.
+	 *   This should be given as an array of name-value pairs. This option has been
+	 *   available since version 1.0.3.</li>
 	 * <li>'on': the ON clause. The condition specified here will be appended
-	 *   to the joining condition using the AND operator.</li>
+	 *   to the joining condition using the AND operator. This option has been
+	 *   available since version 1.0.2.</li>
 	 * <li>'index': the name of the column whose values should be used as keys
 	 *   of the array that stores related objects. This option is only available to
-	 *   HAS_MANY and MANY_MANY relations.</li>
-	 * <li>'scopes': scopes to apply. In case of a single scope can be used like 'scopes'=>'scopeName',
-	 *   in case of multiple scopes can be used like 'scopes'=>array('scopeName1','scopeName2').
-	 *   This option has been available since version 1.1.9.</li>
+	 *   HAS_MANY and MANY_MANY relations. This option has been available since version 1.0.7.</li>
 	 * </ul>
 	 *
 	 * The following options are available for certain relations when lazy loading:
 	 * <ul>
 	 * <li>'group': string, the GROUP BY clause. Defaults to empty. Note, column references need to
-	 *   be disambiguated with prefix 'relationName.' (e.g. relationName.age). This option only applies to HAS_MANY and MANY_MANY relations.</li>
+	 *   be disambiguated with prefix '??.' (e.g. ??.age). This option only applies to HAS_MANY and MANY_MANY relations.</li>
 	 * <li>'having': string, the HAVING clause. Defaults to empty. Note, column references need to
-	 *   be disambiguated with prefix 'relationName.' (e.g. relationName.age). This option only applies to HAS_MANY and MANY_MANY relations.</li>
+	 *   be disambiguated with prefix '??.' (e.g. ??.age). This option only applies to HAS_MANY and MANY_MANY relations.</li>
 	 * <li>'limit': limit of the rows to be selected. This option does not apply to BELONGS_TO relation.</li>
 	 * <li>'offset': offset of the rows to be selected. This option does not apply to BELONGS_TO relation.</li>
-	 * <li>'through': name of the model's relation that will be used as a bridge when getting related data. Can be set only for HAS_ONE and HAS_MANY. This option has been available since version 1.1.7.</li>
 	 * </ul>
 	 *
 	 * Below is an example declaring related objects for 'Post' active record class:
 	 * <pre>
 	 * return array(
-	 *     'author'=>array(self::BELONGS_TO, 'User', 'author_id'),
-	 *     'comments'=>array(self::HAS_MANY, 'Comment', 'post_id', 'with'=>'author', 'order'=>'create_time DESC'),
-	 *     'tags'=>array(self::MANY_MANY, 'Tag', 'post_tag(post_id, tag_id)', 'order'=>'name'),
+	 *     'author'=>array(self::BELONGS_TO, 'User', 'authorID'),
+	 *     'comments'=>array(self::HAS_MANY, 'Comment', 'postID', 'with'=>'author', 'order'=>'createTime DESC'),
+	 *     'tags'=>array(self::MANY_MANY, 'Tag', 'PostTag(postID, tagID)', 'order'=>'name'),
 	 * );
 	 * </pre>
 	 *
@@ -553,7 +807,7 @@ abstract class CActiveRecord extends CModel
 	 *           'condition'=>'status=1',
 	 *     ),
 	 *     'recently'=>array(
-	 *           'order'=>'create_time DESC',
+	 *           'order'=>'createTime DESC',
 	 *           'limit'=>5,
 	 *     ),
 	 * );
@@ -570,6 +824,7 @@ abstract class CActiveRecord extends CModel
 	 * @return array the scope definition. The array keys are scope names; the array
 	 * values are the corresponding scope definitions. Each scope definition is represented
 	 * as an array whose keys must be properties of {@link CDbCriteria}.
+	 * @since 1.0.5
 	 */
 	public function scopes()
 	{
@@ -580,6 +835,7 @@ abstract class CActiveRecord extends CModel
 	 * Returns the list of all attribute names of the model.
 	 * This would return all column names of the table associated with this AR class.
 	 * @return array list of attribute names.
+	 * @since 1.0.1
 	 */
 	public function attributeNames()
 	{
@@ -587,45 +843,28 @@ abstract class CActiveRecord extends CModel
 	}
 
 	/**
-	 * Returns the text label for the specified attribute.
-	 * This method overrides the parent implementation by supporting
-	 * returning the label defined in relational object.
-	 * In particular, if the attribute name is in the form of "post.author.name",
-	 * then this method will derive the label from the "author" relation's "name" attribute.
-	 * @param string $attribute the attribute name
-	 * @return string the attribute label
-	 * @see generateAttributeLabel
-	 * @since 1.1.4
+	 * Returns the name of attributes that are safe to be massively assigned.
+	 * The default implementation returns all table columns exception primary key(s).
+	 * Child class may override this method to further limit the attributes that can be massively assigned.
+	 * See {@link CModel::safeAttributes} on how to override this method.
+	 * @return array list of safe attribute names.
+	 * @see CModel::safeAttributes
 	 */
-	public function getAttributeLabel($attribute)
+	public function safeAttributes()
 	{
-		$labels=$this->attributeLabels();
-		if(isset($labels[$attribute]))
-			return $labels[$attribute];
-		elseif(strpos($attribute,'.')!==false)
+		$attributes=array();
+		foreach($this->getMetaData()->columns as $name=>$column)
 		{
-			$segs=explode('.',$attribute);
-			$name=array_pop($segs);
-			$model=$this;
-			foreach($segs as $seg)
-			{
-				$relations=$model->getMetaData()->relations;
-				if(isset($relations[$seg]))
-					$model=CActiveRecord::model($relations[$seg]->className);
-				else
-					break;
-			}
-			return $model->getAttributeLabel($name);
+			if(!$column->isPrimaryKey)
+				$attributes[]=$name;
 		}
-		else
-			return $this->generateAttributeLabel($attribute);
+		return $attributes;
 	}
 
 	/**
 	 * Returns the database connection used by active record.
 	 * By default, the "db" application component is used as the database connection.
 	 * You may override this method if you want to use a different database connection.
-	 * @throws CDbException if "db" application component is not defined
 	 * @return CDbConnection the database connection used by active record.
 	 */
 	public function getDbConnection()
@@ -636,15 +875,17 @@ abstract class CActiveRecord extends CModel
 		{
 			self::$db=Yii::app()->getDb();
 			if(self::$db instanceof CDbConnection)
+			{
+				self::$db->setActive(true);
 				return self::$db;
+			}
 			else
 				throw new CDbException(Yii::t('yii','Active Record requires a "db" CDbConnection application component.'));
 		}
 	}
 
 	/**
-	 * Returns the named relation declared for this AR class.
-	 * @param string $name the relation name
+	 * @param string the relation name
 	 * @return CActiveRelation the named relation declared for this AR class. Null if the relation does not exist.
 	 */
 	public function getActiveRelation($name)
@@ -653,7 +894,6 @@ abstract class CActiveRecord extends CModel
 	}
 
 	/**
-	 * Returns the metadata of the table that this AR belongs to
 	 * @return CDbTableSchema the metadata of the table that this AR belongs to
 	 */
 	public function getTableSchema()
@@ -662,7 +902,6 @@ abstract class CActiveRecord extends CModel
 	}
 
 	/**
-	 * Returns the command builder used by this AR.
 	 * @return CDbCommandBuilder the command builder used by this AR
 	 */
 	public function getCommandBuilder()
@@ -671,8 +910,7 @@ abstract class CActiveRecord extends CModel
 	}
 
 	/**
-	 * Checks whether this AR has the named attribute
-	 * @param string $name attribute name
+	 * @param string attribute name
 	 * @return boolean whether this AR has the named attribute (table column).
 	 */
 	public function hasAttribute($name)
@@ -687,7 +925,7 @@ abstract class CActiveRecord extends CModel
 	 * If this record is the result of a query and the attribute is not loaded,
 	 * null will be returned.
 	 * You may also use $this->AttributeName to obtain the attribute value.
-	 * @param string $name the attribute name
+	 * @param string the attribute name
 	 * @return mixed the attribute value. Null if the attribute is not set or does not exist.
 	 * @see hasAttribute
 	 */
@@ -695,15 +933,15 @@ abstract class CActiveRecord extends CModel
 	{
 		if(property_exists($this,$name))
 			return $this->$name;
-		elseif(isset($this->_attributes[$name]))
+		else if(isset($this->_attributes[$name]))
 			return $this->_attributes[$name];
 	}
 
 	/**
 	 * Sets the named attribute value.
 	 * You may also use $this->AttributeName to set the attribute value.
-	 * @param string $name the attribute name
-	 * @param mixed $value the attribute value.
+	 * @param string the attribute name
+	 * @param mixed the attribute value.
 	 * @return boolean whether the attribute exists and the assignment is conducted successfully
 	 * @see hasAttribute
 	 */
@@ -711,7 +949,7 @@ abstract class CActiveRecord extends CModel
 	{
 		if(property_exists($this,$name))
 			$this->$name=$value;
-		elseif(isset($this->getMetaData()->columns[$name]))
+		else if(isset($this->getMetaData()->columns[$name]))
 			$this->_attributes[$name]=$value;
 		else
 			return false;
@@ -719,11 +957,11 @@ abstract class CActiveRecord extends CModel
 	}
 
 	/**
-	 * Do not call this method. This method is used internally by {@link CActiveFinder} to populate
-	 * related objects. This method adds a related object to this record.
-	 * @param string $name attribute name
-	 * @param mixed $record the related record
-	 * @param mixed $index the index value in the related object collection.
+	 * Adds a related object to this record.
+	 * This method is used internally by {@link CActiveFinder} to populate related objects.
+	 * @param string attribute name
+	 * @param mixed the related record
+	 * @param mixed the index value in the related object collection.
 	 * If true, it means using zero-based integer index.
 	 * If false, it means a HAS_ONE or BELONGS_TO object and no index is needed.
 	 */
@@ -741,14 +979,14 @@ abstract class CActiveRecord extends CModel
 					$this->_related[$name][$index]=$record;
 			}
 		}
-		elseif(!isset($this->_related[$name]))
+		else if(!isset($this->_related[$name]))
 			$this->_related[$name]=$record;
 	}
 
 	/**
 	 * Returns all column attribute values.
 	 * Note, related objects are not returned.
-	 * @param mixed $names names of attributes whose value needs to be returned.
+	 * @param mixed names of attributes whose value needs to be returned.
 	 * If this is true (default), then all attribute values will be returned, including
 	 * those that are not loaded from DB (null will be returned for those attributes).
 	 * If this is null, all attributes except those that are not loaded from DB will be returned.
@@ -761,19 +999,14 @@ abstract class CActiveRecord extends CModel
 		{
 			if(property_exists($this,$name))
 				$attributes[$name]=$this->$name;
-			elseif($names===true && !isset($attributes[$name]))
+			else if($names===true && !isset($attributes[$name]))
 				$attributes[$name]=null;
 		}
 		if(is_array($names))
 		{
 			$attrs=array();
 			foreach($names as $name)
-			{
-				if(property_exists($this,$name))
-					$attrs[$name]=$this->$name;
-				else
-					$attrs[$name]=isset($attributes[$name])?$attributes[$name]:null;
-			}
+				$attrs[$name]=isset($attributes[$name])?$attributes[$name]:null;
 			return $attrs;
 		}
 		else
@@ -782,37 +1015,34 @@ abstract class CActiveRecord extends CModel
 
 	/**
 	 * Saves the current record.
-	 *
-	 * The record is inserted as a row into the database table if its {@link isNewRecord}
-	 * property is true (usually the case when the record is created using the 'new'
-	 * operator). Otherwise, it will be used to update the corresponding row in the table
-	 * (usually the case if the record is obtained using one of those 'find' methods.)
-	 *
-	 * Validation will be performed before saving the record. If the validation fails,
-	 * the record will not be saved. You can call {@link getErrors()} to retrieve the
-	 * validation errors.
-	 *
-	 * If the record is saved via insertion, its {@link isNewRecord} property will be
-	 * set false, and its {@link scenario} property will be set to be 'update'.
-	 * And if its primary key is auto-incremental and is not set before insertion,
-	 * the primary key will be populated with the automatically generated key value.
-	 *
-	 * @param boolean $runValidation whether to perform validation before saving the record.
+	 * The record is inserted as a row into the database table if it is manually
+	 * created using the 'new' operator. If it is obtained using one of those
+	 * 'find' methods, the record is considered not new and it will be used to
+	 * update the corresponding row in the table. You may check this status via {@link isNewRecord}.
+	 * Validation may be performed before saving the record. If the validation fails,
+	 * the record will not be saved.
+	 * If the record is being inserted and its primary key is null,
+	 * after insertion the primary key will be populated with the value
+	 * generated automatically by the database.
+	 * @param boolean whether to perform validation before saving the record.
 	 * If the validation fails, the record will not be saved to database.
-	 * @param array $attributes list of attributes that need to be saved. Defaults to null,
+	 * The validation will be performed under either 'insert' or 'update' scenario,
+	 * depending on whether {@link isNewRecord} is true or false.
+	 * @param array list of attributes that need to be saved. Defaults to null,
 	 * meaning all attributes that are loaded from DB will be saved.
 	 * @return boolean whether the saving succeeds
 	 */
 	public function save($runValidation=true,$attributes=null)
 	{
-		if(!$runValidation || $this->validate($attributes))
+		if(($scenario=$this->getScenario())==='')
+			$scenario=$this->getIsNewRecord()?'insert':'update';
+		if(!$runValidation || $this->validate($scenario,$attributes))
 			return $this->getIsNewRecord() ? $this->insert($attributes) : $this->update($attributes);
 		else
 			return false;
 	}
 
 	/**
-	 * Returns if the current record is new.
 	 * @return boolean whether the record is new and should be inserted when calling {@link save}.
 	 * This property is automatically set in constructor and {@link populateRecord}.
 	 * Defaults to false, but it will be set to true if the instance is created using
@@ -824,19 +1054,32 @@ abstract class CActiveRecord extends CModel
 	}
 
 	/**
-	 * Sets if the record is new.
-	 * @param boolean $value whether the record is new and should be inserted when calling {@link save}.
+	 * @param boolean whether the record is new and should be inserted when calling {@link save}.
 	 * @see getIsNewRecord
 	 */
 	public function setIsNewRecord($value)
 	{
 		$this->_new=$value;
+		if(!$value && $this->getScenario()==='insert')
+			$this->setScenario('update');
+	}
+
+	/**
+	 * Returns a list of validators created according to {@link CModel::rules rules}.
+	 * This overrides the parent implementation so that the validators are only
+	 * created once for each type of AR.
+	 * @return array a list of validators created according to {@link CModel::rules}.
+	 * @since 1.0.1
+	 */
+	public function getValidators()
+	{
+		return $this->getMetaData()->getValidators();
 	}
 
 	/**
 	 * This event is raised before the record is saved.
-	 * By setting {@link CModelEvent::isValid} to be false, the normal {@link save()} process will be stopped.
-	 * @param CModelEvent $event the event parameter
+	 * @param CEvent the event parameter
+	 * @since 1.0.2
 	 */
 	public function onBeforeSave($event)
 	{
@@ -845,7 +1088,8 @@ abstract class CActiveRecord extends CModel
 
 	/**
 	 * This event is raised after the record is saved.
-	 * @param CEvent $event the event parameter
+	 * @param CEvent the event parameter
+	 * @since 1.0.2
 	 */
 	public function onAfterSave($event)
 	{
@@ -854,8 +1098,8 @@ abstract class CActiveRecord extends CModel
 
 	/**
 	 * This event is raised before the record is deleted.
-	 * By setting {@link CModelEvent::isValid} to be false, the normal {@link delete()} process will be stopped.
-	 * @param CModelEvent $event the event parameter
+	 * @param CEvent the event parameter
+	 * @since 1.0.2
 	 */
 	public function onBeforeDelete($event)
 	{
@@ -864,7 +1108,8 @@ abstract class CActiveRecord extends CModel
 
 	/**
 	 * This event is raised after the record is deleted.
-	 * @param CEvent $event the event parameter
+	 * @param CEvent the event parameter
+	 * @since 1.0.2
 	 */
 	public function onAfterDelete($event)
 	{
@@ -872,18 +1117,20 @@ abstract class CActiveRecord extends CModel
 	}
 
 	/**
+	 * This event is raised after the record instance is created by new operator.
+	 * @param CEvent the event parameter
+	 * @since 1.0.2
+	 */
+	public function onAfterConstruct($event)
+	{
+		$this->raiseEvent('onAfterConstruct',$event);
+	}
+
+	/**
 	 * This event is raised before an AR finder performs a find call.
-	 * This can be either a call to CActiveRecords find methods or a find call
-	 * when model is loaded in relational context via lazy or eager loading.
-	 * If you want to access or modify the query criteria used for the
-	 * find call, you can use {@link getDbCriteria()} to customize it based on your needs.
-	 * When modifying criteria in beforeFind you have to make sure you are using the right
-	 * table alias which is different on normal find and relational call.
-	 * You can use {@link getTableAlias()} to get the alias used for the upcoming find call.
-	 * Please note that modification of criteria is fully supported as of version 1.1.13.
-	 * Earlier versions had some problems with relational context and applying changes correctly.
-	 * @param CModelEvent $event the event parameter
+	 * @param CEvent the event parameter
 	 * @see beforeFind
+	 * @since 1.0.9
 	 */
 	public function onBeforeFind($event)
 	{
@@ -892,40 +1139,12 @@ abstract class CActiveRecord extends CModel
 
 	/**
 	 * This event is raised after the record is instantiated by a find method.
-	 * @param CEvent $event the event parameter
+	 * @param CEvent the event parameter
+	 * @since 1.0.2
 	 */
 	public function onAfterFind($event)
 	{
 		$this->raiseEvent('onAfterFind',$event);
-	}
-
-	/**
-	 * Given 'with' options returns a new active finder instance.
-	 *
-	 * @param mixed $with the relation names to be actively looked for
-	 * @return CActiveFinder active finder for the operation
-	 *
-	 * @since 1.1.14
-	 */
-	public function getActiveFinder($with)
-	{
-		return new CActiveFinder($this,$with);
-	}
-
-	/**
-	 * This event is raised before an AR finder performs a count call.
-	 * If you want to access or modify the query criteria used for the
-	 * count call, you can use {@link getDbCriteria()} to customize it based on your needs.
-	 * When modifying criteria in beforeCount you have to make sure you are using the right
-	 * table alias which is different on normal count and relational call.
-	 * You can use {@link getTableAlias()} to get the alias used for the upcoming count call.
-	 * @param CModelEvent $event the event parameter
-	 * @see beforeCount
-	 * @since 1.1.14
-	 */
-	public function onBeforeCount($event)
-	{
-		$this->raiseEvent('onBeforeCount',$event);
 	}
 
 	/**
@@ -950,7 +1169,7 @@ abstract class CActiveRecord extends CModel
 	}
 
 	/**
-	 * This method is invoked after saving a record successfully.
+	 * This method is invoked after saving a record.
 	 * The default implementation raises the {@link onAfterSave} event.
 	 * You may override this method to do postprocessing after record saving.
 	 * Make sure you call the parent implementation so that the event is raised properly.
@@ -993,36 +1212,30 @@ abstract class CActiveRecord extends CModel
 	}
 
 	/**
+	 * This method is invoked after a record instance is created by new operator.
+	 * The default implementation raises the {@link onAfterConstruct} event.
+	 * You may override this method to do postprocessing after record creation.
+	 * Make sure you call the parent implementation so that the event is raised properly.
+	 */
+	protected function afterConstruct()
+	{
+		if($this->hasEventHandler('onAfterConstruct'))
+			$this->onAfterConstruct(new CEvent($this));
+	}
+
+	/**
 	 * This method is invoked before an AR finder executes a find call.
 	 * The find calls include {@link find}, {@link findAll}, {@link findByPk},
-	 * {@link findAllByPk}, {@link findByAttributes}, {@link findAllByAttributes},
-	 * {@link findBySql} and {@link findAllBySql}.
+	 * {@link findAllByPk}, {@link findByAttributes} and {@link findAllByAttributes}.
 	 * The default implementation raises the {@link onBeforeFind} event.
 	 * If you override this method, make sure you call the parent implementation
 	 * so that the event is raised properly.
-	 * For details on modifying query criteria see {@link onBeforeFind} event.
+	 * @since 1.0.9
 	 */
 	protected function beforeFind()
 	{
 		if($this->hasEventHandler('onBeforeFind'))
-		{
-			$event=new CModelEvent($this);
-			$this->onBeforeFind($event);
-		}
-	}
-
-	/**
-	 * This method is invoked before an AR finder executes a count call.
-	 * The count calls include {@link count} and {@link countByAttributes}
-	 * The default implementation raises the {@link onBeforeCount} event.
-	 * If you override this method, make sure you call the parent implementation
-	 * so that the event is raised properly.
-	 * @since 1.1.14
-	 */
-	protected function beforeCount()
-	{
-		if($this->hasEventHandler('onBeforeCount'))
-			$this->onBeforeCount(new CEvent($this));
+			$this->onBeforeFind(new CEvent($this));
 	}
 
 	/**
@@ -1040,6 +1253,7 @@ abstract class CActiveRecord extends CModel
 	/**
 	 * Calls {@link beforeFind}.
 	 * This method is internally used.
+	 * @since 1.0.11
 	 */
 	public function beforeFindInternal()
 	{
@@ -1049,6 +1263,7 @@ abstract class CActiveRecord extends CModel
 	/**
 	 * Calls {@link afterFind}.
 	 * This method is internally used.
+	 * @since 1.0.3
 	 */
 	public function afterFindInternal()
 	{
@@ -1060,12 +1275,10 @@ abstract class CActiveRecord extends CModel
 	 * If the table's primary key is auto-incremental and is null before insertion,
 	 * it will be populated with the actual value after insertion.
 	 * Note, validation is not performed in this method. You may call {@link validate} to perform the validation.
-	 * After the record is inserted to DB successfully, its {@link isNewRecord} property will be set false,
-	 * and its {@link scenario} property will be set to be 'update'.
-	 * @param array $attributes list of attributes that need to be saved. Defaults to null,
+	 * @param array list of attributes that need to be saved. Defaults to null,
 	 * meaning all attributes that are loaded from DB will be saved.
 	 * @return boolean whether the attributes are valid and the record is inserted successfully.
-	 * @throws CDbException if the record is not new
+	 * @throws CException if the record is not new
 	 */
 	public function insert($attributes=null)
 	{
@@ -1075,7 +1288,7 @@ abstract class CActiveRecord extends CModel
 		{
 			Yii::trace(get_class($this).'.insert()','system.db.ar.CActiveRecord');
 			$builder=$this->getCommandBuilder();
-			$table=$this->getTableSchema();
+			$table=$this->getMetaData()->tableSchema;
 			$command=$builder->createInsertCommand($table,$this->getAttributes($attributes));
 			if($command->execute())
 			{
@@ -1084,7 +1297,7 @@ abstract class CActiveRecord extends CModel
 				{
 					if(is_string($primaryKey) && $this->$primaryKey===null)
 						$this->$primaryKey=$builder->getLastInsertID($table);
-					elseif(is_array($primaryKey))
+					else if(is_array($primaryKey))
 					{
 						foreach($primaryKey as $pk)
 						{
@@ -1096,24 +1309,25 @@ abstract class CActiveRecord extends CModel
 						}
 					}
 				}
-				$this->_pk=$this->getPrimaryKey();
 				$this->afterSave();
 				$this->setIsNewRecord(false);
-				$this->setScenario('update');
 				return true;
 			}
+			else
+				$this->afterSave();
 		}
-		return false;
+		else
+			return false;
 	}
 
 	/**
 	 * Updates the row represented by this active record.
 	 * All loaded attributes will be saved to the database.
 	 * Note, validation is not performed in this method. You may call {@link validate} to perform the validation.
-	 * @param array $attributes list of attributes that need to be saved. Defaults to null,
+	 * @param array list of attributes that need to be saved. Defaults to null,
 	 * meaning all attributes that are loaded from DB will be saved.
 	 * @return boolean whether the update is successful
-	 * @throws CDbException if the record is new
+	 * @throws CException if the record is new
 	 */
 	public function update($attributes=null)
 	{
@@ -1122,10 +1336,7 @@ abstract class CActiveRecord extends CModel
 		if($this->beforeSave())
 		{
 			Yii::trace(get_class($this).'.update()','system.db.ar.CActiveRecord');
-			if($this->_pk===null)
-				$this->_pk=$this->getPrimaryKey();
-			$this->updateByPk($this->getOldPrimaryKey(),$this->getAttributes($attributes));
-			$this->_pk=$this->getPrimaryKey();
+			$this->updateByPk($this->getPrimaryKey(),$this->getAttributes($attributes));
 			$this->afterSave();
 			return true;
 		}
@@ -1136,8 +1347,8 @@ abstract class CActiveRecord extends CModel
 	/**
 	 * Saves a selected list of attributes.
 	 * Unlike {@link save}, this method only saves the specified attributes
-	 * of an existing row dataset and does NOT call either {@link beforeSave} or {@link afterSave}.
-	 * Also note that this method does neither attribute filtering nor validation.
+	 * of an existing row dataset. It thus has better performance.
+	 * Note, this method does neither attribute filtering nor validation.
 	 * So do not use this method with untrusted data (such as user posted data).
 	 * You may consider the following alternative if you want to do so:
 	 * <pre>
@@ -1145,13 +1356,11 @@ abstract class CActiveRecord extends CModel
 	 * $postRecord->attributes=$_POST['post'];
 	 * $postRecord->save();
 	 * </pre>
-	 * @param array $attributes attributes to be updated. Each element represents an attribute name
+	 * @param array attributes to be updated. Each element represents an attribute name
 	 * or an attribute value indexed by its name. If the latter, the record's
 	 * attribute will be changed accordingly before saving.
-	 * @throws CDbException if the record is new
-	 * @return boolean whether the update is successful. Note that false is also returned if the saving
-	 * was successfull but no attributes had changed and the database driver returns 0 for the number
-	 * of updated records.
+	 * @return boolean whether the update is successful
+	 * @throws CException if the record is new or any database error
 	 */
 	public function saveAttributes($attributes)
 	{
@@ -1166,56 +1375,16 @@ abstract class CActiveRecord extends CModel
 				else
 					$values[$name]=$this->$name=$value;
 			}
-			if($this->_pk===null)
-				$this->_pk=$this->getPrimaryKey();
-			if($this->updateByPk($this->getOldPrimaryKey(),$values)>0)
-			{
-				$this->_pk=$this->getPrimaryKey();
-				return true;
-			}
-			else
-				return false;
+			return $this->updateByPk($this->getPrimaryKey(),$values)>0;
 		}
 		else
 			throw new CDbException(Yii::t('yii','The active record cannot be updated because it is new.'));
 	}
 
 	/**
-	 * Saves one or several counter columns for the current AR object.
-	 * Note that this method differs from {@link updateCounters} in that it only
-	 * saves the current AR object.
-	 * An example usage is as follows:
-	 * <pre>
-	 * $postRecord=Post::model()->findByPk($postID);
-	 * $postRecord->saveCounters(array('view_count'=>1));
-	 * </pre>
-	 * Use negative values if you want to decrease the counters.
-	 * @param array $counters the counters to be updated (column name=>increment value)
-	 * @return boolean whether the saving is successful
-	 * @see updateCounters
-	 * @since 1.1.8
-	 */
-	public function saveCounters($counters)
-	{
-		Yii::trace(get_class($this).'.saveCounters()','system.db.ar.CActiveRecord');
-		$builder=$this->getCommandBuilder();
-		$table=$this->getTableSchema();
-		$criteria=$builder->createPkCriteria($table,$this->getOldPrimaryKey());
-		$command=$builder->createUpdateCounterCommand($this->getTableSchema(),$counters,$criteria);
-		if($command->execute())
-		{
-			foreach($counters as $name=>$value)
-				$this->$name=$this->$name+$value;
-			return true;
-		}
-		else
-			return false;
-	}
-
-	/**
 	 * Deletes the row corresponding to this active record.
-	 * @throws CDbException if the record is new
 	 * @return boolean whether the deletion is successful.
+	 * @throws CException if the record is new
 	 */
 	public function delete()
 	{
@@ -1242,17 +1411,12 @@ abstract class CActiveRecord extends CModel
 	public function refresh()
 	{
 		Yii::trace(get_class($this).'.refresh()','system.db.ar.CActiveRecord');
-		if(($record=$this->findByPk($this->getPrimaryKey()))!==null)
+		if(!$this->getIsNewRecord() && ($record=$this->findByPk($this->getPrimaryKey()))!==null)
 		{
 			$this->_attributes=array();
 			$this->_related=array();
 			foreach($this->getMetaData()->columns as $name=>$column)
-			{
-				if(property_exists($this,$name))
-					$this->$name=$record->$name;
-				else
-					$this->_attributes[$name]=$record->$name;
-			}
+				$this->$name=$record->$name;
 			return true;
 		}
 		else
@@ -1260,9 +1424,8 @@ abstract class CActiveRecord extends CModel
 	}
 
 	/**
-	 * Compares current active record with another one.
-	 * The comparison is made by comparing table name and the primary key values of the two active records.
-	 * @param CActiveRecord $record record to compare to
+	 * Compares this active record with another one.
+	 * The comparison is made by comparing the primary key values of the two active records.
 	 * @return boolean whether the two active records refer to the same row in the database table.
 	 */
 	public function equals($record)
@@ -1271,16 +1434,15 @@ abstract class CActiveRecord extends CModel
 	}
 
 	/**
-	 * Returns the primary key value.
 	 * @return mixed the primary key value. An array (column name=>column value) is returned if the primary key is composite.
 	 * If primary key is not defined, null will be returned.
 	 */
 	public function getPrimaryKey()
 	{
-		$table=$this->getTableSchema();
+		$table=$this->getMetaData()->tableSchema;
 		if(is_string($table->primaryKey))
 			return $this->{$table->primaryKey};
-		elseif(is_array($table->primaryKey))
+		else if(is_array($table->primaryKey))
 		{
 			$values=array();
 			foreach($table->primaryKey as $name)
@@ -1291,182 +1453,56 @@ abstract class CActiveRecord extends CModel
 			return null;
 	}
 
-	/**
-	 * Sets the primary key value.
-	 * After calling this method, the old primary key value can be obtained from {@link oldPrimaryKey}.
-	 * @param mixed $value the new primary key value. If the primary key is composite, the new value
-	 * should be provided as an array (column name=>column value).
-	 * @since 1.1.0
-	 */
-	public function setPrimaryKey($value)
-	{
-		$this->_pk=$this->getPrimaryKey();
-		$table=$this->getTableSchema();
-		if(is_string($table->primaryKey))
-			$this->{$table->primaryKey}=$value;
-		elseif(is_array($table->primaryKey))
-		{
-			foreach($table->primaryKey as $name)
-				$this->$name=$value[$name];
-		}
-	}
-
-	/**
-	 * Returns the old primary key value.
-	 * This refers to the primary key value that is populated into the record
-	 * after executing a find method (e.g. find(), findAll()).
-	 * The value remains unchanged even if the primary key attribute is manually assigned with a different value.
-	 * @return mixed the old primary key value. An array (column name=>column value) is returned if the primary key is composite.
-	 * If primary key is not defined, null will be returned.
-	 * @since 1.1.0
-	 */
-	public function getOldPrimaryKey()
-	{
-		return $this->_pk;
-	}
-
-	/**
-	 * Sets the old primary key value.
-	 * @param mixed $value the old primary key value.
-	 * @since 1.1.3
-	 */
-	public function setOldPrimaryKey($value)
-	{
-		$this->_pk=$value;
-	}
-
-	/**
-	 * Performs the actual DB query and populates the AR objects with the query result.
-	 * This method is mainly internally used by other AR query methods.
-	 * @param CDbCriteria $criteria the query criteria
-	 * @param boolean $all whether to return all data
-	 * @return mixed the AR objects populated with the query result
-	 * @since 1.1.7
-	 */
-	protected function query($criteria,$all=false)
+	private function query($criteria,$all=false)
 	{
 		$this->beforeFind();
 		$this->applyScopes($criteria);
-
-		if(empty($criteria->with))
-		{
-			if(!$all)
-				$criteria->limit=1;
-			$command=$this->getCommandBuilder()->createFindCommand($this->getTableSchema(),$criteria);
-			return $all ? $this->populateRecords($command->queryAll(), true, $criteria->index) : $this->populateRecord($command->queryRow());
-		}
-		else
-		{
-			$finder=$this->getActiveFinder($criteria->with);
-			return $finder->query($criteria,$all);
-		}
+		$command=$this->getCommandBuilder()->createFindCommand($this->getTableSchema(),$criteria);
+		return $all ? $this->populateRecords($command->queryAll()) : $this->populateRecord($command->queryRow());
 	}
 
 	/**
 	 * Applies the query scopes to the given criteria.
 	 * This method merges {@link dbCriteria} with the given criteria parameter.
 	 * It then resets {@link dbCriteria} to be null.
-	 * @param CDbCriteria $criteria the query criteria. This parameter may be modified by merging {@link dbCriteria}.
+	 * @param CDbCriteria the query criteria. This parameter may be modified by merging {@link dbCriteria}.
+	 * @since 1.0.12
 	 */
 	public function applyScopes(&$criteria)
 	{
-		if(!empty($criteria->scopes))
-		{
-			$scs=$this->scopes();
-			$c=$this->getDbCriteria();
-			foreach((array)$criteria->scopes as $k=>$v)
-			{
-				if(is_integer($k))
-				{
-					if(is_string($v))
-					{
-						if(isset($scs[$v]))
-						{
-							$c->mergeWith($scs[$v],true);
-							continue;
-						}
-						$scope=$v;
-						$params=array();
-					}
-					elseif(is_array($v))
-					{
-						$scope=key($v);
-						$params=current($v);
-					}
-				}
-				elseif(is_string($k))
-				{
-					$scope=$k;
-					$params=$v;
-				}
-
-				call_user_func_array(array($this,$scope),(array)$params);
-			}
-		}
-
-		if(isset($c) || ($c=$this->getDbCriteria(false))!==null)
+		if(($c=$this->getDbCriteria(false))!==null)
 		{
 			$c->mergeWith($criteria);
 			$criteria=$c;
-			$this->resetScope(false);
+			$this->_c=null;
 		}
-	}
-
-	/**
-	 * Returns the table alias to be used by the find methods.
-	 * In relational queries, the returned table alias may vary according to
-	 * the corresponding relation declaration. Also, the default table alias
-	 * set by {@link setTableAlias} may be overridden by the applied scopes.
-	 * @param boolean $quote whether to quote the alias name
-	 * @param boolean $checkScopes whether to check if a table alias is defined in the applied scopes so far.
-	 * This parameter must be set false when calling this method in {@link defaultScope}.
-	 * An infinite loop would be formed otherwise.
-	 * @return string the default table alias
-	 * @since 1.1.1
-	 */
-	public function getTableAlias($quote=false, $checkScopes=true)
-	{
-		if($checkScopes && ($criteria=$this->getDbCriteria(false))!==null && $criteria->alias!='')
-			$alias=$criteria->alias;
-		else
-			$alias=$this->_alias;
-		return $quote ? $this->getDbConnection()->getSchema()->quoteTableName($alias) : $alias;
-	}
-
-	/**
-	 * Sets the table alias to be used in queries.
-	 * @param string $alias the table alias to be used in queries. The alias should NOT be quoted.
-	 * @since 1.1.3
-	 */
-	public function setTableAlias($alias)
-	{
-		$this->_alias=$alias;
 	}
 
 	/**
 	 * Finds a single active record with the specified condition.
-	 * @param mixed $condition query condition or criteria.
+	 * @param mixed query condition or criteria.
 	 * If a string, it is treated as query condition (the WHERE clause);
 	 * If an array, it is treated as the initial values for constructing a {@link CDbCriteria} object;
 	 * Otherwise, it should be an instance of {@link CDbCriteria}.
-	 * @param array $params parameters to be bound to an SQL statement.
+	 * @param array parameters to be bound to an SQL statement.
 	 * This is only used when the first parameter is a string (query condition).
 	 * In other cases, please use {@link CDbCriteria::params} to set parameters.
-	 * @return static the record found. Null if no record is found.
+	 * @return CActiveRecord the record found. Null if no record is found.
 	 */
 	public function find($condition='',$params=array())
 	{
 		Yii::trace(get_class($this).'.find()','system.db.ar.CActiveRecord');
 		$criteria=$this->getCommandBuilder()->createCriteria($condition,$params);
+		$criteria->limit=1;
 		return $this->query($criteria);
 	}
 
 	/**
 	 * Finds all active records satisfying the specified condition.
 	 * See {@link find()} for detailed explanation about $condition and $params.
-	 * @param mixed $condition query condition or criteria.
-	 * @param array $params parameters to be bound to an SQL statement.
-	 * @return static[] list of active records satisfying the specified condition. An empty array is returned if none is found.
+	 * @param mixed query condition or criteria.
+	 * @param array parameters to be bound to an SQL statement.
+	 * @return array list of active records satisfying the specified condition. An empty array is returned if none is found.
 	 */
 	public function findAll($condition='',$params=array())
 	{
@@ -1478,207 +1514,138 @@ abstract class CActiveRecord extends CModel
 	/**
 	 * Finds a single active record with the specified primary key.
 	 * See {@link find()} for detailed explanation about $condition and $params.
-	 * @param mixed $pk primary key value(s). Use array for multiple primary keys. For composite key, each key value must be an array (column name=>column value).
-	 * @param mixed $condition query condition or criteria.
-	 * @param array $params parameters to be bound to an SQL statement.
-	 * @return static the record found. Null if none is found.
+	 * @param mixed primary key value(s). Use array for multiple primary keys. For composite key, each key value must be an array (column name=>column value).
+	 * @param mixed query condition or criteria.
+	 * @param array parameters to be bound to an SQL statement.
+	 * @return CActiveRecord the record found. Null if none is found.
 	 */
 	public function findByPk($pk,$condition='',$params=array())
 	{
 		Yii::trace(get_class($this).'.findByPk()','system.db.ar.CActiveRecord');
-		$prefix=$this->getTableAlias(true).'.';
-		$criteria=$this->getCommandBuilder()->createPkCriteria($this->getTableSchema(),$pk,$condition,$params,$prefix);
+		$criteria=$this->getCommandBuilder()->createPkCriteria($this->getTableSchema(),$pk,$condition,$params);
+		$criteria->limit=1;
 		return $this->query($criteria);
 	}
 
 	/**
 	 * Finds all active records with the specified primary keys.
 	 * See {@link find()} for detailed explanation about $condition and $params.
-	 * @param mixed $pk primary key value(s). Use array for multiple primary keys. For composite key, each key value must be an array (column name=>column value).
-	 * @param mixed $condition query condition or criteria.
-	 * @param array $params parameters to be bound to an SQL statement.
-	 * @return static[] the records found. An empty array is returned if none is found.
+	 * @param mixed primary key value(s). Use array for multiple primary keys. For composite key, each key value must be an array (column name=>column value).
+	 * @param mixed query condition or criteria.
+	 * @param array parameters to be bound to an SQL statement.
+	 * @return array the records found. An empty array is returned if none is found.
 	 */
 	public function findAllByPk($pk,$condition='',$params=array())
 	{
 		Yii::trace(get_class($this).'.findAllByPk()','system.db.ar.CActiveRecord');
-		$prefix=$this->getTableAlias(true).'.';
-		$criteria=$this->getCommandBuilder()->createPkCriteria($this->getTableSchema(),$pk,$condition,$params,$prefix);
+		$criteria=$this->getCommandBuilder()->createPkCriteria($this->getTableSchema(),$pk,$condition,$params);
 		return $this->query($criteria,true);
 	}
 
 	/**
 	 * Finds a single active record that has the specified attribute values.
 	 * See {@link find()} for detailed explanation about $condition and $params.
-	 * @param array $attributes list of attribute values (indexed by attribute names) that the active records should match.
-	 * An attribute value can be an array which will be used to generate an IN condition.
-	 * @param mixed $condition query condition or criteria.
-	 * @param array $params parameters to be bound to an SQL statement.
-	 * @return static the record found. Null if none is found.
+	 * @param array list of attribute values (indexed by attribute names) that the active records should match.
+	 * Since version 1.0.8, an attribute value can be an array which will be used to generate an IN condition.
+	 * @param mixed query condition or criteria.
+	 * @param array parameters to be bound to an SQL statement.
+	 * @return CActiveRecord the record found. Null if none is found.
 	 */
 	public function findByAttributes($attributes,$condition='',$params=array())
 	{
 		Yii::trace(get_class($this).'.findByAttributes()','system.db.ar.CActiveRecord');
-		$prefix=$this->getTableAlias(true).'.';
-		$criteria=$this->getCommandBuilder()->createColumnCriteria($this->getTableSchema(),$attributes,$condition,$params,$prefix);
+		$criteria=$this->getCommandBuilder()->createColumnCriteria($this->getTableSchema(),$attributes,$condition,$params);
+		$criteria->limit=1;
 		return $this->query($criteria);
 	}
 
 	/**
 	 * Finds all active records that have the specified attribute values.
 	 * See {@link find()} for detailed explanation about $condition and $params.
-	 * @param array $attributes list of attribute values (indexed by attribute names) that the active records should match.
-	 * An attribute value can be an array which will be used to generate an IN condition.
-	 * @param mixed $condition query condition or criteria.
-	 * @param array $params parameters to be bound to an SQL statement.
-	 * @return static[] the records found. An empty array is returned if none is found.
+	 * @param array list of attribute values (indexed by attribute names) that the active records should match.
+	 * Since version 1.0.8, an attribute value can be an array which will be used to generate an IN condition.
+	 * @param mixed query condition or criteria.
+	 * @param array parameters to be bound to an SQL statement.
+	 * @return array the records found. An empty array is returned if none is found.
 	 */
 	public function findAllByAttributes($attributes,$condition='',$params=array())
 	{
 		Yii::trace(get_class($this).'.findAllByAttributes()','system.db.ar.CActiveRecord');
-		$prefix=$this->getTableAlias(true).'.';
-		$criteria=$this->getCommandBuilder()->createColumnCriteria($this->getTableSchema(),$attributes,$condition,$params,$prefix);
+		$criteria=$this->getCommandBuilder()->createColumnCriteria($this->getTableSchema(),$attributes,$condition,$params);
 		return $this->query($criteria,true);
 	}
 
 	/**
 	 * Finds a single active record with the specified SQL statement.
-	 * @param string $sql the SQL statement
-	 * @param array $params parameters to be bound to the SQL statement
-	 * @return static the record found. Null if none is found.
+	 * @param string the SQL statement
+	 * @param array parameters to be bound to the SQL statement
+	 * @return CActiveRecord the record found. Null if none is found.
 	 */
 	public function findBySql($sql,$params=array())
 	{
 		Yii::trace(get_class($this).'.findBySql()','system.db.ar.CActiveRecord');
-		$this->beforeFind();
-		if(($criteria=$this->getDbCriteria(false))!==null && !empty($criteria->with))
-		{
-			$this->resetScope(false);
-			$finder=$this->getActiveFinder($criteria->with);
-			return $finder->findBySql($sql,$params);
-		}
-		else
-		{
-			$command=$this->getCommandBuilder()->createSqlCommand($sql,$params);
-			return $this->populateRecord($command->queryRow());
-		}
+		$command=$this->getCommandBuilder()->createSqlCommand($sql,$params);
+		return $this->populateRecord($command->queryRow());
 	}
 
 	/**
 	 * Finds all active records using the specified SQL statement.
-	 * @param string $sql the SQL statement
-	 * @param array $params parameters to be bound to the SQL statement
-	 * @return static[] the records found. An empty array is returned if none is found.
+	 * @param string the SQL statement
+	 * @param array parameters to be bound to the SQL statement
+	 * @return array the records found. An empty array is returned if none is found.
 	 */
 	public function findAllBySql($sql,$params=array())
 	{
 		Yii::trace(get_class($this).'.findAllBySql()','system.db.ar.CActiveRecord');
-		$this->beforeFind();
-		if(($criteria=$this->getDbCriteria(false))!==null && !empty($criteria->with))
-		{
-			$this->resetScope(false);
-			$finder=$this->getActiveFinder($criteria->with);
-			return $finder->findAllBySql($sql,$params);
-		}
-		else
-		{
-			$command=$this->getCommandBuilder()->createSqlCommand($sql,$params);
-			return $this->populateRecords($command->queryAll());
-		}
+		$command=$this->getCommandBuilder()->createSqlCommand($sql,$params);
+		return $this->populateRecords($command->queryAll());
 	}
 
 	/**
 	 * Finds the number of rows satisfying the specified query condition.
 	 * See {@link find()} for detailed explanation about $condition and $params.
-	 * @param mixed $condition query condition or criteria.
-	 * @param array $params parameters to be bound to an SQL statement.
-	 * @return string the number of rows satisfying the specified query condition. Note: type is string to keep max. precision.
+	 * @param mixed query condition or criteria.
+	 * @param array parameters to be bound to an SQL statement.
+	 * @return integer the number of rows satisfying the specified query condition.
 	 */
 	public function count($condition='',$params=array())
 	{
 		Yii::trace(get_class($this).'.count()','system.db.ar.CActiveRecord');
-		$this->beforeCount();
 		$builder=$this->getCommandBuilder();
 		$criteria=$builder->createCriteria($condition,$params);
 		$this->applyScopes($criteria);
-
-		if(empty($criteria->with))
-			return $builder->createCountCommand($this->getTableSchema(),$criteria)->queryScalar();
-		else
-		{
-			$finder=$this->getActiveFinder($criteria->with);
-			return $finder->count($criteria);
-		}
-	}
-
-	/**
-	 * Finds the number of rows that have the specified attribute values.
-	 * See {@link find()} for detailed explanation about $condition and $params.
-	 * @param array $attributes list of attribute values (indexed by attribute names) that the active records should match.
-	 * An attribute value can be an array which will be used to generate an IN condition.
-	 * @param mixed $condition query condition or criteria.
-	 * @param array $params parameters to be bound to an SQL statement.
-	 * @return string the number of rows satisfying the specified query condition. Note: type is string to keep max. precision.
-	 * @since 1.1.4
-	 */
-	public function countByAttributes($attributes,$condition='',$params=array())
-	{
-		Yii::trace(get_class($this).'.countByAttributes()','system.db.ar.CActiveRecord');
-		$prefix=$this->getTableAlias(true).'.';
-		$builder=$this->getCommandBuilder();
-		$this->beforeCount();
-		$criteria=$builder->createColumnCriteria($this->getTableSchema(),$attributes,$condition,$params,$prefix);
-		$this->applyScopes($criteria);
-
-		if(empty($criteria->with))
-			return $builder->createCountCommand($this->getTableSchema(),$criteria)->queryScalar();
-		else
-		{
-			$finder=$this->getActiveFinder($criteria->with);
-			return $finder->count($criteria);
-		}
+		return $builder->createCountCommand($this->getTableSchema(),$criteria)->queryScalar();
 	}
 
 	/**
 	 * Finds the number of rows using the given SQL statement.
-	 * This is equivalent to calling {@link CDbCommand::queryScalar} with the specified
-	 * SQL statement and the parameters.
-	 * @param string $sql the SQL statement
-	 * @param array $params parameters to be bound to the SQL statement
-	 * @return string the number of rows using the given SQL statement. Note: type is string to keep max. precision.
+	 * @param string the SQL statement
+	 * @param array parameters to be bound to the SQL statement
+	 * @return integer the number of rows using the given SQL statement.
 	 */
 	public function countBySql($sql,$params=array())
 	{
 		Yii::trace(get_class($this).'.countBySql()','system.db.ar.CActiveRecord');
-		$this->beforeCount();
 		return $this->getCommandBuilder()->createSqlCommand($sql,$params)->queryScalar();
 	}
 
 	/**
 	 * Checks whether there is row satisfying the specified condition.
 	 * See {@link find()} for detailed explanation about $condition and $params.
-	 * @param mixed $condition query condition or criteria.
-	 * @param array $params parameters to be bound to an SQL statement.
+	 * @param mixed query condition or criteria.
+	 * @param array parameters to be bound to an SQL statement.
 	 * @return boolean whether there is row satisfying the specified condition.
 	 */
-	public function exists($condition='',$params=array())
+	public function exists($condition,$params=array())
 	{
 		Yii::trace(get_class($this).'.exists()','system.db.ar.CActiveRecord');
 		$builder=$this->getCommandBuilder();
 		$criteria=$builder->createCriteria($condition,$params);
 		$table=$this->getTableSchema();
-		$criteria->select='1';
+		$criteria->select=reset($table->columns)->rawName;
 		$criteria->limit=1;
 		$this->applyScopes($criteria);
-
-		if(empty($criteria->with))
-			return $builder->createFindCommand($table,$criteria,$this->getTableAlias(false, false))->queryRow()!==false;
-		else
-		{
-			$criteria->select='*';
-			$finder=$this->getActiveFinder($criteria->with);
-			return $finder->count($criteria)>0;
-		}
+		return $builder->createFindCommand($table,$criteria)->queryRow()!==false;
 	}
 
 	/**
@@ -1701,11 +1668,18 @@ abstract class CActiveRecord extends CModel
 	 * <pre>
 	 * Post::model()->with(array(
 	 *     'author'=>array('select'=>'id, name'),
-	 *     'comments'=>array('condition'=>'approved=1', 'order'=>'create_time'),
+	 *     'comments'=>array('condition'=>'approved=1', 'order'=>'createTime'),
 	 * ))->findAll();
 	 * </pre>
 	 *
-	 * @return static the AR object itself.
+	 * This method returns a {@link CActiveFinder} instance that provides
+	 * a set of find methods similar to that of CActiveRecord.
+	 *
+	 * Note, the possible parameters to this method have been changed since version 1.0.2.
+	 * Previously, it was not possible to specify on-th-fly query options,
+	 * and child-relations were specified as hierarchical arrays.
+	 *
+	 * @return CActiveFinder the active finder instance. If no parameter is passed in, the object itself will be returned.
 	 */
 	public function with()
 	{
@@ -1714,33 +1688,20 @@ abstract class CActiveRecord extends CModel
 			$with=func_get_args();
 			if(is_array($with[0]))  // the parameter is given as an array
 				$with=$with[0];
-			if(!empty($with))
-				$this->getDbCriteria()->mergeWith(array('with'=>$with));
+			return new CActiveFinder($this,$with);
 		}
-		return $this;
-	}
-
-	/**
-	 * Sets {@link CDbCriteria::together} property to be true.
-	 * This is only used in relational AR query. Please refer to {@link CDbCriteria::together}
-	 * for more details.
-	 * @return static the AR object itself
-	 * @since 1.1.4
-	 */
-	public function together()
-	{
-		$this->getDbCriteria()->together=true;
-		return $this;
+		else
+			return $this;
 	}
 
 	/**
 	 * Updates records with the specified primary key(s).
 	 * See {@link find()} for detailed explanation about $condition and $params.
 	 * Note, the attributes are not checked for safety and validation is NOT performed.
-	 * @param mixed $pk primary key value(s). Use array for multiple primary keys. For composite key, each key value must be an array (column name=>column value).
-	 * @param array $attributes list of attributes (name=>$value) to be updated
-	 * @param mixed $condition query condition or criteria.
-	 * @param array $params parameters to be bound to an SQL statement.
+	 * @param mixed primary key value(s). Use array for multiple primary keys. For composite key, each key value must be an array (column name=>column value).
+	 * @param array list of attributes (name=>$value) to be updated
+	 * @param mixed query condition or criteria.
+	 * @param array parameters to be bound to an SQL statement.
 	 * @return integer the number of rows being updated
 	 */
 	public function updateByPk($pk,$attributes,$condition='',$params=array())
@@ -1757,9 +1718,9 @@ abstract class CActiveRecord extends CModel
 	 * Updates records with the specified condition.
 	 * See {@link find()} for detailed explanation about $condition and $params.
 	 * Note, the attributes are not checked for safety and no validation is done.
-	 * @param array $attributes list of attributes (name=>$value) to be updated
-	 * @param mixed $condition query condition or criteria.
-	 * @param array $params parameters to be bound to an SQL statement.
+	 * @param array list of attributes (name=>$value) to be updated
+	 * @param mixed query condition or criteria.
+	 * @param array parameters to be bound to an SQL statement.
 	 * @return integer the number of rows being updated
 	 */
 	public function updateAll($attributes,$condition='',$params=array())
@@ -1775,11 +1736,10 @@ abstract class CActiveRecord extends CModel
 	 * Updates one or several counter columns.
 	 * Note, this updates all rows of data unless a condition or criteria is specified.
 	 * See {@link find()} for detailed explanation about $condition and $params.
-	 * @param array $counters the counters to be updated (column name=>increment value)
-	 * @param mixed $condition query condition or criteria.
-	 * @param array $params parameters to be bound to an SQL statement.
+	 * @param array the counters to be updated (column name=>increment value)
+	 * @param mixed query condition or criteria.
+	 * @param array parameters to be bound to an SQL statement.
 	 * @return integer the number of rows being updated
-	 * @see saveCounters
 	 */
 	public function updateCounters($counters,$condition='',$params=array())
 	{
@@ -1793,9 +1753,9 @@ abstract class CActiveRecord extends CModel
 	/**
 	 * Deletes rows with the specified primary key.
 	 * See {@link find()} for detailed explanation about $condition and $params.
-	 * @param mixed $pk primary key value(s). Use array for multiple primary keys. For composite key, each key value must be an array (column name=>column value).
-	 * @param mixed $condition query condition or criteria.
-	 * @param array $params parameters to be bound to an SQL statement.
+	 * @param mixed primary key value(s). Use array for multiple primary keys. For composite key, each key value must be an array (column name=>column value).
+	 * @param mixed query condition or criteria.
+	 * @param array parameters to be bound to an SQL statement.
 	 * @return integer the number of rows deleted
 	 */
 	public function deleteByPk($pk,$condition='',$params=array())
@@ -1810,8 +1770,8 @@ abstract class CActiveRecord extends CModel
 	/**
 	 * Deletes rows with the specified condition.
 	 * See {@link find()} for detailed explanation about $condition and $params.
-	 * @param mixed $condition query condition or criteria.
-	 * @param array $params parameters to be bound to an SQL statement.
+	 * @param mixed query condition or criteria.
+	 * @param array parameters to be bound to an SQL statement.
 	 * @return integer the number of rows deleted
 	 */
 	public function deleteAll($condition='',$params=array())
@@ -1826,11 +1786,12 @@ abstract class CActiveRecord extends CModel
 	/**
 	 * Deletes rows which match the specified attribute values.
 	 * See {@link find()} for detailed explanation about $condition and $params.
-	 * @param array $attributes list of attribute values (indexed by attribute names) that the active records should match.
-	 * An attribute value can be an array which will be used to generate an IN condition.
-	 * @param mixed $condition query condition or criteria.
-	 * @param array $params parameters to be bound to an SQL statement.
-	 * @return integer number of rows affected by the execution.
+	 * @param array list of attribute values (indexed by attribute names) that the active records should match.
+	 * Since version 1.0.8, an attribute value can be an array which will be used to generate an IN condition.
+	 * @param mixed query condition or criteria.
+	 * @param array parameters to be bound to an SQL statement.
+	 * @return CActiveRecord the record found. Null if none is found.
+	 * @since 1.0.9
 	 */
 	public function deleteAllByAttributes($attributes,$condition='',$params=array())
 	{
@@ -1845,9 +1806,10 @@ abstract class CActiveRecord extends CModel
 	/**
 	 * Creates an active record with the given attributes.
 	 * This method is internally used by the find methods.
-	 * @param array $attributes attribute values (column name=>column value)
-	 * @param boolean $callAfterFind whether to call {@link afterFind} after the record is populated.
-	 * @return static the newly created active record. The class of the object is the same as the model class.
+	 * @param array attribute values (column name=>column value)
+	 * @param boolean whether to call {@link afterFind} after the record is populated.
+	 * This parameter is added in version 1.0.3.
+	 * @return CActiveRecord the newly created active record. The class of the object is the same as the model class.
 	 * Null is returned if the input data is false.
 	 */
 	public function populateRecord($attributes,$callAfterFind=true)
@@ -1855,17 +1817,14 @@ abstract class CActiveRecord extends CModel
 		if($attributes!==false)
 		{
 			$record=$this->instantiate($attributes);
-			$record->setScenario('update');
-			$record->init();
 			$md=$record->getMetaData();
 			foreach($attributes as $name=>$value)
 			{
 				if(property_exists($record,$name))
 					$record->$name=$value;
-				elseif(isset($md->columns[$name]))
+				else if(isset($md->columns[$name]))
 					$record->_attributes[$name]=$value;
 			}
-			$record->_pk=$record->getPrimaryKey();
 			$record->attachBehaviors($record->behaviors());
 			if($callAfterFind)
 				$record->afterFind();
@@ -1878,24 +1837,30 @@ abstract class CActiveRecord extends CModel
 	/**
 	 * Creates a list of active records based on the input data.
 	 * This method is internally used by the find methods.
-	 * @param array $data list of attribute values for the active records.
-	 * @param boolean $callAfterFind whether to call {@link afterFind} after each record is populated.
-	 * @param string $index the name of the attribute whose value will be used as indexes of the query result array.
-	 * If null, it means the array will be indexed by zero-based integers.
-	 * @return static[] list of active records.
+	 * @param array list of attribute values for the active records.
+	 * @param boolean whether to call {@link afterFind} after each record is populated.
+	 * This parameter is added in version 1.0.3.
+	 * @return array list of active records.
 	 */
-	public function populateRecords($data,$callAfterFind=true,$index=null)
+	public function populateRecords($data,$callAfterFind=true)
 	{
 		$records=array();
+		$md=$this->getMetaData();
 		foreach($data as $attributes)
 		{
-			if(($record=$this->populateRecord($attributes,$callAfterFind))!==null)
+			$record=$this->instantiate($attributes);
+			$md=$record->getMetaData();
+			foreach($attributes as $name=>$value)
 			{
-				if($index===null)
-					$records[]=$record;
-				else
-					$records[$record->$index]=$record;
+				if(property_exists($record,$name))
+					$record->$name=$value;
+				else if(isset($record->_md->columns[$name]))
+					$record->_attributes[$name]=$value;
 			}
+			$record->attachBehaviors($record->behaviors());
+			if($callAfterFind)
+				$record->afterFind();
+			$records[]=$record;
 		}
 		return $records;
 	}
@@ -1907,25 +1872,26 @@ abstract class CActiveRecord extends CModel
 	 * depends the attributes that are to be populated to the record.
 	 * For example, by creating a record based on the value of a column,
 	 * you may implement the so-called single-table inheritance mapping.
-	 * @param array $attributes list of attribute values for the active records.
-	 * @return static the active record
+	 * @param array list of attribute values for the active records.
+	 * @return CActiveRecord the active record
+	 * @since 1.0.2
 	 */
 	protected function instantiate($attributes)
 	{
 		$class=get_class($this);
-		$model=new $class(null);
-		return $model;
+		return new $class(null);
 	}
 
 	/**
 	 * Returns whether there is an element at the specified offset.
 	 * This method is required by the interface ArrayAccess.
-	 * @param mixed $offset the offset to check on
+	 * @param mixed the offset to check on
 	 * @return boolean
+	 * @since 1.0.2
 	 */
 	public function offsetExists($offset)
 	{
-		return $this->__isset($offset);
+		return isset($this->getMetaData()->columns[$offset]);
 	}
 }
 
@@ -1933,7 +1899,9 @@ abstract class CActiveRecord extends CModel
 /**
  * CBaseActiveRelation is the base class for all active relations.
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.db.ar
+ * @since 1.0.4
  */
 class CBaseActiveRelation extends CComponent
 {
@@ -1946,18 +1914,18 @@ class CBaseActiveRelation extends CComponent
 	 */
 	public $className;
 	/**
-	 * @var mixed the foreign key in this relation
+	 * @var string the foreign key in this relation
 	 */
 	public $foreignKey;
 	/**
 	 * @var mixed list of column names (an array, or a string of names separated by commas) to be selected.
 	 * Do not quote or prefix the column names unless they are used in an expression.
-	 * In that case, you should prefix the column names with 'relationName.'.
+	 * In that case, you should prefix the column names with '??.'.
 	 */
 	public $select='*';
 	/**
 	 * @var string WHERE clause. For {@link CActiveRelation} descendant classes, column names
-	 * referenced in the condition should be disambiguated with prefix 'relationName.'.
+	 * referenced in the condition should be disambiguated with prefix '??.'.
 	 */
 	public $condition='';
 	/**
@@ -1967,40 +1935,26 @@ class CBaseActiveRelation extends CComponent
 	public $params=array();
 	/**
 	 * @var string GROUP BY clause. For {@link CActiveRelation} descendant classes, column names
-	 * referenced in this property should be disambiguated with prefix 'relationName.'.
+	 * referenced in this property should be disambiguated with prefix '??.'.
 	 */
 	public $group='';
 	/**
-	 * @var string how to join with other tables. This refers to the JOIN clause in an SQL statement.
-	 * For example, <code>'LEFT JOIN users ON users.id=authorID'</code>.
-	 * @since 1.1.3
-	 */
-	public $join='';
-	/**
-	 * @var string|array property for setting post-JOIN operations such as USE INDEX.
-	 * String typed value can be used with JOINs for HAS_MANY and MANY_MANY relations, while array typed
-	 * value designed to be used only with MANY_MANY relations. First array element will be used for junction
-	 * table JOIN and second array element will be used for target table JOIN.
-	 * @since 1.1.16
-	 */
-	public $joinOptions='';
-	/**
 	 * @var string HAVING clause. For {@link CActiveRelation} descendant classes, column names
-	 * referenced in this property should be disambiguated with prefix 'relationName.'.
+	 * referenced in this property should be disambiguated with prefix '??.'.
 	 */
 	public $having='';
 	/**
 	 * @var string ORDER BY clause. For {@link CActiveRelation} descendant classes, column names
-	 * referenced in this property should be disambiguated with prefix 'relationName.'.
+	 * referenced in this property should be disambiguated with prefix '??.'.
 	 */
 	public $order='';
 
 	/**
 	 * Constructor.
-	 * @param string $name name of the relation
-	 * @param string $className name of the related active record class
-	 * @param string $foreignKey foreign key for this relation
-	 * @param array $options additional options (name=>value). The keys must be the property names of this class.
+	 * @param string name of the relation
+	 * @param string name of the related active record class
+	 * @param string foreign key for this relation
+	 * @param array additional options (name=>value). The keys must be the property names of this class.
 	 */
 	public function __construct($name,$className,$foreignKey,$options=array())
 	{
@@ -2013,18 +1967,16 @@ class CBaseActiveRelation extends CComponent
 
 	/**
 	 * Merges this relation with a criteria specified dynamically.
-	 * @param array $criteria the dynamically specified criteria
-	 * @param boolean $fromScope whether the criteria to be merged is from scopes
+	 * @param array the dynamically specified criteria
+	 * @since 1.0.5
 	 */
-	public function mergeWith($criteria,$fromScope=false)
+	public function mergeWith($criteria)
 	{
-		if($criteria instanceof CDbCriteria)
-			$criteria=$criteria->toArray();
 		if(isset($criteria['select']) && $this->select!==$criteria['select'])
 		{
 			if($this->select==='*')
 				$this->select=$criteria['select'];
-			elseif($criteria['select']!=='*')
+			else if($criteria['select']!=='*')
 			{
 				$select1=is_string($this->select)?preg_split('/\s*,\s*/',trim($this->select),-1,PREG_SPLIT_NO_EMPTY):$this->select;
 				$select2=is_string($criteria['select'])?preg_split('/\s*,\s*/',trim($criteria['select']),-1,PREG_SPLIT_NO_EMPTY):$criteria['select'];
@@ -2036,7 +1988,7 @@ class CBaseActiveRelation extends CComponent
 		{
 			if($this->condition==='')
 				$this->condition=$criteria['condition'];
-			elseif($criteria['condition']!=='')
+			else if($criteria['condition']!=='')
 				$this->condition="({$this->condition}) AND ({$criteria['condition']})";
 		}
 
@@ -2047,7 +1999,7 @@ class CBaseActiveRelation extends CComponent
 		{
 			if($this->order==='')
 				$this->order=$criteria['order'];
-			elseif($criteria['order']!=='')
+			else if($criteria['order']!=='')
 				$this->order=$criteria['order'].', '.$this->order;
 		}
 
@@ -2055,23 +2007,15 @@ class CBaseActiveRelation extends CComponent
 		{
 			if($this->group==='')
 				$this->group=$criteria['group'];
-			elseif($criteria['group']!=='')
+			else if($criteria['group']!=='')
 				$this->group.=', '.$criteria['group'];
-		}
-
-		if(isset($criteria['join']) && $this->join!==$criteria['join'])
-		{
-			if($this->join==='')
-				$this->join=$criteria['join'];
-			elseif($criteria['join']!=='')
-				$this->join.=' '.$criteria['join'];
 		}
 
 		if(isset($criteria['having']) && $this->having!==$criteria['having'])
 		{
 			if($this->having==='')
 				$this->having=$criteria['having'];
-			elseif($criteria['having']!=='')
+			else if($criteria['having']!=='')
 				$this->having="({$this->having}) AND ({$criteria['having']})";
 		}
 	}
@@ -2081,7 +2025,9 @@ class CBaseActiveRelation extends CComponent
 /**
  * CStatRelation represents a statistical relational query.
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.db.ar
+ * @since 1.0.4
  */
 class CStatRelation extends CBaseActiveRelation
 {
@@ -2095,27 +2041,15 @@ class CStatRelation extends CBaseActiveRelation
 	 * receive a statistical query result. Defaults to 0.
 	 */
 	public $defaultValue=0;
-	/**
-	 * @var mixed scopes to apply
-	 * Can be set to the one of the following:
-	 * <ul>
-	 * <li>Single scope: 'scopes'=>'scopeName'.</li>
-	 * <li>Multiple scopes: 'scopes'=>array('scopeName1','scopeName2').</li>
-	 * </ul>
-	 * @since 1.1.16
-	 */
-	public $scopes;
 
 	/**
 	 * Merges this relation with a criteria specified dynamically.
-	 * @param array $criteria the dynamically specified criteria
-	 * @param boolean $fromScope whether the criteria to be merged is from scopes
+	 * @param array the dynamically specified criteria
+	 * @since 1.0.5
 	 */
-	public function mergeWith($criteria,$fromScope=false)
+	public function mergeWith($criteria)
 	{
-		if($criteria instanceof CDbCriteria)
-			$criteria=$criteria->toArray();
-		parent::mergeWith($criteria,$fromScope);
+		parent::mergeWith($criteria);
 
 		if(isset($criteria['defaultValue']))
 			$this->defaultValue=$criteria['defaultValue'];
@@ -2126,6 +2060,7 @@ class CStatRelation extends CBaseActiveRelation
 /**
  * CActiveRelation is the base class for representing active relations that bring back related objects.
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.db.ar
  * @since 1.0
  */
@@ -2137,66 +2072,41 @@ class CActiveRelation extends CBaseActiveRelation
 	public $joinType='LEFT OUTER JOIN';
 	/**
 	 * @var string ON clause. The condition specified here will be appended to the joining condition using AND operator.
+	 * @since 1.0.2
 	 */
 	public $on='';
 	/**
 	 * @var string the alias for the table that this relation refers to. Defaults to null, meaning
-	 * the alias will be the same as the relation name.
+	 * the alias will be generated automatically. If you set this property explicitly, make sure
+	 * the alias is unique globally.
+	 * @see aliasToken
+	 * @since 1.0.1
 	 */
 	public $alias;
+	/**
+	 * @var string the column prefix placeholder. It will be replaced by the corresponding table alias.
+	 * @see alias
+	 */
+	public $aliasToken='??';
 	/**
 	 * @var string|array specifies which related objects should be eagerly loaded when this related object is lazily loaded.
 	 * For more details about this property, see {@link CActiveRecord::with()}.
 	 */
 	public $with=array();
 	/**
-	 * @var boolean whether this table should be joined with the primary table.
-	 * When setting this property to be false, the table associated with this relation will
-	 * appear in a separate JOIN statement.
-	 * If this property is set true, then the corresponding table will ALWAYS be joined together
-	 * with the primary table, no matter the primary table is limited or not.
-	 * If this property is not set, the corresponding table will be joined with the primary table
-	 * only when the primary table is not limited.
+	 * @var boolean whether this table should be joined with the primary table. If not set or false,
+	 * Each HAS_MANY or MANY_MANY table will appear in a separate JOIN statement. Defaults to null.
+	 * @since 1.0.3
 	 */
 	public $together;
-	/**
-	 * @var mixed scopes to apply
-	 * Can be set to the one of the following:
-	 * <ul>
-	 * <li>Single scope: 'scopes'=>'scopeName'.</li>
-	 * <li>Multiple scopes: 'scopes'=>array('scopeName1','scopeName2').</li>
-	 * </ul>
-	 * @since 1.1.9
-	 */
-	 public $scopes;
-	/**
-	 * @var string the name of the relation that should be used as the bridge to this relation.
-	 * Defaults to null, meaning don't use any bridge.
-	 * @since 1.1.7
-	 */
-	public $through;
 
 	/**
 	 * Merges this relation with a criteria specified dynamically.
-	 * @param array $criteria the dynamically specified criteria
-	 * @param boolean $fromScope whether the criteria to be merged is from scopes
+	 * @param array the dynamically specified criteria
+	 * @since 1.0.5
 	 */
-	public function mergeWith($criteria,$fromScope=false)
+	public function mergeWith($criteria)
 	{
-		if($criteria instanceof CDbCriteria)
-			$criteria=$criteria->toArray();
-		if($fromScope)
-		{
-			if(isset($criteria['condition']) && $this->on!==$criteria['condition'])
-			{
-				if($this->on==='')
-					$this->on=$criteria['condition'];
-				elseif($criteria['condition']!=='')
-					$this->on="({$this->on}) AND ({$criteria['condition']})";
-			}
-			unset($criteria['condition']);
-		}
-
 		parent::mergeWith($criteria);
 
 		if(isset($criteria['joinType']))
@@ -2206,7 +2116,7 @@ class CActiveRelation extends CBaseActiveRelation
 		{
 			if($this->on==='')
 				$this->on=$criteria['on'];
-			elseif($criteria['on']!=='')
+			else if($criteria['on']!=='')
 				$this->on="({$this->on}) AND ({$criteria['on']})";
 		}
 
@@ -2215,6 +2125,9 @@ class CActiveRelation extends CBaseActiveRelation
 
 		if(isset($criteria['alias']))
 			$this->alias=$criteria['alias'];
+
+		if(isset($criteria['aliasToken']))
+			$this->aliasToken=$criteria['aliasToken'];
 
 		if(isset($criteria['together']))
 			$this->together=$criteria['together'];
@@ -2225,6 +2138,7 @@ class CActiveRelation extends CBaseActiveRelation
 /**
  * CBelongsToRelation represents the parameters specifying a BELONGS_TO relation.
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.db.ar
  * @since 1.0
  */
@@ -2236,6 +2150,7 @@ class CBelongsToRelation extends CActiveRelation
 /**
  * CHasOneRelation represents the parameters specifying a HAS_ONE relation.
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.db.ar
  * @since 1.0
  */
@@ -2247,6 +2162,7 @@ class CHasOneRelation extends CActiveRelation
 /**
  * CHasManyRelation represents the parameters specifying a HAS_MANY relation.
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.db.ar
  * @since 1.0
  */
@@ -2263,19 +2179,18 @@ class CHasManyRelation extends CActiveRelation
 	/**
 	 * @var string the name of the column that should be used as the key for storing related objects.
 	 * Defaults to null, meaning using zero-based integer IDs.
+	 * @since 1.0.7
 	 */
 	public $index;
 
 	/**
 	 * Merges this relation with a criteria specified dynamically.
-	 * @param array $criteria the dynamically specified criteria
-	 * @param boolean $fromScope whether the criteria to be merged is from scopes
+	 * @param array the dynamically specified criteria
+	 * @since 1.0.5
 	 */
-	public function mergeWith($criteria,$fromScope=false)
+	public function mergeWith($criteria)
 	{
-		if($criteria instanceof CDbCriteria)
-			$criteria=$criteria->toArray();
-		parent::mergeWith($criteria,$fromScope);
+		parent::mergeWith($criteria);
 		if(isset($criteria['limit']) && $criteria['limit']>0)
 			$this->limit=$criteria['limit'];
 
@@ -2291,55 +2206,12 @@ class CHasManyRelation extends CActiveRelation
 /**
  * CManyManyRelation represents the parameters specifying a MANY_MANY relation.
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.db.ar
  * @since 1.0
  */
 class CManyManyRelation extends CHasManyRelation
 {
-	/**
-	 * @var string name of the junction table for the many-to-many relation.
-	 */
-	private $_junctionTableName=null;
-	/**
-	 * @var array list of foreign keys of the junction table for the many-to-many relation.
-	 */
-	private $_junctionForeignKeys=null;
-
-	/**
-	 * @return string junction table name.
-	 * @since 1.1.12
-	 */
-	public function getJunctionTableName()
-	{
-		if ($this->_junctionTableName===null)
-			$this->initJunctionData();
-		return $this->_junctionTableName;
-	}
-
-	/**
-	 * @return array list of junction table foreign keys.
-	 * @since 1.1.12
-	 */
-	public function getJunctionForeignKeys()
-	{
-		if ($this->_junctionForeignKeys===null)
-			$this->initJunctionData();
-		return $this->_junctionForeignKeys;
-	}
-
-	/**
-	 * Initializes values of {@link junctionTableName} and {@link junctionForeignKeys} parsing
-	 * {@link foreignKey} value.
-	 * @throws CDbException if {@link foreignKey} has been specified in wrong format.
-	 */
-	private function initJunctionData()
-	{
-		if(!preg_match('/^\s*(.*?)\((.*)\)\s*$/',$this->foreignKey,$matches))
-			throw new CDbException(Yii::t('yii','The relation "{relation}" in active record class "{class}" is specified with an invalid foreign key. The format of the foreign key must be "joinTable(fk1,fk2,...)".',
-				array('{class}'=>$this->className,'{relation}'=>$this->name)));
-		$this->_junctionTableName=$matches[1];
-		$this->_junctionForeignKeys=preg_split('/\s*,\s*/',$matches[2],-1,PREG_SPLIT_NO_EMPTY);
-	}
 }
 
 
@@ -2347,6 +2219,7 @@ class CManyManyRelation extends CHasManyRelation
  * CActiveRecordMetaData represents the meta-data for an Active Record class.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.db.ar
  * @since 1.0
  */
@@ -2369,36 +2242,23 @@ class CActiveRecordMetaData
 	 */
 	public $attributeDefaults=array();
 
-	private $_modelClassName;
+	private $_model;
+	private $_validators;
 
 	/**
 	 * Constructor.
-	 * @param CActiveRecord $model the model instance
-	 * @throws CDbException if specified table for active record class cannot be found in the database
+	 * @param CActiveRecord the model instance
 	 */
 	public function __construct($model)
 	{
-		$this->_modelClassName=get_class($model);
+		$this->_model=$model;
 
 		$tableName=$model->tableName();
 		if(($table=$model->getDbConnection()->getSchema()->getTable($tableName))===null)
 			throw new CDbException(Yii::t('yii','The table "{table}" for active record class "{class}" cannot be found in the database.',
-				array('{class}'=>$this->_modelClassName,'{table}'=>$tableName)));
-				
-		if(($modelPk=$model->primaryKey())!==null || $table->primaryKey===null)
-		{
-			$table->primaryKey=$modelPk;
-			if(is_string($table->primaryKey) && isset($table->columns[$table->primaryKey]))
-				$table->columns[$table->primaryKey]->isPrimaryKey=true;
-			elseif(is_array($table->primaryKey))
-			{
-				foreach($table->primaryKey as $name)
-				{
-					if(isset($table->columns[$name]))
-						$table->columns[$name]->isPrimaryKey=true;
-				}
-			}
-		}
+				array('{class}'=>get_class($model),'{table}'=>$tableName)));
+		if($table->primaryKey===null)
+			$table->primaryKey=$model->primaryKey();
 		$this->tableSchema=$table;
 		$this->columns=$table->columns;
 
@@ -2410,51 +2270,21 @@ class CActiveRecordMetaData
 
 		foreach($model->relations() as $name=>$config)
 		{
-			$this->addRelation($name,$config);
+			if(isset($config[0],$config[1],$config[2]))  // relation class, AR class, FK
+				$this->relations[$name]=new $config[0]($name,$config[1],$config[2],array_slice($config,3));
+			else
+				throw new CDbException(Yii::t('yii','Active record "{class}" has an invalid configuration for relation "{relation}". It must specify the relation type, the related active record class and the foreign key.',
+					array('{class}'=>get_class($model),'{relation}'=>$name)));
 		}
 	}
 
 	/**
-	 * Adds a relation.
-	 *
-	 * $config is an array with three elements:
-	 * relation type, the related active record class and the foreign key.
-	 *
-	 * @throws CDbException
-	 * @param string $name $name Name of the relation.
-	 * @param array $config $config Relation parameters.
-	 * @return void
-	 * @since 1.1.2
+	 * @return array list of validators
 	 */
-	public function addRelation($name,$config)
+	public function getValidators()
 	{
-		if(isset($config[0],$config[1],$config[2]))  // relation class, AR class, FK
-			$this->relations[$name]=new $config[0]($name,$config[1],$config[2],array_slice($config,3));
-		else
-			throw new CDbException(Yii::t('yii','Active record "{class}" has an invalid configuration for relation "{relation}". It must specify the relation type, the related active record class and the foreign key.', array('{class}'=>$this->_modelClassName,'{relation}'=>$name)));
-	}
-
-	/**
-	 * Checks if there is a relation with specified name defined.
-	 *
-	 * @param string $name $name Name of the relation.
-	 * @return boolean
-	 * @since 1.1.2
-	 */
-	public function hasRelation($name)
-	{
-		return isset($this->relations[$name]);
-	}
-
-	/**
-	 * Deletes a relation with specified name.
-	 *
-	 * @param string $name $name
-	 * @return void
-	 * @since 1.1.2
-	 */
-	public function removeRelation($name)
-	{
-		unset($this->relations[$name]);
+		if(!$this->_validators)
+			$this->_validators=$this->_model->createValidators();
+		return $this->_validators;
 	}
 }

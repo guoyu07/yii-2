@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -19,9 +19,11 @@
  * issues encountered.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.logging
+ * @since 1.0.6
  */
-class CLogFilter extends CComponent implements ILogFilter
+class CLogFilter extends CComponent
 {
 	/**
 	 * @var boolean whether to prefix each log message with the current user session ID.
@@ -35,6 +37,7 @@ class CLogFilter extends CComponent implements ILogFilter
 	public $prefixUser=false;
 	/**
 	 * @var boolean whether to log the current user name and ID. Defaults to true.
+	 * This property is effective only when {@link showContext} is true.
 	 */
 	public $logUser=true;
 	/**
@@ -42,31 +45,19 @@ class CLogFilter extends CComponent implements ILogFilter
 	 * Note that a variable must be accessible via $GLOBALS. Otherwise it won't be logged.
 	 */
 	public $logVars=array('_GET','_POST','_FILES','_COOKIE','_SESSION','_SERVER');
-	/**
-	 * @var callable or function which will be used to dump context information.
-	 * Defaults to `var_export`. If you're experiencing issues with circular references
-	 * problem change it to `print_r`. Any kind of callable (static methods, user defined
-	 * functions, lambdas, etc.) could also be used.
-	 * @since 1.1.14
-	 */
-	public $dumper='var_export';
 
 
 	/**
 	 * Filters the given log messages.
 	 * This is the main method of CLogFilter. It processes the log messages
 	 * by adding context information, etc.
-	 * @param array $logs the log messages
-	 * @return array
+	 * @param array the log messages
 	 */
 	public function filter(&$logs)
 	{
-		if (!empty($logs))
-		{
-			if(($message=$this->getContext())!=='')
-				array_unshift($logs,array($message,CLogger::LEVEL_INFO,'application',YII_BEGIN_TIME));
-			$this->format($logs);
-		}
+		if(($message=$this->getContext())!=='')
+			array_unshift($logs,array($message,CLogger::LEVEL_INFO,'application',YII_BEGIN_TIME));
+		$this->format($logs);
 		return $logs;
 	}
 
@@ -75,7 +66,6 @@ class CLogFilter extends CComponent implements ILogFilter
 	 * The default implementation will prefix each message with session ID
 	 * if {@link prefixSession} is set true. It may also prefix each message
 	 * with the current user's name and ID if {@link prefixUser} is true.
-	 * @param array $logs the log messages
 	 */
 	protected function format(&$logs)
 	{
@@ -102,39 +92,12 @@ class CLogFilter extends CComponent implements ILogFilter
 		if($this->logUser && ($user=Yii::app()->getComponent('user',false))!==null)
 			$context[]='User: '.$user->getName().' (ID: '.$user->getId().')';
 
-		if($this->dumper==='var_export' || $this->dumper==='print_r')
+		foreach($this->logVars as $name)
 		{
-			foreach($this->logVars as $name)
-				if(($value=$this->getGlobalsValue($name))!==null)
-					$context[]="\${$name}=".call_user_func($this->dumper,$value,true);
-		}
-		else
-		{
-			foreach($this->logVars as $name)
-				if(($value=$this->getGlobalsValue($name))!==null)
-					$context[]="\${$name}=".call_user_func($this->dumper,$value);
+			if(!empty($GLOBALS[$name]))
+				$context[]="\${$name}=".var_export($GLOBALS[$name],true);
 		}
 
 		return implode("\n\n",$context);
-	}
-
-	/**
-	 * @param string[] $path
-	 * @return string|null
-	 */
-	private function getGlobalsValue(&$path)
-	{
-		if(is_scalar($path))
-			return !empty($GLOBALS[$path]) ? $GLOBALS[$path] : null;
-		$pathAux=$path;
-		$parts=array();
-		$value=$GLOBALS;
-		do
-		{
-			$value=$value[$parts[]=array_shift($pathAux)];
-		}
-		while(!empty($value) && !empty($pathAux) && !is_string($value));
-		$path=implode('.',$parts);
-		return $value;
 	}
 }

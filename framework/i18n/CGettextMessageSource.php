@@ -4,14 +4,14 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
 /**
  * CGettextMessageSource represents a message source that is based on GNU Gettext.
  *
- * Each CGettextMessageSource instance represents the message translations
+ * Each CGettextMessageSource instance represents the message tranlations
  * for a single domain. And each message category represents a message context
  * in Gettext. Translated messages are stored as either a MO or PO file,
  * depending on the {@link useMoFile} property value.
@@ -22,6 +22,7 @@
  * {@link catalog} property, which defaults to 'messages'.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.i18n
  * @since 1.0
  */
@@ -40,6 +41,7 @@ class CGettextMessageSource extends CMessageSource
 	 * @var string the ID of the cache application component that is used to cache the messages.
 	 * Defaults to 'cache' which refers to the primary cache application component.
 	 * Set this property to false if you want to disable caching the messages.
+	 * @since 1.0.10
 	 */
 	public $cacheID='cache';
 	/**
@@ -77,8 +79,8 @@ class CGettextMessageSource extends CMessageSource
 
 	/**
 	 * Loads the message translation for the specified language and category.
-	 * @param string $category the message category
-	 * @param string $language the target language
+	 * @param string the message category
+	 * @param string the target language
 	 * @return array the loaded messages
 	 */
 	protected function loadMessages($category, $language)
@@ -91,7 +93,7 @@ class CGettextMessageSource extends CMessageSource
 
 		if ($this->cachingDuration > 0 && $this->cacheID!==false && ($cache=Yii::app()->getComponent($this->cacheID))!==null)
 		{
-			$key = self::CACHE_KEY_PREFIX . $messageFile . "." . $category;
+			$key = self::CACHE_KEY_PREFIX . $messageFile;
 			if (($data=$cache->get($key)) !== false)
 				return unserialize($data);
 		}

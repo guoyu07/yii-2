@@ -7,67 +7,40 @@
  * - $columns: a list of column schema objects
  */
 ?>
-<?php
-echo "<?php\n";
-$label=$this->class2name($modelClass,true);
-echo "\$this->breadcrumbs=array(
-	'$label'=>array('index'),
-	'Manage',
-);\n";
-?>
+<h2>Managing <?php echo $modelClass; ?></h2>
 
-$this->menu=array(
-	array('label'=>'List <?php echo $modelClass; ?>', 'url'=>array('index')),
-	array('label'=>'Create <?php echo $modelClass; ?>', 'url'=>array('create')),
-);
+<div class="actionBar">
+[<?php echo "<?php echo CHtml::link('{$modelClass} List',array('list')); ?>"; ?>]
+[<?php echo "<?php echo CHtml::link('New {$modelClass}',array('create')); ?>"; ?>]
+</div>
 
-Yii::app()->clientScript->registerScript('search', "
-$('.search-button').click(function(){
-	$('.search-form').toggle();
-	return false;
-});
-$('.search-form form').submit(function(){
-	$('#<?php echo $this->class2id($modelClass); ?>-grid').yiiGridView('update', {
-		data: $(this).serialize()
-	});
-	return false;
-});
-");
-?>
-
-<h1>Manage <?php echo $this->class2name($modelClass,true); ?></h1>
-
-<p>
-You may optionally enter a comparison operator (<b>&lt;</b>, <b>&lt;=</b>, <b>&gt;</b>, <b>&gt;=</b>, <b>&lt;&gt;</b>
-or <b>=</b>) at the beginning of each of your search values to specify how the comparison should be done.
-</p>
-
-<?php echo "<?php echo CHtml::link('Advanced Search','#',array('class'=>'search-button')); ?>"; ?>
-
-<div class="search-form" style="display:none">
-<?php echo "<?php \$this->renderPartial('_search',array(
-	'model'=>\$model,
-)); ?>\n"; ?>
-</div><!-- search-form -->
-
-<?php echo "<?php"; ?> $this->widget('zii.widgets.grid.CGridView', array(
-	'id'=>'<?php echo $this->class2id($modelClass); ?>-grid',
-	'dataProvider'=>$model->search(),
-	'filter'=>$model,
-	'columns'=>array(
-<?php
-$count=0;
-foreach($columns as $column)
-{
-	if(++$count==7)
-		echo "\t\t/*\n";
-	echo "\t\t'".$column->name."',\n";
-}
-if($count>=7)
-	echo "\t\t*/\n";
-?>
-		array(
-			'class'=>'CButtonColumn',
-		),
-	),
-)); ?>
+<table class="dataGrid">
+  <thead>
+  <tr>
+    <th><?php echo "<?php echo \$sort->link('$ID'); ?>"; ?></th>
+<?php foreach($columns as $column): ?>
+    <th><?php echo "<?php echo \$sort->link('{$column->name}'); ?>"; ?></th>
+<?php endforeach; ?>
+	<th>Actions</th>
+  </tr>
+  </thead>
+  <tbody>
+<?php echo "<?php foreach(\$models as \$n=>\$model): ?>\n"; ?>
+  <tr class="<?php echo "<?php echo \$n%2?'even':'odd';?>"; ?>">
+    <td><?php echo "<?php echo CHtml::link(\$model->{$ID},array('show','id'=>\$model->{$ID})); ?>"; ?></td>
+<?php foreach($columns as $column): ?>
+    <td><?php echo "<?php echo CHtml::encode(\$model->{$column->name}); ?>"; ?></td>
+<?php endforeach; ?>
+    <td>
+      <?php echo "<?php echo CHtml::link('Update',array('update','id'=>\$model->{$ID})); ?>\n"; ?>
+      <?php echo "<?php echo CHtml::linkButton('Delete',array(
+      	  'submit'=>'',
+      	  'params'=>array('command'=>'delete','id'=>\$model->{$ID}),
+      	  'confirm'=>\"Are you sure to delete #{\$model->{$ID}}?\")); ?>\n"; ?>
+	</td>
+  </tr>
+<?php echo "<?php endforeach; ?>\n"; ?>
+  </tbody>
+</table>
+<br/>
+<?php echo "<?php \$this->widget('CLinkPager',array('pages'=>\$pages)); ?>" ?>

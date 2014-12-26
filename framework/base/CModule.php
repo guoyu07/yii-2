@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -13,27 +13,10 @@
  *
  * CModule mainly manages application components and sub-modules.
  *
- * @property string $id The module ID.
- * @property string $basePath The root directory of the module. Defaults to the directory containing the module class.
- * @property CAttributeCollection $params The list of user-defined parameters.
- * @property string $modulePath The directory that contains the application modules. Defaults to the 'modules' subdirectory of {@link basePath}.
- * @property CModule $parentModule The parent module. Null if this module does not have a parent.
- * @property array $modules The configuration of the currently installed modules (module ID => configuration).
- * @property array $components The application components (indexed by their IDs).
- * @property array $import List of aliases to be imported.
- * @property array $aliases List of aliases to be defined. The array keys are root aliases,
- * while the array values are paths or aliases corresponding to the root aliases.
- * For example,
- * <pre>
- * array(
- *    'models'=>'application.models',              // an existing alias
- *    'extensions'=>'application.extensions',      // an existing alias
- *    'backend'=>dirname(__FILE__).'/../backend',  // a directory
- * )
- * </pre>.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.base
+ * @since 1.0.4
  */
 abstract class CModule extends CComponent
 {
@@ -61,9 +44,9 @@ abstract class CModule extends CComponent
 
 	/**
 	 * Constructor.
-	 * @param string $id the ID of this module
-	 * @param CModule $parent the parent module (if any)
-	 * @param mixed $config the module configuration. It can be either an array or
+	 * @param string the ID of this module
+	 * @param CModule the parent module (if any)
+	 * @param mixed the module configuration. It can be either an array or
 	 * the path of a PHP file returning the configuration array.
 	 */
 	public function __construct($id,$parent,$config=null)
@@ -78,6 +61,11 @@ abstract class CModule extends CComponent
 		{
 			$this->setBasePath($config['basePath']);
 			unset($config['basePath']);
+		}
+		else
+		{
+			$class=new ReflectionClass(get_class($this));
+			$this->setBasePath(dirname($class->getFileName()));
 		}
 		Yii::setPathOfAlias($id,$this->getBasePath());
 
@@ -94,7 +82,7 @@ abstract class CModule extends CComponent
 	 * Getter magic method.
 	 * This method is overridden to support accessing application components
 	 * like reading module properties.
-	 * @param string $name application component or property name
+	 * @param string application component or property name
 	 * @return mixed the named property value
 	 */
 	public function __get($name)
@@ -109,7 +97,7 @@ abstract class CModule extends CComponent
 	 * Checks if a property value is null.
 	 * This method overrides the parent implementation by checking
 	 * if the named application component is loaded.
-	 * @param string $name the property name or the event name
+	 * @param string the property name or the event name
 	 * @return boolean whether the property value is null
 	 */
 	public function __isset($name)
@@ -121,7 +109,6 @@ abstract class CModule extends CComponent
 	}
 
 	/**
-	 * Returns the module ID.
 	 * @return string the module ID.
 	 */
 	public function getId()
@@ -130,8 +117,7 @@ abstract class CModule extends CComponent
 	}
 
 	/**
-	 * Sets the module ID.
-	 * @param string $id the module ID
+	 * @param string the module ID
 	 */
 	public function setId($id)
 	{
@@ -139,7 +125,6 @@ abstract class CModule extends CComponent
 	}
 
 	/**
-	 * Returns the root directory of the module.
 	 * @return string the root directory of the module. Defaults to the directory containing the module class.
 	 */
 	public function getBasePath()
@@ -155,7 +140,7 @@ abstract class CModule extends CComponent
 	/**
 	 * Sets the root directory of the module.
 	 * This method can only be invoked at the beginning of the constructor.
-	 * @param string $path the root directory of the module.
+	 * @param string the root directory of the module.
 	 * @throws CException if the directory does not exist.
 	 */
 	public function setBasePath($path)
@@ -166,7 +151,6 @@ abstract class CModule extends CComponent
 	}
 
 	/**
-	 * Returns user-defined parameters.
 	 * @return CAttributeCollection the list of user-defined parameters
 	 */
 	public function getParams()
@@ -174,16 +158,11 @@ abstract class CModule extends CComponent
 		if($this->_params!==null)
 			return $this->_params;
 		else
-		{
-			$this->_params=new CAttributeCollection;
-			$this->_params->caseSensitive=true;
-			return $this->_params;
-		}
+			return $this->_params=new CAttributeCollection;
 	}
 
 	/**
-	 * Sets user-defined parameters.
-	 * @param array $value user-defined parameters. This should be in name-value pairs.
+	 * @param array user-defined parameters. This should be in name-value pairs.
 	 */
 	public function setParams($value)
 	{
@@ -193,7 +172,6 @@ abstract class CModule extends CComponent
 	}
 
 	/**
-	 * Returns the directory that contains the application modules.
 	 * @return string the directory that contains the application modules. Defaults to the 'modules' subdirectory of {@link basePath}.
 	 */
 	public function getModulePath()
@@ -205,8 +183,7 @@ abstract class CModule extends CComponent
 	}
 
 	/**
-	 * Sets the directory that contains the application modules.
-	 * @param string $value the directory that contains the application modules.
+	 * @param string the directory that contains the application modules.
 	 * @throws CException if the directory is invalid
 	 */
 	public function setModulePath($value)
@@ -218,7 +195,7 @@ abstract class CModule extends CComponent
 
 	/**
 	 * Sets the aliases that are used in the module.
-	 * @param array $aliases list of aliases to be imported
+	 * @param array list of aliases to be imported
 	 */
 	public function setImport($aliases)
 	{
@@ -228,7 +205,7 @@ abstract class CModule extends CComponent
 
 	/**
 	 * Defines the root aliases.
-	 * @param array $mappings list of aliases to be defined. The array keys are root aliases,
+	 * @param array list of aliases to be defined. The array keys are root aliases,
 	 * while the array values are paths or aliases corresponding to the root aliases.
 	 * For example,
 	 * <pre>
@@ -238,6 +215,7 @@ abstract class CModule extends CComponent
 	 *    'backend'=>dirname(__FILE__).'/../backend',  // a directory
 	 * )
 	 * </pre>
+	 * @since 1.0.5
 	 */
 	public function setAliases($mappings)
 	{
@@ -251,7 +229,6 @@ abstract class CModule extends CComponent
 	}
 
 	/**
-	 * Returns the parent module.
 	 * @return CModule the parent module. Null if this module does not have a parent.
 	 */
 	public function getParentModule()
@@ -263,14 +240,14 @@ abstract class CModule extends CComponent
 	 * Retrieves the named application module.
 	 * The module has to be declared in {@link modules}. A new instance will be created
 	 * when calling this method with the given ID for the first time.
-	 * @param string $id application module ID (case-sensitive)
+	 * @param string application module ID (case-sensitive)
 	 * @return CModule the module instance, null if the module is disabled or does not exist.
 	 */
 	public function getModule($id)
 	{
 		if(isset($this->_modules[$id]) || array_key_exists($id,$this->_modules))
 			return $this->_modules[$id];
-		elseif(isset($this->_moduleConfig[$id]))
+		else if(isset($this->_moduleConfig[$id]))
 		{
 			$config=$this->_moduleConfig[$id];
 			if(!isset($config['enabled']) || $config['enabled'])
@@ -288,18 +265,6 @@ abstract class CModule extends CComponent
 	}
 
 	/**
-	 * Returns a value indicating whether the specified module is installed.
-	 * @param string $id the module ID
-	 * @return boolean whether the specified module is installed.
-	 * @since 1.1.2
-	 */
-	public function hasModule($id)
-	{
-		return isset($this->_moduleConfig[$id]) || isset($this->_modules[$id]);
-	}
-
-	/**
-	 * Returns the configuration of the currently installed modules.
 	 * @return array the configuration of the currently installed modules (module ID => configuration)
 	 */
 	public function getModules()
@@ -331,14 +296,9 @@ abstract class CModule extends CComponent
 	 *
 	 * You may also enable or disable a module by specifying the 'enabled' option in the configuration.
 	 *
-	 * @param array $modules module configurations.
-	 * @param boolean $merge whether to merge the new module configuration
-	 * with the existing one. Defaults to true, meaning the previously registered
-	 * module configuration with the same ID will be merged with the new configuration.
-	 * If set to false, the existing configuration will be replaced completely.
-	 * This parameter is available since 1.1.16.
+	 * @param array module configurations.
 	 */
-	public function setModules($modules,$merge=true)
+	public function setModules($modules)
 	{
 		foreach($modules as $id=>$module)
 		{
@@ -347,24 +307,21 @@ abstract class CModule extends CComponent
 				$id=$module;
 				$module=array();
 			}
-			if(isset($this->_moduleConfig[$id]) && $merge)
+			if(!isset($module['class']))
+			{
+				Yii::setPathOfAlias($id,$this->getModulePath().DIRECTORY_SEPARATOR.$id);
+				$module['class']=$id.'.'.ucfirst($id).'Module';
+			}
+
+			if(isset($this->_moduleConfig[$id]))
 				$this->_moduleConfig[$id]=CMap::mergeArray($this->_moduleConfig[$id],$module);
 			else
-			{
-				if(!isset($module['class']))
-				{
-					if (Yii::getPathOfAlias($id)===false)
-						Yii::setPathOfAlias($id,$this->getModulePath().DIRECTORY_SEPARATOR.$id);
-					$module['class']=$id.'.'.ucfirst($id).'Module';
-				}
 				$this->_moduleConfig[$id]=$module;
-			}
 		}
 	}
 
 	/**
-	 * Checks whether the named component exists.
-	 * @param string $id application component ID
+	 * @param string application component ID
 	 * @return boolean whether the named application component exists (including both loaded and disabled.)
 	 */
 	public function hasComponent($id)
@@ -374,8 +331,9 @@ abstract class CModule extends CComponent
 
 	/**
 	 * Retrieves the named application component.
-	 * @param string $id application component ID (case-sensitive)
-	 * @param boolean $createIfNull whether to create the component if it doesn't exist yet.
+	 * @param string application component ID (case-sensitive)
+	 * @param boolean whether to create the component if it doesn't exist yet. This parameter
+	 * has been available since version 1.0.6.
 	 * @return IApplicationComponent the application component instance, null if the application component is disabled or does not exist.
 	 * @see hasComponent
 	 */
@@ -383,12 +341,13 @@ abstract class CModule extends CComponent
 	{
 		if(isset($this->_components[$id]))
 			return $this->_components[$id];
-		elseif(isset($this->_componentConfig[$id]) && $createIfNull)
+		else if(isset($this->_componentConfig[$id]) && $createIfNull)
 		{
 			$config=$this->_componentConfig[$id];
+			unset($this->_componentConfig[$id]);
 			if(!isset($config['enabled']) || $config['enabled'])
 			{
-				Yii::trace("Loading \"$id\" application component",'system.CModule');
+				Yii::trace("Loading \"$id\" application component",'system.web.CModule');
 				unset($config['enabled']);
 				$component=Yii::createComponent($config);
 				$component->init();
@@ -399,76 +358,24 @@ abstract class CModule extends CComponent
 
 	/**
 	 * Puts a component under the management of the module.
-	 * The component will be initialized by calling its {@link CApplicationComponent::init() init()}
+	 * The component will be initialized (by calling its {@link CApplicationComponent::init() init()}
 	 * method if it has not done so.
-	 * @param string $id component ID
-	 * @param array|IApplicationComponent $component application component
-	 * (either configuration array or instance). If this parameter is null,
-	 * component will be unloaded from the module.
-	 * @param boolean $merge whether to merge the new component configuration
-	 * with the existing one. Defaults to true, meaning the previously registered
-	 * component configuration with the same ID will be merged with the new configuration.
-	 * If set to false, the existing configuration will be replaced completely.
-	 * This parameter is available since 1.1.13.
+	 * @param string component ID
+	 * @param IApplicationComponent the component
 	 */
-	public function setComponent($id,$component,$merge=true)
+	public function setComponent($id,$component)
 	{
-		if($component===null)
-		{
-			unset($this->_components[$id]);
-			return;
-		}
-		elseif($component instanceof IApplicationComponent)
-		{
-			$this->_components[$id]=$component;
-
-			if(!$component->getIsInitialized())
-				$component->init();
-
-			return;
-		}
-		elseif(isset($this->_components[$id]))
-		{
-			if(isset($component['class']) && get_class($this->_components[$id])!==$component['class'])
-			{
-				unset($this->_components[$id]);
-				$this->_componentConfig[$id]=$component; //we should ignore merge here
-				return;
-			}
-
-			foreach($component as $key=>$value)
-			{
-				if($key!=='class')
-					$this->_components[$id]->$key=$value;
-			}
-		}
-		elseif(isset($this->_componentConfig[$id]['class'],$component['class'])
-			&& $this->_componentConfig[$id]['class']!==$component['class'])
-		{
-			$this->_componentConfig[$id]=$component; //we should ignore merge here
-			return;
-		}
-
-		if(isset($this->_componentConfig[$id]) && $merge)
-			$this->_componentConfig[$id]=CMap::mergeArray($this->_componentConfig[$id],$component);
-		else
-			$this->_componentConfig[$id]=$component;
+		$this->_components[$id]=$component;
+		if(!$component->getIsInitialized())
+			$component->init();
 	}
 
 	/**
-	 * Returns the application components.
-	 * @param boolean $loadedOnly whether to return the loaded components only. If this is set false,
-	 * then all components specified in the configuration will be returned, whether they are loaded or not.
-	 * Loaded components will be returned as objects, while unloaded components as configuration arrays.
-	 * This parameter has been available since version 1.1.3.
-	 * @return array the application components (indexed by their IDs)
+	 * @return array the currently loaded components (indexed by their IDs)
 	 */
-	public function getComponents($loadedOnly=true)
+	public function getComponents()
 	{
-		if($loadedOnly)
-			return $this->_components;
-		else
-			return array_merge($this->_componentConfig, $this->_components);
+		return $this->_components;
 	}
 
 	/**
@@ -497,20 +404,24 @@ abstract class CModule extends CComponent
 	 * )
 	 * </pre>
 	 *
-	 * @param array $components application components(id=>component configuration or instances)
-	 * @param boolean $merge whether to merge the new component configuration with the existing one.
-	 * Defaults to true, meaning the previously registered component configuration of the same ID
-	 * will be merged with the new configuration. If false, the existing configuration will be replaced completely.
+	 * @param array application components(id=>component configuration or instances)
 	 */
-	public function setComponents($components,$merge=true)
+	public function setComponents($components)
 	{
 		foreach($components as $id=>$component)
-			$this->setComponent($id,$component,$merge);
+		{
+			if($component instanceof IApplicationComponent)
+				$this->setComponent($id,$component);
+			else if(isset($this->_componentConfig[$id]))
+				$this->_componentConfig[$id]=CMap::mergeArray($this->_componentConfig[$id],$component);
+			else
+				$this->_componentConfig[$id]=$component;
+		}
 	}
 
 	/**
 	 * Configures the module with the specified configuration.
-	 * @param array $config the configuration array
+	 * @param array the configuration array
 	 */
 	public function configure($config)
 	{

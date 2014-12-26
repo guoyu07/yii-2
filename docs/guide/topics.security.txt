@@ -6,7 +6,7 @@ Cross-site Scripting Prevention
 Cross-site scripting (also known as XSS) occurs when a web application
 gathers malicious data from a user. Often attackers will inject JavaScript,
 VBScript, ActiveX, HTML, or Flash into a vulnerable application to fool other
-application users and gather data from them. For example, a poorly designed
+application users and gather data from them. For example, a poorly design
 forum system may display user input in forum posts without any checking.
 An attacker can then inject a piece of malicious JavaScript code into a post
 so that when other users read this post, the JavaScript runs unexpectedly
@@ -101,7 +101,7 @@ There are several countermeasures to prevent cookies from being attacked.
 
 Yii implements a cookie validation scheme that prevents cookies from being
 modified. In particular, it does HMAC check for the cookie values if cookie
-validation is enabled.
+validation is enable.
 
 Cookie validation is disabled by default. To enable it, configure the
 [CHttpRequest] application component in the

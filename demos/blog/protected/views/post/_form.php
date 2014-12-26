@@ -1,47 +1,45 @@
 <div class="form">
+<?php echo CHtml::beginForm(); ?>
 
-<?php $form=$this->beginWidget('CActiveForm'); ?>
+<?php echo CHtml::errorSummary($post); ?>
 
-	<p class="note">Fields with <span class="required">*</span> are required.</p>
+<div class="row">
+<?php echo CHtml::activeLabel($post,'title'); ?>
+<?php echo CHtml::activeTextField($post,'title',array('size'=>65,'maxlength'=>128)); ?>
+</div>
+<div class="row">
+<?php echo CHtml::activeLabel($post,'content'); ?>
+<?php echo CHtml::activeTextArea($post,'content',array('rows'=>20, 'cols'=>50)); ?>
+<p class="hint">
+You may use <a href="http://daringfireball.net/projects/markdown/syntax" target="_blank">Markdown syntax</a>.
+</p>
+</div>
+<div class="row">
+<?php echo CHtml::activeLabel($post,'tags'); ?>
+<?php echo CHtml::activeTextField($post,'tags',array('size'=>65)); ?>
+<p class="hint">
+Separate different tags with commas.
+</p>
+</div>
+<div class="row">
+<?php echo CHtml::activeLabel($post,'status'); ?>
+<?php echo CHtml::activeDropDownList($post,'status',Post::model()->statusOptions); ?>
+</div>
 
-	<?php echo CHtml::errorSummary($model); ?>
+<div class="row action">
+<?php echo CHtml::submitButton($update ? 'Save' : 'Create', array('name'=>'submitPost')); ?>
 
-	<div class="row">
-		<?php echo $form->labelEx($model,'title'); ?>
-		<?php echo $form->textField($model,'title',array('size'=>80,'maxlength'=>128)); ?>
-		<?php echo $form->error($model,'title'); ?>
-	</div>
+<?php echo CHtml::submitButton('Preview',array('name'=>'previewPost')); ?>
+</div>
 
-	<div class="row">
-		<?php echo $form->labelEx($model,'content'); ?>
-		<?php echo CHtml::activeTextArea($model,'content',array('rows'=>10, 'cols'=>70)); ?>
-		<p class="hint">You may use <a target="_blank" href="http://daringfireball.net/projects/markdown/syntax">Markdown syntax</a>.</p>
-		<?php echo $form->error($model,'content'); ?>
-	</div>
-
-	<div class="row">
-		<?php echo $form->labelEx($model,'tags'); ?>
-		<?php $this->widget('CAutoComplete', array(
-			'model'=>$model,
-			'attribute'=>'tags',
-			'url'=>array('suggestTags'),
-			'multiple'=>true,
-			'htmlOptions'=>array('size'=>50),
-		)); ?>
-		<p class="hint">Please separate different tags with commas.</p>
-		<?php echo $form->error($model,'tags'); ?>
-	</div>
-
-	<div class="row">
-		<?php echo $form->labelEx($model,'status'); ?>
-		<?php echo $form->dropDownList($model,'status',Lookup::items('PostStatus')); ?>
-		<?php echo $form->error($model,'status'); ?>
-	</div>
-
-	<div class="row buttons">
-		<?php echo CHtml::submitButton($model->isNewRecord ? 'Create' : 'Save'); ?>
-	</div>
-
-<?php $this->endWidget(); ?>
-
+<?php echo CHtml::endForm(); ?>
 </div><!-- form -->
+
+<?php if(isset($_POST['previewPost']) && !$post->hasErrors()): ?>
+<h3>Preview</h3>
+<div class="post">
+  <div class="title"><?php echo CHtml::encode($post->title); ?></div>
+  <div class="author">posted by <?php echo Yii::app()->user->name . ' on ' . date('F j, Y',$post->createTime); ?></div>
+  <div class="content"><?php echo $post->contentDisplay; ?></div>
+</div><!-- post preview -->
+<?php endif; ?>

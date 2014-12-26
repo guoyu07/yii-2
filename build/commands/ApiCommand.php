@@ -4,9 +4,10 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
+
 Yii::import('application.commands.api.ApiModel');
 
 /**
@@ -15,42 +16,33 @@ Yii::import('application.commands.api.ApiModel');
  * under the specified directory.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.build
  * @since 1.0
  */
 class ApiCommand extends CConsoleCommand
 {
-	const URL_PATTERN='/\{\{([^\}]+)\|([^\}]+)\}\}/';
+	const URL_PATTERN='/\{\{(.*?)\|(.*?)\}\}/s';
 	public $classes;
 	public $packages;
 	public $pageTitle;
 	public $themePath;
 	public $currentClass;
-	public $baseSourceUrl="https://github.com/yiisoft/yii/blob";
-	public $version;
 
 	public function getHelp()
 	{
 		return <<<EOD
 USAGE
   build api <output-path> [mode]
-  build api check
 
 DESCRIPTION
   This command generates offline API documentation for the Yii framework.
 
 PARAMETERS
-  * output-path: required, the directory where the generated documentation would be saved.
-  * mode: optional, either 'online' or 'offline' (default).
-          Indicates whether the generated documentation are for online or offline use.
-
-  * check: check PHPDoc for proper @param syntax
-
-EXAMPLES
-  * build api yii/doc online - builds api ONLINE documentation in folder yii/doc
-  * build api yii/doc        - builds api OFFLINE (default) documentation in folder yii/doc
-
-  * build api check          - cheks PHPDoc @param directives
+ * output-path: required, the directory where the generated documentation
+   would be saved.
+ * mode: optional, either 'online' or 'offline' (default). This indicates
+   whether the generated documentation are for online or offline use.
 
 EOD;
 	}
@@ -61,12 +53,20 @@ EOD;
 	 */
 	public function run($args)
 	{
+		if(!isset($args[0]))
+			$this->usageError('the output directory is not specified.');
+		if(!is_dir($docPath=$args[0]))
+			$this->usageError("the output directory {$docPath} does not exist.");
+
+		$offline=true;
+		if(isset($args[1]) && $args[1]==='online')
+			$offline=false;
+
 		$options=array(
 			'fileTypes'=>array('php'),
 			'exclude'=>array(
-				'.gitignore',
+				'.svn',
 				'/yiilite.php',
-				'/yiit.php',
 				'/cli',
 				'/i18n/data',
 				'/messages',
@@ -75,71 +75,24 @@ EOD;
 				'/web/js',
 				'/web/widgets/views',
 				'/utils/mimeTypes.php',
-				'/gii/assets',
-				'/gii/components',
-				'/gii/controllers',
-				'/gii/generators',
-				'/gii/models',
-				'/gii/views',
+				'/toolkit',
 			),
 		);
-
-		if(!isset($args[0]))
-			$this->usageError('the output directory is not specified.');
-
-		if($args[0]=='check') {
-			$checkFiles=CFileHelper::findFiles(YII_PATH,$options);
-			$model=new ApiModel;
-			$model->check($checkFiles);
-			exit();
-		}
-
-		if(!is_dir($docPath=$args[0]))
-			$this->usageError("the output directory {$docPath} does not exist.");
-
-		$offline=true;
-		if(isset($args[1]) && $args[1]==='online')
-			$offline=false;
-
-		$this->version=Yii::getVersion();
-
-		/*
-		 * development version - link to master
-		 * release version link to tags
-		 */
-		if(substr($this->version,-3)=='dev')
-			$this->baseSourceUrl .= '/master/framework';
-		else
-			$this->baseSourceUrl .= '/'.$this->version.'/framework';
-
 		$this->pageTitle='Yii Framework Class Reference';
 		$themePath=dirname(__FILE__).'/api';
 
-		echo "\nBuilding.. : " . $this->pageTitle."\n";
-		echo "Type...... : " . ( $offline ? "offline" : "online" ). "\n";
-		echo "Version... : " . $this->version."\n";
-		echo "Source URL : " . $this->baseSourceUrl."\n\n";
-
-		echo "Building model...\n";
 		$model=$this->buildModel(YII_PATH,$options);
+
 		$this->classes=$model->classes;
 		$this->packages=$model->packages;
 
-		echo "Building pages...\n";
 		if($offline)
 			$this->buildOfflinePages($docPath.DIRECTORY_SEPARATOR.'api',$themePath);
 		else
 		{
 			$this->buildOnlinePages($docPath.DIRECTORY_SEPARATOR.'api',$themePath);
 			$this->buildKeywords($docPath);
-			$this->buildPackages($docPath);
 		}
-		echo "Done.\n\n";
-	}
-
-	protected function buildPackages($docPath)
-	{
-		file_put_contents($docPath.'/api/packages.txt',serialize($this->packages));
 	}
 
 	protected function buildKeywords($docPath)
@@ -161,7 +114,7 @@ EOD;
 					$keywords[]=$name.'.'.$method->name.'()';
 			}
 		}
-		file_put_contents($docPath.'/api/keywords.txt',implode(',',$keywords));
+		file_put_contents($docPath.'/apiKeywords.txt',implode(',',$keywords));
 	}
 
 	public function render($view,$data=null,$return=false,$layout='main')
@@ -176,21 +129,6 @@ EOD;
 	{
 		$viewFile=$this->themePath."/views/{$view}.php";
 		return $this->renderFile($viewFile,$data,$return);
-	}
-
-	public function renderSourceLink($sourcePath,$line=null)
-	{
-		if($line===null)
-			return CHtml::link('framework'.$sourcePath,$this->baseSourceUrl.$sourcePath,array('class'=>'sourceLink'));
-		else
-			return CHtml::link('framework'.$sourcePath.'#'.$line, $this->baseSourceUrl.$sourcePath.'#L'.$line,array('class'=>'sourceLink'));
-	}
-
-	public function highlight($code,$limit=20)
-	{
-		$code=preg_replace("/^    /m",'',rtrim(str_replace("\t","    ",$code)));
-		$code=highlight_string("<?php\n".$code,true);
-		return preg_replace('/&lt;\\?php<br \\/>/','',$code,1);
 	}
 
 	protected function buildOfflinePages($docPath,$themePath)
@@ -210,7 +148,7 @@ EOD;
 			file_put_contents($docPath.'/'.$name.'.html',$content);
 		}
 
-		CFileHelper::copyDirectory($this->themePath.'/assets',$docPath);
+		CFileHelper::copyDirectory($this->themePath.'/assets',$docPath,array('exclude'=>array('.svn')));
 
 		$content=$this->renderPartial('chmProject',null,true);
 		file_put_contents($docPath.'/manual.hhp',$content);
@@ -299,9 +237,8 @@ EOD;
 	{
 		if($text===null)
 			$text=$subject;
-		if(isset($this->classes[$type])) {
+		if(isset($this->classes[$type]))
 			return '{{'.$type.'::'.$subject.'-detail'.'|'.$text.'}}';
-		}
 		else
 			return $text;
 	}
@@ -320,14 +257,6 @@ EOD;
 			$sig.=$property->setter->signature;
 		}
 		return $sig;
-	}
-
-	public function fixMethodAnchor($class,$name)
-	{
-		if(isset($this->classes[$class]->properties[$name]))
-			return $name."()";
-		else
-			return $name;
 	}
 
 	protected function fixOfflineLink($matches)

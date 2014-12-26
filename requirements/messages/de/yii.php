@@ -11,24 +11,20 @@
  * Messages that no longer need translation will have their translations
  * enclosed between a pair of '@@' marks.
  *
- * Message string can be used with plural forms format. Check i18n section
- * of the guide for details.
- *
  * NOTE, this file must be saved in UTF-8 encoding.
+ *
+ * @version $Id: $
  */
 return array (
-  'Ctype extension' => 'Ctype Erweiterung',
-  'To use memcached set <a href="http://www.yiiframework.com/doc/api/CMemCache#useMemcached-detail">CMemCache::useMemcached</a> to <code>true</code>.' => 'Um memcached verwenden zu können, muss <a href="http://www.yiiframework.com/doc/api/CMemCache#useMemcached-detail">CMemCache::useMemcached</a> auf <code>true</code> gesetzt werden.',
+  'This is required by encrypt and decrypt methods.' => 'Dies wird für Ver- und Entschlüsselungsmethoden benötigt.',
   '$_SERVER does not have {vars}.' => '$_SERVER verfügt nicht über {vars}.',
   '$_SERVER variable' => '$_SERVER Variable',
-  '$_SERVER["SCRIPT_FILENAME"] must be the same as the entry script file path.' => '$_SERVER["SCRIPT_FILENAME"] muss auf das Startscript verweisen.',
+  '$_SERVER["SCRIPT_FILENAME"] must be the same as the entry script file path.' => '$_SERVER["SCRIPT_FILENAME"] muss der selbe Eingangsscriptpfad sein.',
   'APC extension' => 'APC Erweiterung',
-  'All <a href="http://www.yiiframework.com/doc/api/#system.db">DB-related classes</a>' => 'Alle <a href="http://www.yiiframework.com/doc/api/#system.db">DB-bezogenen Klassen</a>',
+  'All <a href="http://www.yiiframework.com/doc/api/#system.db">DB-related classes</a>' => 'Alle <a href="http://www.yiiframework.com/doc/api/#system.db">DB-bezüglichen Klassen</a>',
   'DOM extension' => 'DOM Erweiterung',
   'Either $_SERVER["REQUEST_URI"] or $_SERVER["QUERY_STRING"] must exist.' => 'Entweder $_SERVER["REQUEST_URI"] oder $_SERVER["QUERY_STRING"] müssen exisitieren.',
-  'GD extension with<br />FreeType support' => 'GD Erweiterung mit <br />FreeType-Unterstützung',
-  'GD installed<br />FreeType support not installed' => 'GD installiert<br />FreeType-Unterstützung nicht installiert',
-  'GD not installed' => 'GD nicht installiert',
+  'GD extension' => 'GD Erweiterung',
   'Mcrypt extension' => 'Mcyrpt Erweiterung',
   'Memcache extension' => 'Memcache Erweiterung',
   'PCRE extension' => 'PCRE Erweiterung',
@@ -41,9 +37,8 @@ return array (
   'Reflection extension' => 'Reflection Erweiterung',
   'SOAP extension' => 'SOAP Erweiterung',
   'SPL extension' => 'SPL Erweiterung',
-  'This is required by encrypt and decrypt methods.' => 'Wird für Ver- und Entschlüsselungsmethoden benötigt.',
-  'This is required if you are using MySQL database.' => 'Wird für die Verwendung einer MySQL Datenbank benötigt.',
-  'This is required if you are using PostgreSQL database.' => 'Wird für die Verwendung einer PostgreSQL Datenbank benötigt.',
-  'This is required if you are using SQLite database.' => 'Wird für die Verwendung einer SQLite Datenbank benötigt.',
-  'Unable to determine URL path info. Please make sure $_SERVER["PATH_INFO"] (or $_SERVER["PHP_SELF"] and $_SERVER["SCRIPT_NAME"]) contains proper value.' => 'Die URL-Pfadinformation kann nicht ermittelt werden. Stellen Sie bitte sicher, dass $_SERVER["PATH_INFO"] (oder $_SERVER["PHP_SELF"] und $_SERVER["SCRIPT_NAME"]) den entsprechenden Wert enthält.',
+  'This is required if you are using MySQL database.' => 'Dies wird für die Verwendung einer MySQL Datenbank benötigt.',
+  'This is required if you are using PostgreSQL database.' => 'Dies wird für die Verwendung einer PostgreSQL Datenbank benötigt.',
+  'This is required if you are using SQLite database.' => 'Dies wird für die Verwendung einer SQLite Datenbank benötigt.',
+  'Unable to determine URL path info. Please make sure $_SERVER["PATH_INFO"] (or $_SERVER["PHP_SELF"] and $_SERVER["SCRIPT_NAME"]) contains proper value.' => 'Die URL Pfadinformation kann nicht ermittelt werden. Stellen Sie bitte sicher, dass entweder $_SERVER["PATH_INFO"] (oder $_SERVER["PHP_SELF"] und $_SERVER["SCRIPT_NAME"]) mit korrekten Werten gefüllt sind.',
 );

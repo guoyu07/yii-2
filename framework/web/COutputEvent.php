@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -14,6 +14,7 @@
  * An event handler may retrieve the captured {@link output} for further processing.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.web
  * @since 1.0
  */
@@ -26,8 +27,8 @@ class COutputEvent extends CEvent
 
 	/**
 	 * Constructor.
-	 * @param mixed $sender sender of the event
-	 * @param string $output the output to be processed
+	 * @param mixed sender of the event
+	 * @param string the output to be processed
 	 */
 	public function __construct($sender,$output)
 	{

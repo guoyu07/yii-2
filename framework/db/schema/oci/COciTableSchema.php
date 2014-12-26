@@ -4,15 +4,17 @@
  *
  * @author Ricardo Grana <rickgrana@yahoo.com.br>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
 /**
- * COciTableSchema represents the metadata for an Oracle table.
+ * COciTableSchema represents the metadata for a Oracle table.
  *
  * @author Ricardo Grana <rickgrana@yahoo.com.br>
+ * @version $Id$
  * @package system.db.schema.oci
+ * @since 1.0.5
  */
 class COciTableSchema extends CDbTableSchema
 {

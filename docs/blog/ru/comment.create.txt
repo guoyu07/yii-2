@@ -3,66 +3,54 @@
 
 В данном разделе мы реализуем функции отображения и создания комментариев.
 
-Для большей интерактивности будем проводить валидацию на стороне клиента.
-При помощи Yii сделать это довольно легко. Отметим, что для этого потребуется
-Yii версии 1.1.1 или новее.
 
 Отображение комментариев
 ------------------------
 
-Вместо использования отдельных страниц для отображения и создания
-комментариев, мы используем страницу записи (генерируемую действием `view`
-контроллера `PostController`). Под текстом записи мы отображаем список
-комментариев, принадлежащих ей и форму создания комментария.
+Вместо использования индивидуальных страниц отображения и создания
+комментариев, мы используем страницу отображения записи. Под контентом записи
+мы отображаем список комментариев, принадлежащих записи и форму создания
+комментария.
 
-Чтобы отобразить комментарии на странице записи, мы изменяем отображение
-`/wwwroot/blog/protected/views/post/view.php` следующим образом:
+Чтобы отобразить комментарии на странице записи, мы изменяем метод
+`actionShow()` контроллера `PostController` следующим образом:
 
 ~~~
 [php]
-…основная часть отображения post…
-
-<div id="comments">
-	<?php if($model->commentCount>=1): ?>
-		<h3>
-			<?php echo $model->commentCount . 'comment(s)'; ?>
-		</h3>
-
-		<?php $this->renderPartial('_comments',array(
-			'post'=>$model,
-			'comments'=>$model->comments,
-		)); ?>
-	<?php endif; ?>
-</div>
+public function actionShow()
+{
+	$post=$this->loadPost();
+	$this->render('show',array(
+		'post'=>$post,
+		'comments'=>$post->comments,
+	));
+}
 ~~~
 
-Выше мы вызываем `renderPartial()` для вывода отображения `_comments`, показывающего
-список комментариев к текущей записи. Заметим, что в отображении, для получения
-комментариев к записи, мы используем выражение `$model->comments`. Это возможно
-так как мы объявили связь `comments` в классе `Post`. Выполнение этого
-выражения вызывает дополнительный JOIN-запрос к БД, чтобы возвратить
-нужные комментарии. Эта возможность известна как [ленивая загрузка](/doc/guide/ru/database.arr).
+Заметим, что выражение `$post->comments` правильно, потому что мы объявили
+отношение `comments` в классе `Post`. Выполнение этого выражения вызвало бы
+неявный JOIN-запрос к БД, чтобы возвратить комментарии, принадлежащие текущей
+записи. Эта особенность известна как [ленивая загрузка](/doc/guide/ru/database.arr).
 
-Отображение `_comments` не очень интересно. В нём производится обход всех комментариев
-и их вывод. Заинтересованные читатели могут посмотреть файл
-`/wwwroot/yii/demos/blog/protected/views/post/_comments.php`.
+Мы также изменяем представление `show`, добавляя отображение комментария в
+конце отображения записи, которое мы не будем уточнять.
 
 Создание комментариев
 ---------------------
 
-Чтобы обработать создание комментария, мы сначала изменяем метод `actionView()`
+Чтобы обработать создание комментария, мы сначала изменяем метод `actionShow()`
 контроллера `PostController` следующим образом:
 
 ~~~
 [php]
-public function actionView()
+public function actionShow()
 {
-	$post=$this->loadModel();
+	$post=$this->loadPost();
 	$comment=$this->newComment($post);
-
-	$this->render('view',array(
-		'model'=>$post,
-		'comment'=>$comment,
+	$this->render('show',array(
+		'post'=>$post,
+		'comments'=>$post->comments,
+		'newComment'=>$comment,
 	));
 }
 
@@ -72,120 +60,63 @@ protected function newComment($post)
 	if(isset($_POST['Comment']))
 	{
 		$comment->attributes=$_POST['Comment'];
-		if($post->addComment($comment))
-		{
-			if($comment->status==Comment::STATUS_PENDING)
-				Yii::app()->user->setFlash('commentSubmitted','Thank you for your comment.
-				Your comment will be posted once it is approved.');
-			$this->refresh();
-		}
-	}
-	return $comment;
-}
-~~~
-
-Далее мы добавляем метод `addComment()` в модель `Post`:
-
-~~~
-[php]
-public function addComment($comment)
-{
-	if(Yii::app()->params['commentNeedApproval'])
+		$comment->postId=$post->id;
 		$comment->status=Comment::STATUS_PENDING;
-	else
-		$comment->status=Comment::STATUS_APPROVED;
-	$comment->post_id=$this->id;
-	return $comment->save();
-}
-~~~
 
-
-Выше мы вызываем метод `newComment()` перед показом представления `view`.
-В методе `newComment()` мы создаем экземпляр класса `Comment` и проверяем,
-отправлена ли форма комментария.  Если отправлена — пробуем добавить комментарий
-к записи, вызывая `$post->addComment($comment)`. Если получилось — обновляем
-страницу записи, на которой будет показан только что созданный комментарий в том случае,
-если он не требует одобрения. В противном случае показываем моментальное сообщение о
-том, что комментарий будет показан как только он будет одобрен. Моментальное сообщение
-обычно выводится для подтверждения какого-то действия. Если пользователь обновляет
-страницу, такое сообщение исчезает.
-
-Продолжаем изменять `/wwwroot/blog/protected/views/post/view.php`:
-
-~~~
-[php]
-…
-<div id="comments">
-	…
-	<h3>Оставить комментарий</h3>
-
-	<?php if(Yii::app()->user->hasFlash('commentSubmitted')): ?>
-		<div class="flash-success">
-			<?php echo Yii::app()->user->getFlash('commentSubmitted'); ?>
-		</div>
-	<?php else: ?>
-		<?php $this->renderPartial('/comment/_form',array(
-			'model'=>$comment,
-		)); ?>
-	<?php endif; ?>
-
-</div><!-- comments -->
-~~~
-
-В приведённом выше коде мы показываем моментальное сообщение, если оно есть.
-В обратном случае — показываем форму ввода комментария из файла
-`/wwwroot/blog/protected/views/comment/_form.php`.
-
-AJAX валидация
---------------
-
-Для того, чтобы улучшить удобство формы, можно использовать AJAX валидацию полей формы. В этом случае пользователь
-получает информацию об ошибках по мере заполнения формы. Для использования данной возможности в форме комментариев
-необходимо сделать несколько изменений в отображении `/wwwroot/blog/protected/views/comment/_form.php` и методе `newComment()`.
-
-В файле `_form.php` нам необходимо установить свойство [CActiveForm::enableAjaxValidation]
-для виджета [CActiveForm] в `true`:
-
-~~~
-[php]
-<div class="form">
-
-<?php $form=$this->beginWidget('CActiveForm', array(
-	'id'=>'comment-form',
-	'enableAjaxValidation'=>true,
-)); ?>
-…
-<?php $this->endWidget(); ?>
-
-</div><!-- form -->
-~~~
-
-В метод `newComment()` мы добавляем код, отвечающий на запросы AJAX валидации.
-Код проверяет, есть ли параметр `POST` с именем `ajax`. Если есть — отдаёт
-результат валидации, используя [CActiveForm::validate].
-
-~~~
-[php]
-protected function newComment($post)
-{
-	$comment=new Comment;
-
-	if(isset($_POST['ajax']) && $_POST['ajax']==='comment-form')
-	{
-		echo CActiveForm::validate($comment);
-		Yii::app()->end();
-	}
-
-	if(isset($_POST['Comment']))
-	{
-		$comment->attributes=$_POST['Comment'];
-		if($post->addComment($comment))
+		if(isset($_POST['previewComment']))
+			$comment->validate('insert');
+		else if(isset($_POST['submitComment']) && $comment->save())
 		{
-			if($comment->status==Comment::STATUS_PENDING)
-				Yii::app()->user->setFlash('commentSubmitted','Thank you for your comment. Your comment will be posted once it is approved.');
+			Yii::app()->user->setFlash('commentSubmitted','Спасибо...');
 			$this->refresh();
 		}
 	}
 	return $comment;
 }
 ~~~
+
+Выше мы вызываем метод `newComment()` перед рендерингом представления `show`.
+В методе `newComment()` мы создаем экземпляр класса `Comment` и проверяем,
+отправлена ли форма комментария. Форма может быть отправлена щелчком мыши либо
+по кнопке отправки либо по кнопке предпросмотра. Если первое, то пытаемся
+сохранить комментарий и отобразить flash-сообщение. Flash-сообщение отображается
+только один раз, а значит, при следующем обновлении страницы оно исчезнет.
+
+Мы также модифицируем представление `show` добавлением формы создания комментария:
+
+~~~
+[php]
+......
+<?php $this->renderPartial('/comment/_form',array(
+	'comment'=>$newComment,
+	'update'=>false,
+)); ?>
+~~~
+
+Здесь мы включаем форму создания комментария рендерингом частичного
+представления `/wwwroot/blog/protected/views/comment/_form.php`. Переменная
+`$newComment` передается методом `actionShow`. Её назначение - хранение
+введенного пользовательского комментария. Переменная `update` установлена в
+значение false, которое указывает, что форма комментария используется для
+создания нового комментария.
+
+Для поддержки предварительного просмотра комментария мы добавляем кнопку
+предварительного просмотра к форме создания комментария. Когда нажимается кнопка
+предварительного просмотра, предварительный вид комментария отображается внизу
+страницы. Ниже обновленный код формы комментария:
+
+~~~
+[php]
+... форма комментария с кнопкой предварительного просмотра...
+
+<?php if(isset($_POST['previewComment']) && !$comment->hasErrors()): ?>
+<h3>Предварительный просмотр</h3>
+<div class="comment">
+  <div class="author"><?php echo $comment->authorLink; ?> сказал:</div>
+  <div class="time"><?php echo date('F j, Y \a\t h:i a',$comment->createTime); ?></div>
+  <div class="content"><?php echo $comment->contentDisplay; ?></div>
+</div><!-- post preview -->
+<?php endif; ?>
+~~~
+
+<div class="revision">$Id: comment.create.txt 1157 2009-06-22 15:25:02Z qiang.xue $</div>

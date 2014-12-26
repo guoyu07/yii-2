@@ -18,7 +18,7 @@ dazu zum Beispiel sämtliche Eingaben eines Benutzers HTML-codieren. Allerdings
 kann dies in manchen Situationen nicht wünschenswert sein, da so alle
 HTML-Tags deaktiviert werden.
 
-Yii bedient sich daher der Arbeit des
+Yii bedient sich daher die Arbeit des
 [HTMLPurifier](http://htmlpurifier.org/)-Projekts und bietet Entwicklern eine
 nützliche Komponente namens [CHtmlPurifier], die
 [HTMLPurifier](http://htmlpurifier.org/) kapselt. Diese Komponente ist in der
@@ -92,7 +92,7 @@ Schutz vor Cookie-Angriffen
 ---------------------------
 Cookies vor Angriffen zu schützen ist äußerst wichtig, da Session-IDs für
 gewöhnlich in Cookies gespeichert werden. Falls jemand die Session-ID
-ergattern kann, besitzt er damit im Wesentlichen alle bedeutsamen Session-Informationen.
+ergattern kann, besitzt er damit im wesentlichen alle bedeutsamen Session-Informationen.
 
 Es gibt einige Gegenmaßnahmen um Cookies vor einem Angriff zu schützen.
 
@@ -142,4 +142,4 @@ Yii::app()->request->cookies[$name]=$cookie;
 ~~~
 
 
-<div class="revision">$Id: topics.security.txt 2535 2010-10-11 08:28:08Z mdomba $</div>
+<div class="revision">$Id: topics.security.txt 956 2009-04-21 15:16:03Z qiang.xue@gmail.com $</div>

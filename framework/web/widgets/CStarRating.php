@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -24,6 +24,7 @@
  * CStarRating allows customization of its appearance. It also supports empty rating as well as read-only rating.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.web.widgets
  * @since 1.0
  */
@@ -34,11 +35,11 @@ class CStarRating extends CInputWidget
 	 */
 	public $starCount=5;
 	/**
-	 * @var mixed the minimum rating allowed. This can be either an integer or a float value. Defaults to 1.
+	 * @var mixed the minimum rating allowed. This can be either an integer or a double value. Defaults to 1.
 	 */
 	public $minRating=1;
 	/**
-	 * @var mixed the maximum rating allowed. This can be either an integer or a float value. Defaults to 10.
+	 * @var mixed the maximum rating allowed. This can be either an integer or a double value. Defaults to 1.
 	 */
 	public $maxRating=10;
 	/**
@@ -101,12 +102,10 @@ class CStarRating extends CInputWidget
 	public function run()
 	{
 		list($name,$id)=$this->resolveNameID();
-		if(isset($this->htmlOptions['id']))
-			$id=$this->htmlOptions['id'];
-		else
+		if(!isset($this->htmlOptions['id']))
 			$this->htmlOptions['id']=$id;
-		if(isset($this->htmlOptions['name']))
-			$name=$this->htmlOptions['name'];
+		if(!isset($this->htmlOptions['name']))
+			$this->htmlOptions['name']=$name;
 
 		$this->registerClientScript($id);
 
@@ -117,7 +116,7 @@ class CStarRating extends CInputWidget
 
 	/**
 	 * Registers the necessary javascript and css scripts.
-	 * @param string $id the ID of the container
+	 * @param string the ID of the container
 	 */
 	public function registerClientScript($id)
 	{
@@ -134,7 +133,8 @@ class CStarRating extends CInputWidget
 
 	/**
 	 * Registers the needed CSS file.
-	 * @param string $url the CSS URL. If null, a default CSS URL will be used.
+	 * @param string the CSS URL. If null, a default CSS URL will be used.
+	 * @since 1.0.2
 	 */
 	public static function registerCssFile($url=null)
 	{
@@ -146,21 +146,16 @@ class CStarRating extends CInputWidget
 
 	/**
 	 * Renders the stars.
-	 * @param string $id the ID of the container
-	 * @param string $name the name of the input
+	 * @param string the ID of the container
+	 * @param string the name of the input
 	 */
 	protected function renderStars($id,$name)
 	{
 		$inputCount=(int)(($this->maxRating-$this->minRating)/$this->ratingStepSize+1);
 		$starSplit=(int)($inputCount/$this->starCount);
-		if($this->hasModel())
-		{
-			$attr=$this->attribute;
-			CHtml::resolveName($this->model,$attr);
-			$selection=$this->model->$attr;
-		}
-		else
-			$selection=$this->value;
+		$attr=$this->attribute;
+		CHtml::resolveName($this->model,$attr);
+		$selection=$this->hasModel() ? $this->model->$attr : $this->value;
 		$options=$starSplit>1 ? array('class'=>"{split:{$starSplit}}") : array();
 		for($value=$this->minRating, $i=0;$i<$inputCount; ++$i, $value+=$this->ratingStepSize)
 		{
@@ -190,15 +185,26 @@ class CStarRating extends CInputWidget
 			$options['starWidth']=$this->starWidth;
 		if($this->readOnly===true)
 			$options['readOnly']=true;
-		foreach(array('focus', 'blur', 'callback') as $event)
+		if($this->focus!==null)
 		{
-			if($this->$event!==null)
-			{
-				if($this->$event instanceof CJavaScriptExpression)
-					$options[$event]=$this->$event;
-				else
-					$options[$event]=new CJavaScriptExpression($this->$event);
-			}
+			if(strncmp($this->focus,'js:',3))
+				$options['focus']='js:'.$this->focus;
+			else
+				$options['focus']=$this->focus;
+		}
+		if($this->blur!==null)
+		{
+			if(strncmp($this->blur,'js:',3))
+				$options['blur']='js:'.$this->blur;
+			else
+				$options['blur']=$this->blur;
+		}
+		if($this->callback!==null)
+		{
+			if(strncmp($this->callback,'js:',3))
+				$options['callback']='js:'.$this->callback;
+			else
+				$options['callback']=$this->callback;
 		}
 		return $options;
 	}

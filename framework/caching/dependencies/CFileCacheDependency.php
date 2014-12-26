@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
+ * @copyright Copyright &copy; 2008-2009 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -17,6 +17,7 @@
  * last modification time remains unchanged.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
  * @package system.caching.dependencies
  * @since 1.0
  */
@@ -30,7 +31,7 @@ class CFileCacheDependency extends CCacheDependency
 
 	/**
 	 * Constructor.
-	 * @param string $fileName name of the file whose change is to be checked.
+	 * @param string name of the file whose change is to be checked.
 	 */
 	public function __construct($fileName=null)
 	{
@@ -40,7 +41,6 @@ class CFileCacheDependency extends CCacheDependency
 	/**
 	 * Generates the data needed to determine if dependency has been changed.
 	 * This method returns the file's last modification time.
-	 * @throws CException if {@link fileName} is empty
 	 * @return mixed the data needed to determine if dependency has been changed.
 	 */
 	protected function generateDependentData()
