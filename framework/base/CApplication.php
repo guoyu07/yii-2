@@ -225,7 +225,7 @@ abstract class CApplication extends CModule
 	}
 
 	/**
-	 * Returns the unique identifier for the application.
+	 * 返回应用程序唯一的标识。
 	 * @return string the unique identifier for the application.
 	 */
 	public function getId()
