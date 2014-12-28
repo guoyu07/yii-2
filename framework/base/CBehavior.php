@@ -37,7 +37,7 @@ class CBehavior extends CComponent implements IBehavior
 	}
 
 	/**
-	 * Attaches the behavior object to the component.
+	 * 对组件附加行为对象。
 	 * The default implementation will set the {@link owner} property
 	 * and attach event handlers as declared in {@link events}.
 	 * This method will also set {@link enabled} to true.
@@ -52,7 +52,7 @@ class CBehavior extends CComponent implements IBehavior
 	}
 
 	/**
-	 * Detaches the behavior object from the component.
+	 * 从组件中分离行为对象。
 	 * The default implementation will unset the {@link owner} property
 	 * and detach event handlers declared in {@link events}.
 	 * This method will also set {@link enabled} to false.
