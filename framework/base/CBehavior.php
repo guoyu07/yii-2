@@ -11,8 +11,8 @@
 /**
  * CBehavior 是所有行为类的基类。
  *
- * @property CComponent $owner The owner component that this behavior is attached to.
- * @property boolean $enabled Whether this behavior is enabled.
+ * @property CComponent $owner 此行为被附加的所有者组件。
+ * @property boolean $enabled 此行为是否被启用。
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @package system.base
