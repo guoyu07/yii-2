@@ -23,7 +23,7 @@ class CBehavior extends CComponent implements IBehavior
 	private $_owner;
 
 	/**
-	 * Declares events and the corresponding event handler methods.
+	 * 声明事件和相应事件的处理方法。
 	 * The events are defined by the {@link owner} component, while the handler
 	 * methods by the behavior class. The handlers will be attached to the corresponding
 	 * events when the behavior is attached to the {@link owner} component; and they
