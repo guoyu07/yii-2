@@ -7,6 +7,7 @@
  * @copyright 2008-2013 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
+include('/Users/cuiliang/.composer/vendor/autoload.php');
 Yii::import('application.commands.api.ApiModel');
 
 /**
