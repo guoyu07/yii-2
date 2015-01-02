@@ -1,5 +1,5 @@
 <?php if(!$class->nativeMethodCount) return; ?>
-<h2>Method Details</h2>
+<h2>方法详情</h2>
 
 <?php foreach($class->methods as $method): ?>
 <?php if($method->isInherited) continue; ?>
@@ -8,7 +8,7 @@
 <span class="detailHeaderTag">
 method
 <?php if(!empty($method->since)): ?>
-(available since v<?php echo $method->since; ?>)
+（可用自 v<?php echo $method->since; ?>）
 <?php endif; ?>
 </span>
 </div>

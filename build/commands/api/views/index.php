@@ -1,4 +1,4 @@
-<h1>Class Reference</h1>
+<h1>类参考手册</h1>
 
 <table class="summaryTable docIndex">
 <colgroup>
@@ -7,7 +7,7 @@
 	<col class="col-description" />
 </colgroup>
 <tr>
-  <th>Package</th><th>Class</th><th>Description</th>
+  <th>包</th><th>类</th><th>描述</th>
 </tr>
 <?php foreach($this->packages as $package=>$classes): ?>
 <?php foreach($classes as $i=>$class): ?>
