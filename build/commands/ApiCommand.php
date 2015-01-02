@@ -128,7 +128,7 @@ EOD;
 
 		echo "Building pages...\n";
 		if($offline)
-			$this->buildOfflinePages($docPath,$themePath);
+			$this->buildOfflinePages($docPath.DIRECTORY_SEPARATOR.'api',$themePath);
 		else
 		{
 			$this->buildOnlinePages($docPath.DIRECTORY_SEPARATOR.'api',$themePath);
