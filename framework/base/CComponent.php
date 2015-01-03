@@ -139,7 +139,7 @@ class CComponent
 	 * $this->propertyName=$value;
 	 * $this->eventName=$callback;
 	 * </pre>
-	 * @param string $name the property name or the event name
+	 * @param string $name 属性名称或事件名称t
 	 * @param mixed $value the property value or callback
 	 * @return mixed
 	 * @throws CException if the property/event is not defined or the property is read only.
