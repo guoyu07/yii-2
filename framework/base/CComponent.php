@@ -9,7 +9,7 @@
  */
 
 /**
- * CComponent is the base class for all components.
+ * CComponent 是用于所有组件的基类。
  *
  * CComponent implements the protocol of defining, using properties and events.
  *
