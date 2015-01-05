@@ -99,7 +99,7 @@ class CComponent
 	 * $value=$component->propertyName;
 	 * $handlers=$component->eventName;
 	 * </pre>
-	 * @param string $name the property name or event name
+	 * @param string $name 属性名称或事件名称
 	 * @return mixed the property value, event handlers attached to the event, or the named behavior
 	 * @throws CException if the property or event is not defined
 	 * @see __set
