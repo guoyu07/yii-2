@@ -11,7 +11,7 @@
 Yii::import('CHtml',true);
 
 /**
- * CErrorHandler handles uncaught PHP errors and exceptions.
+ * CErrorHandler 处理未捕获的PHP错误和异常。
  *
  * It displays these errors using appropriate views based on the
  * nature of the error and the mode the application runs at.
