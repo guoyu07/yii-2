@@ -23,9 +23,9 @@
 class CApcCache extends CCache
 {
 	/**
-	 * Initializes this application component.
+	 * 初始化该应用程序组件。
 	 * This method is required by the {@link IApplicationComponent} interface.
-	 * It checks the availability of APC.
+	 * 检查 APC 是否可用。
 	 * @throws CException if APC cache extension is not loaded or is disabled.
 	 */
 	public function init()
