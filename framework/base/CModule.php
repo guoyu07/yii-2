@@ -13,7 +13,7 @@
  *
  * CModule mainly manages application components and sub-modules.
  *
- * @property string $id The module ID.
+ * @property string $id 模块 ID。
  * @property string $basePath The root directory of the module. Defaults to the directory containing the module class.
  * @property CAttributeCollection $params The list of user-defined parameters.
  * @property string $modulePath The directory that contains the application modules. Defaults to the 'modules' subdirectory of {@link basePath}.
