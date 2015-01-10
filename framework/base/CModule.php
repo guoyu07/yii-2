@@ -91,7 +91,7 @@ abstract class CModule extends CComponent
 	}
 
 	/**
-	 * Getter magic method.
+	 * Getter 魔术方法。
 	 * This method is overridden to support accessing application components
 	 * like reading module properties.
 	 * @param string $name application component or property name
