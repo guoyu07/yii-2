@@ -106,7 +106,7 @@ abstract class CModule extends CComponent
 	}
 
 	/**
-	 * Checks if a property value is null.
+	 * 检查一个属性值是否为空。
 	 * This method overrides the parent implementation by checking
 	 * if the named application component is loaded.
 	 * @param string $name the property name or the event name
