@@ -121,8 +121,8 @@ abstract class CModule extends CComponent
 	}
 
 	/**
-	 * Returns the module ID.
-	 * @return string the module ID.
+	 * 返回模块的 ID。
+	 * @return string 模块的 ID。
 	 */
 	public function getId()
 	{
