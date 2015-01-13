@@ -251,7 +251,7 @@ abstract class CModule extends CComponent
 	}
 
 	/**
-	 * Returns the parent module.
+	 * 返回父模块。
 	 * @return CModule the parent module. Null if this module does not have a parent.
 	 */
 	public function getParentModule()
