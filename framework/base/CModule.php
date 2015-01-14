@@ -542,7 +542,7 @@ abstract class CModule extends CComponent
 	}
 
 	/**
-	 * Initializes the module.
+	 * 初始化模块。
 	 * This method is called at the end of the module constructor.
 	 * Note that at this moment, the module has been configured, the behaviors
 	 * have been attached and the application components have been registered.
