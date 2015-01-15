@@ -510,7 +510,7 @@ abstract class CModule extends CComponent
 
 	/**
 	 * Configures the module with the specified configuration.
-	 * @param array $config the configuration array
+	 * @param array $config 配置数组
 	 */
 	public function configure($config)
 	{
