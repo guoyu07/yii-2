@@ -522,7 +522,7 @@ abstract class CModule extends CComponent
 	}
 
 	/**
-	 * Loads static application components.
+	 * 加载静态应用程序组件。
 	 */
 	protected function preloadComponents()
 	{
