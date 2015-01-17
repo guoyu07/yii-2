@@ -472,7 +472,7 @@ abstract class CModule extends CComponent
 	}
 
 	/**
-	 * Sets the application components.
+	 * 设置应用程序组件。
 	 *
 	 * When a configuration is used to specify a component, it should consist of
 	 * the component's initial property values (name-value pairs). Additionally,
