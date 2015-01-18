@@ -456,7 +456,7 @@ abstract class CModule extends CComponent
 	}
 
 	/**
-	 * Returns the application components.
+	 * 返回应用程序组件。
 	 * @param boolean $loadedOnly whether to return the loaded components only. If this is set false,
 	 * then all components specified in the configuration will be returned, whether they are loaded or not.
 	 * Loaded components will be returned as objects, while unloaded components as configuration arrays.
