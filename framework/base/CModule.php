@@ -289,7 +289,7 @@ abstract class CModule extends CComponent
 
 	/**
 	 * Returns a value indicating whether the specified module is installed.
-	 * @param string $id the module ID
+	 * @param string $id 模块 ID
 	 * @return boolean whether the specified module is installed.
 	 * @since 1.1.2
 	 */
