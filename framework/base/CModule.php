@@ -130,8 +130,8 @@ abstract class CModule extends CComponent
 	}
 
 	/**
-	 * Sets the module ID.
-	 * @param string $id the module ID
+	 * 设置模块的 ID。
+	 * @param string $id 模块 ID
 	 */
 	public function setId($id)
 	{
