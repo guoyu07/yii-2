@@ -109,7 +109,7 @@ abstract class CModule extends CComponent
 	 * 检查一个属性值是否为空。
 	 * This method overrides the parent implementation by checking
 	 * if the named application component is loaded.
-	 * @param string $name the property name or the event name
+	 * @param string $name 属性名称或事件名称
 	 * @return boolean 属性值是否为空
 	 */
 	public function __isset($name)
