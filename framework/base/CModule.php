@@ -23,7 +23,7 @@
  * @property array $import List of aliases to be imported.
  * @property array $aliases List of aliases to be defined. The array keys are root aliases,
  * while the array values are paths or aliases corresponding to the root aliases.
- * For example,
+ * 例如，
  * <pre>
  * array(
  *    'models'=>'application.models',              // an existing alias
