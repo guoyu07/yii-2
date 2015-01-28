@@ -94,7 +94,7 @@ abstract class CModule extends CComponent
 	 * Getter 魔术方法。
 	 * This method is overridden to support accessing application components
 	 * like reading module properties.
-	 * @param string $name application component or property name
+	 * @param string $name 应用组件或属性名称
 	 * @return mixed 指定的属性值
 	 */
 	public function __get($name)
