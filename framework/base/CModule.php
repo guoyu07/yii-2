@@ -63,7 +63,7 @@ abstract class CModule extends CComponent
 	 * 构造器。
 	 * @param string $id 模块的 ID
 	 * @param CModule $parent 父模块（如果有）
-	 * @param mixed $config the module configuration. It can be either an array or
+	 * @param mixed $config 模块配置。It can be either an array or
 	 * the path of a PHP file returning the configuration array.
 	 */
 	public function __construct($id,$parent,$config=null)
