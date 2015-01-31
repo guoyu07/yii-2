@@ -140,7 +140,7 @@ abstract class CModule extends CComponent
 
 	/**
 	 * 返回模块的根目录。
-	 * @return string the root directory of the module. Defaults to the directory containing the module class.
+	 * @return string 模块的根目录。Defaults to the directory containing the module class.
 	 */
 	public function getBasePath()
 	{
