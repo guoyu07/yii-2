@@ -155,7 +155,7 @@ abstract class CModule extends CComponent
 	/**
 	 * 设置模块的根目录。
 	 * This method can only be invoked at the beginning of the constructor.
-	 * @param string $path the root directory of the module.
+	 * @param string $path 模块的根目录。
 	 * @throws CException 如果目录不存在。
 	 */
 	public function setBasePath($path)
