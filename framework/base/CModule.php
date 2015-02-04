@@ -166,8 +166,8 @@ abstract class CModule extends CComponent
 	}
 
 	/**
-	 * Returns user-defined parameters.
-	 * @return CAttributeCollection the list of user-defined parameters
+	 * 返回用户定义的参数。
+	 * @return CAttributeCollection 用户定义的参数列表
 	 */
 	public function getParams()
 	{
@@ -182,8 +182,8 @@ abstract class CModule extends CComponent
 	}
 
 	/**
-	 * Sets user-defined parameters.
-	 * @param array $value user-defined parameters. This should be in name-value pairs.
+	 * 设置用户定义的参数
+	 * @param array $value 用户定义的参数。应该设置为 name-value 对。
 	 */
 	public function setParams($value)
 	{
@@ -207,7 +207,7 @@ abstract class CModule extends CComponent
 	/**
 	 * Sets the directory that contains the application modules.
 	 * @param string $value the directory that contains the application modules.
-	 * @throws CException if the directory is invalid
+	 * @throws CException 如果该目录是无效的。
 	 */
 	public function setModulePath($value)
 	{
@@ -217,7 +217,7 @@ abstract class CModule extends CComponent
 	}
 
 	/**
-	 * Sets the aliases that are used in the module.
+	 * 设置用于在模块中使用的别名。
 	 * @param array $aliases list of aliases to be imported
 	 */
 	public function setImport($aliases)
