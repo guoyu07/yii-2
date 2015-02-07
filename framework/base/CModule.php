@@ -260,7 +260,7 @@ abstract class CModule extends CComponent
 	}
 
 	/**
-	 * Retrieves the named application module.
+	 * 检索指定的应用程序模块。
 	 * The module has to be declared in {@link modules}. A new instance will be created
 	 * when calling this method with the given ID for the first time.
 	 * @param string $id application module ID (case-sensitive)
