@@ -263,7 +263,7 @@ abstract class CModule extends CComponent
 	 * 检索指定的应用程序模块。
 	 * The module has to be declared in {@link modules}. A new instance will be created
 	 * when calling this method with the given ID for the first time.
-	 * @param string $id application module ID (case-sensitive)
+	 * @param string $id 应用程序模块的 ID (case-sensitive)
 	 * @return CModule the module instance, null if the module is disabled or does not exist.
 	 */
 	public function getModule($id)
