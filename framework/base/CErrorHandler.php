@@ -163,7 +163,7 @@ class CErrorHandler extends CApplicationComponent
 
 	/**
 	 * 异常处理。
-	 * @param Exception $exception the exception captured
+	 * @param Exception $exception 捕获的异常
 	 */
 	protected function handleException($exception)
 	{
