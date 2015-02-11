@@ -223,7 +223,7 @@ class CErrorHandler extends CApplicationComponent
 
 	/**
 	 * Handles the PHP error.
-	 * @param CErrorEvent $event the PHP error event
+	 * @param CErrorEvent $event PHP 错误事件
 	 */
 	protected function handleError($event)
 	{
