@@ -327,7 +327,7 @@ class CErrorHandler extends CApplicationComponent
 	}
 
 	/**
-	 * Renders the view.
+	 * 渲染视图。
 	 * @param string $view the view name (file name without extension).
 	 * See {@link getViewFile} for how a view file is located given its name.
 	 * @param array $data data to be passed to the view
