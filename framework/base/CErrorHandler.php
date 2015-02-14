@@ -519,7 +519,7 @@ class CErrorHandler extends CApplicationComponent
 	 * @param string $file source file path
 	 * @param integer $errorLine the error line number
 	 * @param integer $maxLines maximum number of lines to display
-	 * @return string the rendering result
+	 * @return string 渲染结果
 	 */
 	protected function renderSourceCode($file,$errorLine,$maxLines)
 	{
