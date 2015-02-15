@@ -516,7 +516,7 @@ class CErrorHandler extends CApplicationComponent
 
 	/**
 	 * Renders the source code around the error line.
-	 * @param string $file source file path
+	 * @param string $file 源文件路径
 	 * @param integer $errorLine the error line number
 	 * @param integer $maxLines maximum number of lines to display
 	 * @return string 渲染结果
